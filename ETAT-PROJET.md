@@ -1,7 +1,7 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **17/09/2026**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **22/09/2026**.
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
@@ -29,6 +29,13 @@ retours HCBE sur la maquette, atelier questionnaire (58 questions prêtes dans N
   footer pro (colonnes soulignées jaune), typo **Public Sans** partout, icônes **Lucide** (zéro emoji),
   carte **MapLibre réelle** (ouverte accueil / repliée ailleurs, toggle chevron, fallback sans WebGL)
 - Mobile complet : burger fonctionnel, nav admin défilante, zéro débordement horizontal (body overflow-x clip)
+- **22/09 — refonte façon RDM validée par Josué (structure copiée du modèle, couleurs BDM)** :
+  header clair (recherche / logo centré / réseaux + connexion) + barre nav verte 44px avec bloc
+  « Emploi & Stages » jaune ; carte : filtres flottants (lieu + thèmes cochables), clusters ronds verts,
+  bouton replier/déplier flottant centré (onglet suspendu quand repliée) ; bas de page : pub + panorama
+  SVG (piste latérite, palmiers) plongeant dans le footer ; police manuscrite **Caveat** pour le mot
+  mis en avant des titres (`.section-title em`) et le « du Monde » du logo ; ombre `.card-soft` sur les cartes.
+  ⚠️ Dev en worktree : `next dev` (Turbopack) casse sur next/font Google → utiliser `next dev --webpack`.
 - Règles UI actées : libellés courts/2-3 mots toujours en nowrap · cartes d'annuaire hauteurs égales pied calé ·
   largeur stable (main width:100%, scrollbar-gutter stable) · header/footer pleine largeur, contenu max-w-6xl
 - Prisma 7 + Zod installés (schéma 20 entités écrit, prisma.config.ts), lucide-react, maplibre-gl

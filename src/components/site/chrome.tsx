@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { Bell, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
@@ -12,58 +12,87 @@ export function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolea
   return (
     <>
       <StickyBar />
-      <header className="border-b border-line">
-        {/* Style A « Institutionnel inversé » : rangée haute en vert profond */}
-        <div className="bg-primary-darker text-white">
-          <div className="flex w-full items-center justify-between gap-4 px-4 py-5 sm:gap-6 sm:px-6 sm:py-6">
-            <Link href="/" className="min-w-0">
-              <span className="font-display text-[1.55rem] font-extrabold leading-none sm:text-3xl">
-                Béninois<span className="text-accent"> du Monde</span>
-              </span>
-              <span className="mt-1.5 block truncate text-[0.58rem] uppercase tracking-[0.16em] text-white/60 sm:text-[0.7rem] sm:tracking-[0.25em]">
-                Le réseau de la diaspora béninoise
-              </span>
+      <header className="border-b border-line bg-paper">
+        {/* Rangée haute claire façon modèle : recherche · logo centré · réseaux + connexion */}
+        <div className="flex w-full items-center justify-between gap-4 px-4 py-4 sm:px-6 md:grid md:grid-cols-[1fr_auto_1fr] md:py-6">
+          <form action="/recherche" className="hidden md:flex">
+            <input
+              type="search"
+              name="q"
+              placeholder="Recherchez sur le site"
+              className="h-11 w-52 border border-line bg-paper px-4 text-sm shadow-[0_2px_4px_rgba(0,0,0,0.12)] focus:border-primary focus:outline-none lg:w-60"
+            />
+            <button className="h-11 bg-primary px-4 text-xs font-extrabold uppercase text-white hover:bg-primary-dark">
+              Ok
+            </button>
+          </form>
+
+          <Link href="/" className="min-w-0 text-center md:justify-self-center">
+            <span className="block font-display text-[1.7rem] font-extrabold leading-none text-primary-darker sm:text-4xl">
+              Béninois
+            </span>
+            <span className="block font-script text-[1.45rem] leading-none text-primary sm:text-[1.8rem]">
+              du Monde
+            </span>
+          </Link>
+
+          <div className="flex items-center justify-end gap-4 lg:gap-5">
+            <ul className="hidden items-center gap-2.5 lg:flex">
+              {[
+                { icon: Fb, label: "Facebook" },
+                { icon: Li, label: "LinkedIn" },
+                { icon: Ig, label: "Instagram" },
+              ].map((s) => (
+                <li key={s.label}>
+                  <a
+                    href="#"
+                    aria-label={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-dark"
+                  >
+                    <s.icon />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/connexion"
+              className="hidden items-center gap-2 text-sm font-semibold text-ink-2 hover:text-primary md:flex"
+            >
+              <CircleUserRound aria-hidden className="h-6 w-6 text-muted" />
+              Se connecter
             </Link>
-
-            <div className="hidden items-center gap-5 md:flex">
-              <form action="/recherche" className="hidden lg:block">
-                <input
-                  type="search"
-                  name="q"
-                  placeholder="Rechercher sur le site…"
-                  className="w-56 rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-accent focus:outline-none"
-                />
-              </form>
-              <Link
-                href="/connexion"
-                className="text-[0.95rem] font-semibold text-white/85 hover:text-accent"
-              >
-                Se connecter
-              </Link>
-              <Link
-                href="/publier"
-                className="rounded bg-accent px-5 py-2.5 text-[0.95rem] font-bold text-ink hover:bg-accent-dark"
-              >
-                Publier
-              </Link>
-            </div>
-
+            <Link
+              href="/publier"
+              className="hidden rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark md:inline-block"
+            >
+              Publier
+            </Link>
             <MobileMenu />
           </div>
         </div>
 
-        {/* Nav en clair sous le bandeau vert, soulignement vert au survol */}
-        <nav className="hidden bg-paper md:block">
-          <div className="flex w-full gap-x-9 px-6 py-3.5 text-[0.95rem] font-bold uppercase tracking-wide">
-            {NAV.map((n) => (
-              <Link
-                key={n.href}
-                href={n.href}
-                className="whitespace-nowrap text-ink-2 underline-offset-8 decoration-primary hover:text-primary hover:underline hover:decoration-2"
-              >
-                {n.label}
-              </Link>
-            ))}
+        {/* Barre de navigation verte, bloc « Emploi & Stages » jaune décalé à gauche */}
+        <nav className="hidden bg-primary md:block">
+          <div className="flex w-full items-stretch">
+            <Link
+              href="/emploi"
+              className="flex items-center gap-2.5 whitespace-nowrap bg-accent px-5 text-[1.02rem] font-extrabold uppercase tracking-wide text-ink hover:bg-accent-dark"
+            >
+              <BriefcaseBusiness aria-hidden className="h-[1.15rem] w-[1.15rem]" />
+              Emploi & stages
+            </Link>
+            <ul className="flex flex-1 items-stretch justify-center">
+              {NAV.filter((n) => n.href !== "/emploi").map((n) => (
+                <li key={n.href} className="flex">
+                  <Link
+                    href={n.href}
+                    className="flex h-11 items-center whitespace-nowrap px-4 text-sm font-extrabold uppercase tracking-wide text-white hover:bg-primary-dark lg:px-5"
+                  >
+                    {n.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </nav>
 
@@ -150,16 +179,85 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
   },
 ];
 
+/* Bas de page façon modèle : bannière pub + panorama pleine largeur qui plonge
+   dans le footer. Illustration décorative (piste de latérite, palmiers) en
+   attendant une vraie photo du Bénin — teintes terre volontairement littérales. */
+function BottomPageBox() {
+  return (
+    <div className="relative">
+      <div className="relative z-10 mx-auto hidden max-w-3xl px-4 md:block">
+        <AdSlot label="bannière bas de page" />
+      </div>
+      <div className="h-[200px] w-full md:-mt-12 md:h-[300px]" aria-hidden>
+        <svg
+          viewBox="0 0 1440 300"
+          preserveAspectRatio="xMidYMid slice"
+          className="h-full w-full"
+          role="presentation"
+        >
+          <defs>
+            <linearGradient id="bdm-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#eaf4ec" />
+              <stop offset="1" stopColor="#fdf4cd" />
+            </linearGradient>
+            <g id="bdm-palm">
+              <path
+                d="M0 78 C -2 50 -1 28 4 0"
+                stroke="var(--green-900)"
+                strokeWidth="5"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path d="M4 2 C -18 -6 -34 -4 -46 6 C -28 4 -12 8 4 2 Z" fill="var(--green-900)" />
+              <path d="M4 2 C 26 -6 42 -4 54 6 C 36 4 20 8 4 2 Z" fill="var(--green-900)" />
+              <path d="M4 2 C -8 -16 -20 -22 -34 -22 C -18 -12 -6 -6 4 2 Z" fill="var(--green-900)" />
+              <path d="M4 2 C 16 -16 28 -22 42 -22 C 26 -12 14 -6 4 2 Z" fill="var(--green-900)" />
+              <path d="M4 2 C 2 -18 6 -28 12 -34 C 6 -20 6 -8 4 2 Z" fill="var(--green-900)" />
+            </g>
+          </defs>
+
+          <rect width="1440" height="300" fill="url(#bdm-sky)" />
+          <circle cx="1100" cy="70" r="46" fill="var(--yellow-500)" opacity="0.55" />
+
+          {/* Collines et végétation */}
+          <path d="M0 170 Q 180 120 360 160 T 720 150 T 1080 165 T 1440 145 V300 H0 Z" fill="var(--green-100)" />
+          <path d="M0 200 Q 240 160 480 195 T 960 190 T 1440 185 V300 H0 Z" fill="var(--green-600)" opacity="0.35" />
+
+          {/* Sol de latérite */}
+          <path d="M0 232 Q 360 214 720 226 T 1440 222 V300 H0 Z" fill="#d9a05b" />
+          <path d="M0 258 Q 480 240 960 252 T 1440 250 V300 H0 Z" fill="#c9863f" />
+
+          {/* Piste qui file vers l'horizon */}
+          <path d="M700 230 L 742 230 L 920 300 L 500 300 Z" fill="#b06f2f" />
+          <path d="M718 234 l 7 0 l 11 24 l -14 0 Z" fill="#fdf4cd" opacity="0.65" />
+          <path d="M707 270 l 17 0 l 15 30 l -30 0 Z" fill="#fdf4cd" opacity="0.65" />
+
+          {/* Palmiers */}
+          <use href="#bdm-palm" transform="translate(170 172) scale(1.15)" />
+          <use href="#bdm-palm" transform="translate(285 190) scale(0.85) scale(-1,1)" />
+          <use href="#bdm-palm" transform="translate(1250 178) scale(1.05)" />
+          <use href="#bdm-palm" transform="translate(1360 196) scale(0.8) scale(-1,1)" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export function SiteFooter() {
   return (
-    <footer className="mt-16 bg-primary-darker text-white">
+    <footer className="mt-16">
+      <BottomPageBox />
+      <div className="bg-primary-darker text-white">
       <div className="w-full px-6 pb-10 pt-14 lg:px-10">
         {/* Rangée 1 : identité | plan du site */}
         <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <div>
             <Link href="/" className="inline-block">
-              <span className="font-display text-[1.6rem] font-extrabold leading-none">
-                Béninois<span className="text-accent"> du Monde</span>
+              <span className="block font-display text-[1.6rem] font-extrabold leading-none">
+                Béninois
+              </span>
+              <span className="block font-script text-[1.5rem] leading-none text-accent">
+                du Monde
               </span>
               <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.25em] text-white/45">
                 Le réseau de la diaspora béninoise
@@ -269,6 +367,7 @@ export function SiteFooter() {
             </p>
           </div>
         </div>
+      </div>
       </div>
       <div className="tricolor" aria-hidden />
     </footer>

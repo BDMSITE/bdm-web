@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 /* Bande « carte de la diaspora » — vraie carte interactive MapLibre + OpenStreetMap,
-   comme le site modèle. Ouverte par défaut sur l'accueil, repliée ailleurs.
+   façon site modèle : filtres flottants sur la carte, clusters ronds, bouton
+   replier/déplier centré. Ouverte par défaut sur l'accueil, repliée ailleurs.
    Les compteurs par ville sont des données d'exemple (branchés à la base en S5). */
 
 const VILLES: { name: string; n: number; lng: number; lat: number; big?: boolean }[] = [
@@ -24,7 +25,7 @@ const VILLES: { name: string; n: number; lng: number; lat: number; big?: boolean
   { name: "Canton", n: 22, lng: 113.26, lat: 23.13 },
 ];
 
-const FILTRES = ["Membres", "Associations", "Adresses", "Événements"];
+const THEMES = ["Membres", "Associations", "Bonnes adresses", "Événements"];
 
 export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -68,8 +69,9 @@ export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
 
       for (const v of VILLES) {
         const el = document.createElement("button");
-        el.className = v.big ? "bdm-marker bdm-marker-big" : "bdm-marker";
-        el.innerHTML = `<b>${v.n}</b>&nbsp;${v.name}`;
+        el.className = v.big ? "bdm-ball bdm-ball-big" : "bdm-ball";
+        el.textContent = String(v.n);
+        el.title = `${v.name} — ${v.n} membres`;
         el.setAttribute("aria-label", `${v.n} membres à ${v.name}`);
         new maplibregl.Marker({ element: el, anchor: "center" })
           .setLngLat([v.lng, v.lat])
@@ -90,46 +92,68 @@ export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
 
   return (
     <section aria-label="Carte de la diaspora">
-      {/* Ouvreur façon site modèle : chevron + texte replier/déplier */}
-      <div className="border-b border-line bg-paper-2">
-        <button
-          onClick={() => setOpen(!open)}
-          aria-expanded={open}
-          className="group mx-auto flex items-center gap-2 py-2.5 text-[0.78rem] font-bold uppercase tracking-[0.15em] text-primary hover:text-primary-dark"
-        >
-          <ChevronDown
-            aria-hidden
-            className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-            strokeWidth={2.5}
-          />
-          {open ? "Replier la carte" : "Déplier la carte"}
-        </button>
-      </div>
+      {/* Repliée : onglet suspendu centré sous la navigation, façon modèle */}
+      {!open && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setOpen(true)}
+            aria-expanded={false}
+            className="flex items-center gap-2 rounded-b-lg border border-t-0 border-line bg-paper px-5 py-2.5 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-primary shadow-md hover:text-primary-dark"
+          >
+            <ChevronDown aria-hidden className="h-4 w-4" strokeWidth={2.5} />
+            Déplier la carte
+          </button>
+        </div>
+      )}
 
       {open && (
         <div className="relative border-b border-line">
-          <div ref={containerRef} className="h-[380px] w-full bg-[#dfe9e2]" />
+          <div ref={containerRef} className="h-[420px] w-full bg-[#dfe9e2]" />
 
-          {/* Légende + filtres */}
-          <div className="absolute bottom-3 left-3 z-10 rounded bg-paper/95 px-3 py-2 shadow-sm">
-            <p className="text-sm font-bold">
-              1 254 membres · <span className="text-primary">47 pays</span>
-            </p>
-            <div className="mt-1.5 flex gap-1.5">
-              {FILTRES.map((f, i) => (
-                <button
-                  key={f}
-                  className={`rounded-full px-2.5 py-0.5 text-[0.7rem] font-bold ${
-                    i === 0
-                      ? "bg-primary text-white"
-                      : "border border-line bg-paper text-ink-2 hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
+          {/* Filtres flottants sur la carte, façon modèle */}
+          <div className="absolute left-4 top-4 z-10 w-[240px] space-y-4 sm:w-[260px]">
+            <form
+              action="/recherche"
+              className="flex items-center gap-2 bg-paper px-3 shadow-md"
+            >
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+              <input
+                type="search"
+                name="q"
+                placeholder="Pays, région ou ville"
+                className="h-11 w-full bg-transparent text-sm focus:outline-none"
+              />
+            </form>
+
+            <div className="hidden bg-paper p-4 shadow-md sm:block">
+              <p className="text-sm font-bold">Recherche par thème</p>
+              <div className="mt-2.5 space-y-2">
+                {THEMES.map((t) => (
+                  <label key={t} className="flex items-center gap-2.5 text-sm text-ink-2">
+                    <input
+                      type="checkbox"
+                      defaultChecked={t === "Membres"}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    {t}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-3 border-t border-line pt-2.5 text-xs font-bold text-muted">
+                1 254 membres · <span className="text-primary">47 pays</span>
+              </p>
             </div>
           </div>
+
+          {/* Bouton replier flottant, centré en bas de la carte */}
+          <button
+            onClick={() => setOpen(false)}
+            aria-expanded
+            className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-md bg-paper px-5 py-2.5 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-primary shadow-lg hover:text-primary-dark"
+          >
+            <ChevronUp aria-hidden className="h-4 w-4" strokeWidth={2.5} />
+            Replier la carte
+          </button>
         </div>
       )}
     </section>

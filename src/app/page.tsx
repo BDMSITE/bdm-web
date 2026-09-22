@@ -167,7 +167,7 @@ export default function Home() {
               <SectionTitle pre="Bonnes" em="adresses" href="/adresses" />
               <div className="grid gap-5 sm:grid-cols-3">
                 {adresses.map((a) => (
-                  <article key={a.name} className="border border-line">
+                  <article key={a.name} className="card-soft border border-line bg-paper">
                     <div className="aspect-[4/3] bg-paper-2" />
                     <div className="p-3">
                       <p className="card-location">{a.city}</p>
@@ -208,7 +208,7 @@ export default function Home() {
               <SectionTitle pre="Événements" em="à venir" href="/agenda" />
               <ul className="space-y-3">
                 {agenda.map((e) => (
-                  <li key={e.title} className="flex items-center gap-4 border border-line p-4">
+                  <li key={e.title} className="card-soft flex items-center gap-4 border border-line bg-paper p-4">
                     <span className="shrink-0 rounded bg-primary px-3 py-2 text-center text-xs font-bold uppercase leading-tight text-white">
                       {e.date}
                     </span>

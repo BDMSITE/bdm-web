@@ -65,6 +65,7 @@
 
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-display), "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-script: var(--font-script), "Segoe Script", cursive;
 }
 
 html {
@@ -85,7 +86,8 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
-/* Titre de section façon modèle : "À LA une" — capitales + un mot en couleur */
+/* Titre de section façon modèle : "ÉVÉNEMENTS à venir" — capitales
+   + le mot mis en avant en manuscrite verte (signature visuelle RDM). */
 .section-title {
   font-family: var(--font-display), "Avenir Next", "Helvetica Neue", sans-serif;
   text-transform: uppercase;
@@ -94,7 +96,18 @@ body {
 }
 .section-title em {
   font-style: normal;
+  font-family: var(--font-script), "Segoe Script", cursive;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1.45em;
+  line-height: 1;
+  font-weight: 700;
   color: var(--green-700);
+}
+
+/* Ombre douce des cartes de contenu (façon modèle) */
+.card-soft {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.07);
 }
 
 /* Lieu en petites capitales sur les cartes de contenu */
@@ -117,29 +130,31 @@ body {
   );
 }
 
-/* Marqueurs de la carte diaspora (MapLibre) */
-.bdm-marker {
-  display: inline-flex;
+/* Marqueurs de la carte diaspora (MapLibre) — pastilles rondes façon
+   clusters du site modèle : compteur blanc sur cercle vert. */
+.bdm-ball {
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.6rem;
-  border: 1.5px solid var(--color-primary);
-  border-radius: 999px;
-  background: var(--color-paper);
-  color: var(--color-primary-dark);
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--green-800);
+  color: #fff;
   font-family: var(--font-body), system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow:
+    inset 0 0 0 3px rgb(255 255 255 / 0.25),
+    0 2px 6px rgb(0 0 0 / 0.3);
   cursor: pointer;
 }
-.bdm-marker:hover { transform: scale(1.07); z-index: 10; }
-.bdm-marker-big {
-  background: var(--color-primary);
-  color: #fff;
-  font-size: 0.85rem;
-  padding: 0.3rem 0.75rem;
+.bdm-ball:hover { transform: scale(1.08); z-index: 10; }
+.bdm-ball-big {
+  width: 60px;
+  height: 60px;
+  font-size: 0.95rem;
+  background: var(--green-700);
   z-index: 5;
 }
 

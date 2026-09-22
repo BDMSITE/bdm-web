@@ -27,7 +27,7 @@ export function StickyBar() {
     >
       <div className="flex h-12 w-full items-center gap-7 px-6">
         <Link href="/" className="shrink-0 font-display text-lg font-extrabold leading-none">
-          Béninois<span className="text-accent"> du Monde</span>
+          Béninois<span className="font-script text-xl font-semibold text-accent"> du Monde</span>
         </Link>
         <nav className="hidden flex-1 items-center gap-6 text-[0.78rem] font-bold uppercase tracking-wide lg:flex">
           {NAV.map((n) => (
@@ -165,7 +165,7 @@ export function MobileMenu() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex shrink-0 items-center gap-2 rounded border border-white/40 px-3 py-2 text-sm font-semibold md:hidden"
+        className="flex shrink-0 items-center gap-2 rounded border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:border-primary hover:text-primary md:hidden"
         aria-label="Ouvrir le menu"
         aria-expanded={open}
       >
@@ -178,7 +178,7 @@ export function MobileMenu() {
           <div className="absolute inset-y-0 right-0 flex w-[300px] max-w-[85vw] flex-col bg-primary-darker text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <span className="font-display text-lg font-extrabold">
-                Béninois<span className="text-accent"> du Monde</span>
+                Béninois<span className="font-script text-xl font-semibold text-accent"> du Monde</span>
               </span>
               <button onClick={() => setOpen(false)} aria-label="Fermer le menu" className="text-white/80 hover:text-accent">
                 <X aria-hidden className="h-6 w-6" />

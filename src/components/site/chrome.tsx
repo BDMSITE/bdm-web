@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Bell, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
@@ -179,65 +180,26 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
   },
 ];
 
-/* Bas de page façon modèle : bannière pub + panorama pleine largeur qui plonge
-   dans le footer. Illustration décorative (piste de latérite, palmiers) en
-   attendant une vraie photo du Bénin — teintes terre volontairement littérales. */
+/* Bas de page façon modèle : bannière pub + photo panoramique pleine largeur
+   qui plonge dans le footer. Photo : Boulevard de la Marina à Cotonou,
+   Osia Zannou (Wikimedia Commons, CC BY-SA 4.0) — crédit obligatoire. */
 function BottomPageBox() {
   return (
     <div className="relative">
       <div className="relative z-10 mx-auto hidden max-w-3xl px-4 md:block">
         <AdSlot label="bannière bas de page" />
       </div>
-      <div className="h-[200px] w-full md:-mt-12 md:h-[300px]" aria-hidden>
-        <svg
-          viewBox="0 0 1440 300"
-          preserveAspectRatio="xMidYMid slice"
-          className="h-full w-full"
-          role="presentation"
-        >
-          <defs>
-            <linearGradient id="bdm-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#eaf4ec" />
-              <stop offset="1" stopColor="#fdf4cd" />
-            </linearGradient>
-            <g id="bdm-palm">
-              <path
-                d="M0 78 C -2 50 -1 28 4 0"
-                stroke="var(--green-900)"
-                strokeWidth="5"
-                fill="none"
-                strokeLinecap="round"
-              />
-              <path d="M4 2 C -18 -6 -34 -4 -46 6 C -28 4 -12 8 4 2 Z" fill="var(--green-900)" />
-              <path d="M4 2 C 26 -6 42 -4 54 6 C 36 4 20 8 4 2 Z" fill="var(--green-900)" />
-              <path d="M4 2 C -8 -16 -20 -22 -34 -22 C -18 -12 -6 -6 4 2 Z" fill="var(--green-900)" />
-              <path d="M4 2 C 16 -16 28 -22 42 -22 C 26 -12 14 -6 4 2 Z" fill="var(--green-900)" />
-              <path d="M4 2 C 2 -18 6 -28 12 -34 C 6 -20 6 -8 4 2 Z" fill="var(--green-900)" />
-            </g>
-          </defs>
-
-          <rect width="1440" height="300" fill="url(#bdm-sky)" />
-          <circle cx="1100" cy="70" r="46" fill="var(--yellow-500)" opacity="0.55" />
-
-          {/* Collines et végétation */}
-          <path d="M0 170 Q 180 120 360 160 T 720 150 T 1080 165 T 1440 145 V300 H0 Z" fill="var(--green-100)" />
-          <path d="M0 200 Q 240 160 480 195 T 960 190 T 1440 185 V300 H0 Z" fill="var(--green-600)" opacity="0.35" />
-
-          {/* Sol de latérite */}
-          <path d="M0 232 Q 360 214 720 226 T 1440 222 V300 H0 Z" fill="#d9a05b" />
-          <path d="M0 258 Q 480 240 960 252 T 1440 250 V300 H0 Z" fill="#c9863f" />
-
-          {/* Piste qui file vers l'horizon */}
-          <path d="M700 230 L 742 230 L 920 300 L 500 300 Z" fill="#b06f2f" />
-          <path d="M718 234 l 7 0 l 11 24 l -14 0 Z" fill="#fdf4cd" opacity="0.65" />
-          <path d="M707 270 l 17 0 l 15 30 l -30 0 Z" fill="#fdf4cd" opacity="0.65" />
-
-          {/* Palmiers */}
-          <use href="#bdm-palm" transform="translate(170 172) scale(1.15)" />
-          <use href="#bdm-palm" transform="translate(285 190) scale(0.85) scale(-1,1)" />
-          <use href="#bdm-palm" transform="translate(1250 178) scale(1.05)" />
-          <use href="#bdm-palm" transform="translate(1360 196) scale(0.8) scale(-1,1)" />
-        </svg>
+      <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
+        <Image
+          src="/images/boulevard-marina-cotonou.jpg"
+          alt="Le boulevard de la Marina à Cotonou vu du ciel"
+          fill
+          sizes="100vw"
+          className="object-cover object-[40%_55%]"
+        />
+        <p className="absolute bottom-1.5 right-2 z-10 text-[0.6rem] tracking-wide text-white/75">
+          Boulevard de la Marina, Cotonou — photo Osia Zannou · CC BY-SA 4.0
+        </p>
       </div>
     </div>
   );

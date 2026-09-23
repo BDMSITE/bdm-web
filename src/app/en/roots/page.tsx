@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteHeader, SiteFooter, SectionTitle, AdSlot } from "@/components/site/chrome";
+import { SiteHeader, SiteFooter, SectionTitle, AdSlot, LangSwitch } from "@/components/site/chrome";
 import { Landmark, ScrollText, Users } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -42,13 +42,7 @@ export default function RootsPage() {
             >
               Join the network
             </Link>
-            <Link
-              href="/memoire"
-              lang="fr"
-              className="whitespace-nowrap rounded border-2 border-white/70 px-4 py-1.5 text-sm font-bold text-white hover:border-accent hover:text-accent"
-            >
-              Lire en français
-            </Link>
+            <LangSwitch fr="/memoire" en="/en/roots" current="en" />
           </div>
         </div>
       </div>

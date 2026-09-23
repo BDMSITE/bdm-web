@@ -5,6 +5,7 @@ import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
 import { LiveTicker } from "./live-ticker";
+import { LogoWord } from "./logo-word";
 
 /* Composants de structure partagés par toutes les pages publiques. */
 
@@ -33,9 +34,7 @@ export function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolea
             <span className="block font-display text-[1.7rem] font-extrabold leading-none text-primary-darker sm:text-4xl">
               Béninois
             </span>
-            <span className="block font-script text-[1.45rem] leading-none text-primary sm:text-[1.8rem]">
-              du Monde
-            </span>
+            <LogoWord className="block font-script text-[1.45rem] leading-none text-primary sm:text-[1.8rem]" />
           </Link>
 
           <div className="flex items-center justify-end gap-4 lg:gap-5">
@@ -213,7 +212,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-16">
       <BottomPageBox />
-      <div className="wax-bg bg-primary-darker text-white">
+      <div className="wax-bg-soft bg-primary-darker text-white">
       <div className="w-full px-6 pb-10 pt-14 lg:px-10">
         {/* Rangée 1 : identité | plan du site */}
         <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
@@ -402,6 +401,23 @@ export function KeywordChips({ keywords }: { keywords: string[] }) {
         </Link>
       ))}
     </div>
+  );
+}
+
+/* Commutateur FR | EN pour les rubriques traduites (Racines / Roots).
+   Posé sur fond vert profond (bandeau de rubrique). */
+export function LangSwitch({ fr, en, current }: { fr: string; en: string; current: "fr" | "en" }) {
+  const on = "bg-accent px-3 py-1.5 text-ink";
+  const off = "px-3 py-1.5 text-white/85 hover:text-accent";
+  return (
+    <span className="inline-flex items-center overflow-hidden rounded border-2 border-white/50 text-xs font-extrabold uppercase tracking-wide">
+      <Link href={fr} lang="fr" aria-current={current === "fr" ? "page" : undefined} className={current === "fr" ? on : off}>
+        FR
+      </Link>
+      <Link href={en} lang="en" aria-current={current === "en" ? "page" : undefined} className={current === "en" ? on : off}>
+        EN
+      </Link>
+    </span>
   );
 }
 

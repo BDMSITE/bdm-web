@@ -107,7 +107,8 @@ export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
       )}
 
       {open && (
-        <div className="relative border-b border-line">
+        <div className="border-b border-line">
+          <div className="relative">
           <div ref={containerRef} className="h-[420px] w-full bg-[#dfe9e2]" />
 
           {/* Filtres flottants sur la carte, façon modèle */}
@@ -145,15 +146,19 @@ export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
             </div>
           </div>
 
-          {/* Bouton replier flottant, centré en bas de la carte */}
-          <button
-            onClick={() => setOpen(false)}
-            aria-expanded
-            className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-md bg-paper px-5 py-2.5 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-primary shadow-lg hover:text-primary-dark"
-          >
-            <ChevronUp aria-hidden className="h-4 w-4" strokeWidth={2.5} />
-            Replier la carte
-          </button>
+          </div>
+
+          {/* Onglet replier suspendu sous la carte, symétrique de l'ouvreur */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => setOpen(false)}
+              aria-expanded
+              className="flex items-center gap-2 whitespace-nowrap rounded-b-lg border border-t-0 border-line bg-paper px-5 py-2.5 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-primary shadow-md hover:text-primary-dark"
+            >
+              <ChevronUp aria-hidden className="h-4 w-4" strokeWidth={2.5} />
+              Replier la carte
+            </button>
+          </div>
         </div>
       )}
     </section>

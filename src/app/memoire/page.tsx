@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteHeader, SiteFooter, SectionTitle, AdSlot, PageBanner } from "@/components/site/chrome";
+import { SiteHeader, SiteFooter, SectionTitle, AdSlot, PageBanner, LangSwitch } from "@/components/site/chrome";
 import { Compass, LibraryBig, BookOpen } from "lucide-react";
 
 export const metadata: Metadata = { title: "Mémoire & racines" };
@@ -26,13 +26,7 @@ export default function MemoirePage() {
         <Link href="/adresses" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
           Professionnels vérifiés (généalogie)
         </Link>
-        <Link
-          href="/en/roots"
-          lang="en"
-          className="whitespace-nowrap rounded border-2 border-white/70 px-4 py-1.5 text-sm font-bold text-white hover:border-accent hover:text-accent"
-        >
-          Read in English — Roots
-        </Link>
+        <LangSwitch fr="/memoire" en="/en/roots" current="fr" />
       </PageBanner>
 
       <main className="mx-auto max-w-6xl px-4 py-8">

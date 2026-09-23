@@ -26,6 +26,13 @@ export default function MemoirePage() {
         <Link href="/adresses" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
           Professionnels vérifiés (généalogie)
         </Link>
+        <Link
+          href="/en/roots"
+          lang="en"
+          className="whitespace-nowrap rounded border-2 border-white/70 px-4 py-1.5 text-sm font-bold text-white hover:border-accent hover:text-accent"
+        >
+          Read in English — Roots
+        </Link>
       </PageBanner>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
@@ -49,6 +56,69 @@ export default function MemoirePage() {
                 ))}
               </div>
               <p className="mt-3 text-sm text-muted">24 lieux documentés et sourcés — repris de l&apos;ancien site, validés par la rédaction.</p>
+            </section>
+
+            {/* Nationalité afrodescendante — loi n° 2024-31, programme My Afro Origins */}
+            <section>
+              <SectionTitle pre="Devenir Béninois·e : la" em="nationalité" />
+              <p className="text-sm leading-relaxed text-ink-2">
+                Depuis la loi n° 2024-31, le Bénin reconnaît la nationalité aux
+                afrodescendants dont un ancêtre a été déporté par la traite. La demande se fait
+                en ligne via le programme officiel <strong>My Afro Origins</strong>.
+              </p>
+              <ol className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { t: "Vérifier son éligibilité", d: "Un ancêtre subsaharien déporté hors d'Afrique (traite atlantique)." },
+                  { t: "Constituer le dossier", d: "Preuves d'ascendance : actes, tests ADN reconnus, généalogie documentée." },
+                  { t: "Déposer en ligne", d: "Sur le portail officiel My Afro Origins ; instruction par l'État béninois." },
+                  { t: "Obtenir la nationalité", d: "Attestation puis carte d'identité — et un pays qui vous accueille." },
+                ].map((s, i) => (
+                  <li key={s.t} className="card-soft border border-line bg-paper p-4">
+                    <span aria-hidden className="font-script text-3xl leading-none text-primary">
+                      {i + 1}
+                    </span>
+                    <h3 className="mt-1 font-bold leading-tight">{s.t}</h3>
+                    <p className="mt-1 text-sm text-ink-2">{s.d}</p>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href="#"
+                  className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark"
+                >
+                  Lire le guide complet
+                </Link>
+                <p className="text-xs text-muted">
+                  Guide informatif — les démarches officielles se font sur le portail national.
+                </p>
+              </div>
+            </section>
+
+            {/* Éditorial Agudas */}
+            <section className="card-soft flex flex-col gap-5 border border-line bg-paper p-5 sm:flex-row">
+              <div className="flex aspect-[4/3] items-center justify-center border border-line bg-paper-2 text-xs text-muted sm:w-56 sm:shrink-0">
+                photo
+              </div>
+              <div className="min-w-0">
+                <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">
+                  Grand récit
+                </span>
+                <h2 className="mt-2 font-display text-xl font-bold leading-snug">
+                  <Link href="/magazine/les-agudas" className="hover:text-primary">
+                    Les Agudas : ces Afro-Brésiliens revenus au Bénin il y a deux siècles
+                  </Link>
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                  Bien avant la loi sur la nationalité, d&apos;anciens captifs et leurs descendants
+                  sont revenus du Brésil s&apos;installer à Ouidah et Porto-Novo. Leur histoire
+                  prouve que le retour aux racines n&apos;est pas une utopie : c&apos;est déjà
+                  arrivé, et le Bénin en garde les maisons, les noms et les fêtes.
+                </p>
+                <Link href="/magazine/les-agudas" className="mt-3 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+                  Lire le récit →
+                </Link>
+              </div>
             </section>
 
             <div className="grid gap-6 sm:grid-cols-3">

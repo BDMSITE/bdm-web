@@ -10,6 +10,8 @@ import {
   Users,
   MapPin,
   Landmark,
+  BadgeCheck,
+  Radio,
   Megaphone,
   Mail,
   Tags,
@@ -19,7 +21,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-/* Barre latérale du back-office — les 13 modules (CDC §7.17). */
+/* Barre latérale du back-office — 13 modules (CDC §7.17) + Compétences et En direct. */
 
 export const ADMIN_NAV = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
@@ -27,10 +29,12 @@ export const ADMIN_NAV = [
   { label: "Rédaction", href: "/admin/redaction", icon: PenLine },
   { label: "Emploi", href: "/admin/emploi", icon: Briefcase, badge: 2 },
   { label: "Communauté", href: "/admin/communaute", icon: Users },
+  { label: "Compétences", href: "/admin/competences", icon: BadgeCheck, badge: 4 },
   { label: "Services", href: "/admin/services", icon: MapPin },
   { label: "Mémoire & HCBE", href: "/admin/memoire", icon: Landmark },
   { label: "Régie pub", href: "/admin/regie", icon: Megaphone },
   { label: "Newsletter & alertes", href: "/admin/newsletter", icon: Mail },
+  { label: "En direct (ticker)", href: "/admin/direct", icon: Radio },
   { label: "Mots-clés", href: "/admin/mots-cles", icon: Tags },
   { label: "Statistiques", href: "/admin/statistiques", icon: BarChart3 },
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },

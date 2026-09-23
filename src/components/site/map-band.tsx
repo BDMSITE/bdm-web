@@ -25,7 +25,7 @@ const VILLES: { name: string; n: number; lng: number; lat: number; big?: boolean
   { name: "Canton", n: 22, lng: 113.26, lat: 23.13 },
 ];
 
-const THEMES = ["Membres", "Associations", "Bonnes adresses", "Événements"];
+const THEMES = ["Membres", "Afrodescendants", "Associations", "Bonnes adresses", "Événements"];
 
 export function MapBand({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);

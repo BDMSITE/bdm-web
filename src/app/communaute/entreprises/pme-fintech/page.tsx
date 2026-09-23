@@ -18,7 +18,7 @@ export default function EntreprisePage() {
       <SiteHeader />
 
       {/* Bandeau fiche */}
-      <div className="bg-primary-darker py-8 text-white">
+      <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-5 px-4">
           <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-white font-display text-xl font-extrabold text-primary-darker">
             LOGO

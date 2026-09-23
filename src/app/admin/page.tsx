@@ -16,6 +16,7 @@ const A_TRAITER = [
 const ACTIVITE = [
   { quoi: "Article membre soumis : « Mon premier Noël à Cotonou »", qui: "Élodie Z.", quand: "il y a 12 min", badge: "À modérer", tone: "yellow" as const },
   { quoi: "Nouvelle inscription entreprise : BTP Horizon", qui: "Abidjan", quand: "il y a 41 min", badge: "Compte pro", tone: "blue" as const },
+  { quoi: "Profil expert soumis : Dr Mariam A. (Santé)", qui: "Montréal", quand: "il y a 55 min", badge: "Compétences", tone: "blue" as const },
   { quoi: "Offre validée : Comptable senior h/f", qui: "par Modératrice A.", quand: "il y a 1 h", badge: "Validé", tone: "green" as const },
   { quoi: "Signalement sur une petite annonce (rencontres)", qui: "Membre #1204", quand: "il y a 2 h", badge: "Urgent", tone: "red" as const },
   { quoi: "Newsletter de septembre programmée", qui: "par Rédaction", quand: "hier", badge: "Programmé", tone: "gray" as const },
@@ -70,6 +71,8 @@ export default function AdminDashboard() {
                 { l: "Écrire un article", href: "/admin/redaction" },
                 { l: "Composer la newsletter", href: "/admin/newsletter" },
                 { l: "Ajouter une bannière pub", href: "/admin/regie" },
+                { l: "Épingler un message En direct", href: "/admin/direct" },
+                { l: "Valider les profils experts", href: "/admin/competences" },
                 { l: "Importer des associations (CSV)", href: "/admin/communaute" },
               ].map((r) => (
                 <Link key={r.l} href={r.href} className="rounded border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:border-primary hover:text-primary">

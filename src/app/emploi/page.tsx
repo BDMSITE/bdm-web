@@ -79,7 +79,7 @@ export default function EmploiPage() {
       <SiteHeader />
 
       {/* Bandeau de rubrique */}
-      <div className="bg-primary-darker py-8 text-white">
+      <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <h1 className="section-title text-2xl md:text-3xl">
             Offres <em className="!text-accent">emploi & stages</em>

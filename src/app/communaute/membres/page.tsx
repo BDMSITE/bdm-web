@@ -6,14 +6,14 @@ export const metadata: Metadata = { title: "Annuaire des membres" };
 
 /* MAQUETTE — Annuaire des membres (CDC §7.5), profils d'exemple. */
 
-const MEMBRES = [
+const MEMBRES: { name: string; city: string; sectors: string[]; pub: number; cv: boolean; afro?: boolean }[] = [
   { name: "Aïchatou S.", city: "COTONOU · BÉNIN", sectors: ["BTP", "Entrepreneuriat"], pub: 3, cv: false },
   { name: "Jean-Eudes K.", city: "PARIS · FRANCE", sectors: ["Informatique"], pub: 1, cv: true },
-  { name: "Mariam A.", city: "MONTRÉAL · CANADA", sectors: ["Santé", "Recherche"], pub: 0, cv: true },
+  { name: "Mariam A.", city: "MONTRÉAL · CANADA", sectors: ["Santé", "Recherche"], pub: 0, cv: true, afro: true },
   { name: "Rodrigue H.", city: "BRUXELLES · BELGIQUE", sectors: ["Finance"], pub: 2, cv: false },
   { name: "Grâce D.", city: "ABIDJAN · CÔTE D'IVOIRE", sectors: ["Commerce", "Logistique"], pub: 0, cv: false },
   { name: "Ulrich T.", city: "COTONOU · BÉNIN", sectors: ["Éducation"], pub: 5, cv: false },
-  { name: "Nadège G.", city: "NEW YORK · USA", sectors: ["Droit"], pub: 1, cv: true },
+  { name: "Nadège G.", city: "NEW YORK · USA", sectors: ["Droit"], pub: 1, cv: true, afro: true },
   { name: "Comlan V.", city: "LOMÉ · TOGO", sectors: ["Agriculture"], pub: 0, cv: false },
   { name: "Élodie Z.", city: "MARSEILLE · FRANCE", sectors: ["Art & spectacle"], pub: 4, cv: false },
 ];
@@ -26,7 +26,7 @@ export default function MembresPage() {
       <SiteHeader />
 
       {/* Bandeau de rubrique */}
-      <div className="bg-primary-darker py-8 text-white">
+      <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <h1 className="section-title text-2xl md:text-3xl">
             Tous les <em className="!text-accent">membres</em>
@@ -120,6 +120,11 @@ export default function MembresPage() {
                     {m.cv && (
                       <span className="rounded-full bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-ink">
                         CV publié
+                      </span>
+                    )}
+                    {m.afro && (
+                      <span className="rounded-full border border-primary bg-primary-faint px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-primary-dark">
+                        Afrodescendant·e
                       </span>
                     )}
                   </div>

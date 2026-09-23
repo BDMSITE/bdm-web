@@ -4,6 +4,7 @@ import { Bell, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
+import { LiveTicker } from "./live-ticker";
 
 /* Composants de structure partagés par toutes les pages publiques. */
 
@@ -97,6 +98,8 @@ export function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolea
           </div>
         </nav>
 
+        <LiveTicker />
+
         <Crumbs />
       </header>
 
@@ -153,6 +156,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
       { label: "Entreprises", href: "/communaute/entreprises" },
       { label: "Associations", href: "/communaute/associations" },
       { label: "Artistes / groupes", href: "/communaute/artistes" },
+      { label: "Compétences de la diaspora", href: "/communaute/competences" },
       { label: "Articles membres", href: "/magazine" },
     ],
   },
@@ -209,7 +213,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-16">
       <BottomPageBox />
-      <div className="bg-primary-darker text-white">
+      <div className="wax-bg bg-primary-darker text-white">
       <div className="w-full px-6 pb-10 pt-14 lg:px-10">
         {/* Rangée 1 : identité | plan du site */}
         <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
@@ -414,7 +418,7 @@ export function PageBanner({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="bg-primary-darker py-8 text-white">
+    <div className="wax-bg bg-primary-darker py-8 text-white">
       <div className="mx-auto max-w-6xl px-4">
         <h1 className="section-title text-2xl md:text-3xl">
           {pre} <em className="!text-accent">{em}</em>

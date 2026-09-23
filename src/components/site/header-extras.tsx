@@ -105,6 +105,10 @@ const LABELS: Record<string, string> = {
   "gangbe-brass": "Gangbé Brass Band",
   "annonce-exemple": "Billet Paris–Cotonou",
   "angelique-kidjo": "Angélique Kidjo",
+  competences: "Compétences de la diaspora",
+  "les-agudas": "Les Agudas",
+  en: "English",
+  roots: "Roots",
 };
 
 function labelFor(seg: string) {
@@ -123,7 +127,7 @@ export function Crumbs() {
     seg,
     label: labelFor(seg),
     href: "/" + parts.slice(0, i + 1).join("/"),
-    clickable: !(seg === "legal" || seg === "mot" || seg === "pratique"),
+    clickable: !(seg === "legal" || seg === "mot" || seg === "pratique" || seg === "en"),
   }));
 
   return (

@@ -62,6 +62,12 @@ const avantages = [
   { deal: "Pack étudiant : assurance à tarif diaspora", partner: "ASSUREUR PARTENAIRE" },
 ];
 
+const competences = [
+  { name: "Dr Mariam A.", role: "Médecin de santé publique", city: "Montréal · Canada", dispo: "Mentorat" },
+  { name: "Jean-Eudes K.", role: "Architecte logiciel", city: "Paris · France", dispo: "À distance" },
+  { name: "Nadège G.", role: "Avocate d'affaires", city: "New York · USA", dispo: "Conseil" },
+];
+
 const agenda = [
   { title: "Pique-nique des Béninois d'Île-de-France", date: "27 SEPT · 12H00", city: "Paris" },
   { title: "Conférence : investir au Bénin en 2027", date: "4 OCT · 18H30", city: "Bruxelles + visio" },
@@ -201,6 +207,26 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            </section>
+
+            {/* Compétences de la diaspora */}
+            <section>
+              <SectionTitle pre="Compétences de la" em="diaspora" href="/communaute/competences" />
+              <div className="grid gap-4 sm:grid-cols-3">
+                {competences.map((c) => (
+                  <article key={c.name} className="card-soft border border-line bg-paper p-4">
+                    <p className="font-bold leading-tight">{c.name}</p>
+                    <p className="text-sm text-ink-2">{c.role}</p>
+                    <p className="card-location mt-1">{c.city}</p>
+                    <span className="mt-2 inline-block rounded-full bg-primary-light px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-primary-dark">
+                      {c.dispo}
+                    </span>
+                  </article>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-muted">
+                87 experts de la diaspora mobilisables pour des projets au Bénin — une initiative HCBE.
+              </p>
             </section>
 
             {/* Agenda */}

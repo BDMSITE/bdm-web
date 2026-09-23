@@ -21,6 +21,7 @@ const ARTICLES = [
   { title: "Étudier au Canada : les bourses ouvertes aux Béninois cette année", cat: "Étudiants", loc: "Canada" },
   { title: "La communauté béninoise de Paris prépare la fête nationale", cat: "Communauté", loc: "Paris · France" },
   { title: "Le vodun expliqué à mes enfants nés en France", cat: "Article membre", loc: "Lyon · France" },
+  { title: "Les Agudas : ces Afro-Brésiliens revenus au Bénin il y a deux siècles", cat: "Mémoire", loc: "Ouidah · Bénin" },
   { title: "Investir dans l'immobilier à Cotonou depuis l'étranger : le guide", cat: "Retour au pays", loc: "Cotonou · Bénin" },
 ];
 

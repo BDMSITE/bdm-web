@@ -36,6 +36,18 @@ retours HCBE sur la maquette, atelier questionnaire (58 questions prêtes dans N
   SVG (piste latérite, palmiers) plongeant dans le footer ; police manuscrite **Caveat** pour le mot
   mis en avant des titres (`.section-title em`) et le « du Monde » du logo ; ombre `.card-soft` sur les cartes.
   ⚠️ Dev en worktree : `next dev` (Turbopack) casse sur next/font Google → utiliser `next dev --webpack`.
+- **23/09 — photo réelle bas de page** : boulevard de la Marina, Cotonou (Wikimedia, Osia Zannou,
+  CC BY-SA 4.0, crédit affiché) dans `public/images/`.
+- **23/09 — différenciation validée par Josué (sugg. 1-2-3 + afro 1-2-4-5)** :
+  ticker « En direct » sous la nav (défilement, données d'exemple, pause au survol) ·
+  motif wax discret `.wax-bg` sur tous les bandeaux verts et le footer ·
+  page **Compétences de la diaspora** (`/communaute/competences` + teaser accueil + lien footer) ·
+  rubrique Racines renforcée sur `/memoire` (guide nationalité loi 2024-31 / My Afro Origins,
+  récit Agudas) · **version EN** `/en/roots` (seule rubrique traduite) ·
+  article `/magazine/les-agudas` · badge « Afrodescendant·e » (annuaire membres) +
+  thème « Afrodescendants » sur la carte ·
+  **admin** : modules « Compétences » (validation experts, mises en relation) et
+  « En direct (ticker) » (messages épinglés + flux auto), raccourcis dashboard.
 - Règles UI actées : libellés courts/2-3 mots toujours en nowrap · cartes d'annuaire hauteurs égales pied calé ·
   largeur stable (main width:100%, scrollbar-gutter stable) · header/footer pleine largeur, contenu max-w-6xl
 - Prisma 7 + Zod installés (schéma 20 entités écrit, prisma.config.ts), lucide-react, maplibre-gl

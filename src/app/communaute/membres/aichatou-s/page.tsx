@@ -33,7 +33,7 @@ export default function ProfilPage() {
       <SiteHeader />
 
       {/* Bandeau profil */}
-      <div className="bg-primary-darker py-8 text-white">
+      <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <nav className="text-xs uppercase tracking-wider text-white/60">
             <Link href="/" className="hover:text-accent">

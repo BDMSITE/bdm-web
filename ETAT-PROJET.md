@@ -65,9 +65,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 - Règles UI actées : libellés courts/2-3 mots toujours en nowrap · cartes d'annuaire hauteurs égales pied calé ·
   largeur stable (main width:100%, scrollbar-gutter stable) · header/footer pleine largeur, contenu max-w-6xl
 - Prisma 7 + Zod installés (schéma 20 entités écrit, prisma.config.ts), lucide-react, maplibre-gl
-- CI GitHub Actions écrite ; repo **public** depuis, mais **toujours bloquée le 12/10 : « account is locked due to a
-  billing issue »** (run 38231898843 sur staging) → Josué doit régler la facturation GitHub (Settings → Billing),
-  sinon aucune CI ne tourne. Le socle est poussé sur **`staging`** (pas main : il manque AUTH_SECRET/DATABASE_URL sur Vercel).
+- **CI = Vercel (zéro coût, décision Josué 12/10)** : GitHub Actions reste verrouillé sur le compte (billing) et on ne
+  paie pas → workflows déplacés dans `.github/workflows.disabled/`, `vercel.json` lance `pnpm check` (eslint + tsc)
+  puis `pnpm build` à chaque push et bloque le déploiement si ça casse.
+- **Recherche** : Meilisearch si `MEILI_HOST` est défini, sinon **repli Postgres** (Prisma ILIKE) — même page, mêmes
+  facettes. En prod, pas de Meilisearch hébergé (payant) tant que ce n'est pas nécessaire.
+- Le socle est poussé sur **`staging`** (pas main : il manque AUTH_SECRET/DATABASE_URL sur Vercel).
+- **Prochaine action bloquante (Josué, 2 min, gratuit)** : `vercel login` dans un terminal (lien par appareil), puis
+  Claude lance `vercel link` + `vercel integration add neon` (Postgres gratuit via Marketplace, sans carte) et pose
+  AUTH_SECRET → bascule sur main. E-mails en prod : compte Resend ou Brevo gratuit à créer (sans domaine = sandbox).
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)
 
 ## Ce qui RESTE (ordre)

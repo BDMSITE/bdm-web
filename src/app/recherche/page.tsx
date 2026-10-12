@@ -2,49 +2,32 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ContentType } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot } from "@/components/site/chrome";
-import { contentIndex, profileIndex } from "@/lib/search";
+import { search } from "@/lib/search";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Recherche" };
 
-/* Recherche globale (CDC §7.15) : Meilisearch, facettes par type,
-   tolérance aux fautes. Membres cherchés dans l'index profils. */
+/* Recherche globale (CDC §7.15) : facettes par type + membres.
+   Meilisearch si disponible, sinon Postgres (voir src/lib/search.ts). */
 
 type Props = { searchParams: Promise<{ q?: string; type?: string }> };
 
 export default async function RecherchePage({ searchParams }: Props) {
   const { q = "", type } = await searchParams;
   const query = q.trim();
-  const typeFilter = type && type in CONTENT_LABEL ? (type as ContentType) : undefined;
+  const typeParam = type === "PROFILE" ? "PROFILE" : type && type in CONTENT_LABEL ? (type as ContentType) : undefined;
 
-  const [contents, profiles] =
-    query && contentIndex && profileIndex
-      ? await Promise.all([
-          contentIndex.search(query, {
-            limit: 30,
-            facets: ["type"],
-            filter: typeFilter ? `type = ${typeFilter}` : undefined,
-            sort: ["publishedAt:desc"],
-          }),
-          type === "PROFILE" || !typeFilter ? profileIndex.search(query, { limit: 12 }) : null,
-        ])
-      : [null, null];
+  const r = query ? await search(query, typeParam) : null;
+  const total = r ? r.contents.total + r.profiles.total : 0;
+  const href = (t?: string) => `/recherche?q=${encodeURIComponent(query)}${t ? `&type=${t}` : ""}`;
 
-  const facets = (contents?.facetDistribution?.type ?? {}) as Record<string, number>;
-  const totalContents = typeFilter ? contents?.estimatedTotalHits ?? 0 : Object.values(facets).reduce((a, b) => a + b, 0);
-  const totalProfiles = profiles?.estimatedTotalHits ?? 0;
-  const showContents = type !== "PROFILE";
-  const showProfiles = !typeFilter;
-
-  const chips: { label: string; href: string; active: boolean }[] = [
-    { label: `Tout (${totalContents + totalProfiles})`, href: `/recherche?q=${encodeURIComponent(query)}`, active: !type },
-    ...Object.entries(facets).map(([t, n]) => ({
-      label: `${CONTENT_LABEL[t as ContentType] ?? t}s (${n})`,
-      href: `/recherche?q=${encodeURIComponent(query)}&type=${t}`,
-      active: type === t,
-    })),
-    ...(totalProfiles ? [{ label: `Membres (${totalProfiles})`, href: `/recherche?q=${encodeURIComponent(query)}&type=PROFILE`, active: type === "PROFILE" }] : []),
-  ];
+  const chips = r
+    ? [
+        { label: `Tout (${Object.values(r.contents.facets).reduce((a, b) => a + b, 0) + (typeParam ? 0 : r.profiles.total)})`, href: href(), active: !typeParam },
+        ...Object.entries(r.contents.facets).map(([t, n]) => ({ label: `${CONTENT_LABEL[t as ContentType] ?? t}s (${n})`, href: href(t), active: typeParam === t })),
+        ...(r.profiles.total || typeParam === "PROFILE" ? [{ label: `Membres (${r.profiles.total})`, href: href("PROFILE"), active: typeParam === "PROFILE" }] : []),
+      ]
+    : [];
 
   return (
     <>
@@ -70,15 +53,9 @@ export default async function RecherchePage({ searchParams }: Props) {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
-            {!query && <p className="text-sm text-muted">Saisissez un mot pour lancer la recherche.</p>}
+            {!r && <p className="text-sm text-muted">Saisissez un mot pour lancer la recherche.</p>}
 
-            {query && !contentIndex && (
-              <p role="alert" className="rounded border border-danger bg-danger-light px-3 py-2.5 text-sm text-danger">
-                La recherche est indisponible pour le moment.
-              </p>
-            )}
-
-            {query && contentIndex && (
+            {r && (
               <>
                 <div className="mb-5 flex flex-wrap items-center gap-2">
                   {chips.map((c) => (
@@ -96,40 +73,42 @@ export default async function RecherchePage({ searchParams }: Props) {
                   ))}
                 </div>
 
-                {totalContents + totalProfiles === 0 && (
+                {total === 0 && (
                   <p className="text-sm text-muted">Aucun résultat pour « {query} ». Essayez un autre mot ou une ville.</p>
                 )}
 
                 <ul className="divide-y divide-line border border-line empty:hidden">
-                  {showProfiles &&
-                    profiles?.hits.map((p) => (
-                      <li key={p.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
-                        <span className="shrink-0 whitespace-nowrap rounded bg-accent-light px-2 py-1 text-xs font-bold uppercase text-ink">Membre</span>
-                        <p className="min-w-0 flex-1 font-bold leading-snug">
-                          <Link href={profileHref(p.slug)} className="hover:text-primary">{p.displayName}</Link>
-                          <span className="card-location ml-2">{[p.city, p.country].filter(Boolean).join(" · ")}</span>
+                  {r.profiles.hits.map((p) => (
+                    <li key={p.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
+                      <span className="shrink-0 whitespace-nowrap rounded bg-accent-light px-2 py-1 text-xs font-bold uppercase text-ink">Membre</span>
+                      <p className="min-w-0 flex-1 font-bold leading-snug">
+                        <Link href={profileHref(p.slug)} className="hover:text-primary">{p.displayName}</Link>
+                        <span className="card-location ml-2">{[p.city, p.country].filter(Boolean).join(" · ")}</span>
+                      </p>
+                    </li>
+                  ))}
+                  {r.contents.hits.map((c) => (
+                    <li key={c.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
+                      <span className="shrink-0 whitespace-nowrap rounded bg-primary-light px-2 py-1 text-xs font-bold uppercase text-primary-dark">
+                        {CONTENT_LABEL[c.type]}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold leading-snug">
+                          <Link href={contentHref(c.type)} className="hover:text-primary">{c.title}</Link>
                         </p>
-                      </li>
-                    ))}
-                  {showContents &&
-                    contents?.hits.map((c) => (
-                      <li key={c.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
-                        <span className="shrink-0 whitespace-nowrap rounded bg-primary-light px-2 py-1 text-xs font-bold uppercase text-primary-dark">
-                          {CONTENT_LABEL[c.type]}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-bold leading-snug">
-                            <Link href={contentHref(c.type)} className="hover:text-primary">{c.title}</Link>
-                          </p>
-                          {c.excerpt && <p className="mt-0.5 line-clamp-1 text-sm text-ink-2">{c.excerpt}</p>}
-                          <p className="card-location mt-1">{[c.city, c.country].filter(Boolean).join(" · ")}</p>
-                        </div>
-                      </li>
-                    ))}
+                        {c.excerpt && <p className="mt-0.5 line-clamp-1 text-sm text-ink-2">{c.excerpt}</p>}
+                        <p className="card-location mt-1">{[c.city, c.country].filter(Boolean).join(" · ")}</p>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </>
             )}
-            <p className="mt-3 text-xs text-muted">Recherche propulsée par Meilisearch : tolérance aux fautes et résultats instantanés.</p>
+            <p className="mt-3 text-xs text-muted">
+              {r?.engine === "meilisearch"
+                ? "Recherche propulsée par Meilisearch : tolérance aux fautes et résultats instantanés."
+                : "Recherche sur la base de données du site."}
+            </p>
           </div>
           <aside className="space-y-8"><AdSlot label="pavé latéral" /></aside>
         </div>

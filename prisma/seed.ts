@@ -142,6 +142,7 @@ async function main() {
             country: u.country,
             lat: u.lat,
             lng: u.lng,
+            visibility: { directory: true },
             cvPublished: u.cvPublished ?? false,
             keywords: { create: kw(u.keywords) },
             ...(u.accountType === "COMPANY" && { company: { create: { size: "10-49", sector: "Fintech" } } }),

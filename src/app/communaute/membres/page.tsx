@@ -1,31 +1,66 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot, AlertsBox } from "@/components/site/chrome";
+import { db } from "@/lib/db";
+import { profileHref } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Annuaire des membres" };
 
-/* MAQUETTE — Annuaire des membres (CDC §7.5), profils d'exemple. */
-
-const MEMBRES: { name: string; city: string; sectors: string[]; pub: number; cv: boolean; afro?: boolean }[] = [
-  { name: "Aïchatou S.", city: "COTONOU · BÉNIN", sectors: ["BTP", "Entrepreneuriat"], pub: 3, cv: false },
-  { name: "Jean-Eudes K.", city: "PARIS · FRANCE", sectors: ["Informatique"], pub: 1, cv: true },
-  { name: "Mariam A.", city: "MONTRÉAL · CANADA", sectors: ["Santé", "Recherche"], pub: 0, cv: true, afro: true },
-  { name: "Rodrigue H.", city: "BRUXELLES · BELGIQUE", sectors: ["Finance"], pub: 2, cv: false },
-  { name: "Grâce D.", city: "ABIDJAN · CÔTE D'IVOIRE", sectors: ["Commerce", "Logistique"], pub: 0, cv: false },
-  { name: "Ulrich T.", city: "COTONOU · BÉNIN", sectors: ["Éducation"], pub: 5, cv: false },
-  { name: "Nadège G.", city: "NEW YORK · USA", sectors: ["Droit"], pub: 1, cv: true, afro: true },
-  { name: "Comlan V.", city: "LOMÉ · TOGO", sectors: ["Agriculture"], pub: 0, cv: false },
-  { name: "Élodie Z.", city: "MARSEILLE · FRANCE", sectors: ["Art & spectacle"], pub: 4, cv: false },
-];
+/* Annuaire des membres (CDC §7.5) — profils actifs en base, filtres
+   nom / pays / secteur, index A–Z. */
 
 const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const PAGE = 24;
 
-export default function MembresPage() {
+type Props = { searchParams: Promise<{ q?: string; pays?: string; secteur?: string; lettre?: string }> };
+
+export default async function MembresPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const q = sp.q?.trim() ?? "";
+  const pays = sp.pays?.trim() ?? "";
+  const secteur = sp.secteur?.trim() ?? "";
+  const lettre = sp.lettre?.toUpperCase().slice(0, 1) ?? "";
+
+  const where: Prisma.ProfileWhereInput = {
+    user: { status: "ACTIVE" },
+    visibility: { path: ["directory"], equals: true },
+    ...(q && {
+      OR: [
+        { displayName: { contains: q, mode: "insensitive" } },
+        { bio: { contains: q, mode: "insensitive" } },
+        { city: { contains: q, mode: "insensitive" } },
+        { keywords: { some: { keyword: { name: { contains: q, mode: "insensitive" } } } } },
+      ],
+    }),
+    ...(pays && { country: pays }),
+    ...(secteur && { keywords: { some: { keyword: { slug: secteur, family: "SECTOR" } } } }),
+    ...(lettre && { displayName: { startsWith: lettre, mode: "insensitive" } }),
+  };
+
+  const [membres, total, pays_, secteurs] = await Promise.all([
+    db.profile.findMany({
+      where,
+      orderBy: { displayName: "asc" },
+      take: PAGE,
+      include: { user: { select: { accountType: true } }, keywords: { include: { keyword: true } } },
+    }),
+    db.profile.count({ where }),
+    db.profile.findMany({ where: { user: { status: "ACTIVE" }, country: { not: null } }, distinct: ["country"], select: { country: true }, orderBy: { country: "asc" } }),
+    db.keyword.findMany({ where: { family: "SECTOR" }, orderBy: { name: "asc" } }),
+  ]);
+
+  const qs = (patch: Record<string, string>) => {
+    const p = new URLSearchParams({ q, pays, secteur, lettre, ...patch });
+    for (const [k, v] of [...p]) if (!v) p.delete(k);
+    const s = p.toString();
+    return `/communaute/membres${s ? `?${s}` : ""}`;
+  };
+
   return (
     <>
       <SiteHeader />
 
-      {/* Bandeau de rubrique */}
       <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <h1 className="section-title text-2xl md:text-3xl">
@@ -38,121 +73,114 @@ export default function MembresPage() {
         </div>
       </div>
 
-      {/* Recherche + filtres */}
-      <div className="border-b border-line bg-paper-2">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex flex-wrap items-center gap-3">
+      <form action="/communaute/membres" className="border-b border-line bg-paper-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-4">
           <input
             type="search"
+            name="q"
+            defaultValue={q}
             placeholder="Nom, profession, ville…"
-            className="w-full sm:w-64 rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-64"
           />
-          <select className="rounded border border-line bg-paper px-3 py-2 text-sm">
-            <option>Tous les pays</option>
-            <option>Bénin</option>
-            <option>France</option>
-            <option>Canada</option>
-            <option>Belgique</option>
-            <option>USA</option>
+          <select name="pays" defaultValue={pays} aria-label="Pays" className="rounded border border-line bg-paper px-3 py-2 text-sm">
+            <option value="">Tous les pays</option>
+            {pays_.map((p) => (
+              <option key={p.country!} value={p.country!}>{p.country}</option>
+            ))}
           </select>
-          <select className="rounded border border-line bg-paper px-3 py-2 text-sm">
-            <option>Tous les secteurs</option>
-            <option>Informatique</option>
-            <option>Santé</option>
-            <option>Finance</option>
-            <option>BTP</option>
+          <select name="secteur" defaultValue={secteur} aria-label="Secteur" className="rounded border border-line bg-paper px-3 py-2 text-sm">
+            <option value="">Tous les secteurs</option>
+            {secteurs.map((s) => (
+              <option key={s.slug} value={s.slug}>{s.name}</option>
+            ))}
           </select>
           <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
             Rechercher
           </button>
-          <button className="ml-auto text-sm font-bold uppercase text-primary hover:underline">
+          <Link href="/" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
             Voir sur la carte
-          </button>
+          </Link>
         </div>
-      </div>
+      </form>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
-            {/* Index A–Z + compteur */}
             <div className="mb-5 flex flex-wrap items-center gap-1">
               {ALPHA.map((l) => (
-                <button
+                <Link
                   key={l}
-                  className="h-7 w-7 rounded text-xs font-bold text-ink-2 hover:bg-primary hover:text-white"
+                  href={qs({ lettre: lettre === l ? "" : l })}
+                  aria-current={lettre === l ? "true" : undefined}
+                  className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold ${
+                    lettre === l ? "bg-primary text-white" : "text-ink-2 hover:bg-primary hover:text-white"
+                  }`}
                 >
                   {l}
-                </button>
+                </Link>
               ))}
               <span className="ml-auto text-sm text-muted">
-                <strong className="text-ink">1 254</strong> membres
+                <strong className="text-ink">{total.toLocaleString("fr-FR")}</strong> membre{total > 1 ? "s" : ""}
               </span>
             </div>
 
-            {/* Grille de profils */}
+            {membres.length === 0 && (
+              <p className="border border-line p-6 text-center text-sm text-muted">
+                Aucun membre ne correspond à ces critères.{" "}
+                <Link href="/communaute/membres" className="font-bold text-primary hover:underline">Réinitialiser</Link>
+              </p>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {MEMBRES.map((m) => (
-                <article
-                  key={m.name}
-                  className="border border-line p-4 hover:border-primary hover:bg-primary-faint"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 shrink-0 rounded-full bg-primary-light flex items-center justify-center font-display font-bold text-primary-dark">
-                      {m.name[0]}
+              {membres.map((m) => {
+                const sectors = m.keywords.filter((k) => k.keyword.family === "SECTOR").map((k) => k.keyword.name);
+                const afro = m.keywords.some((k) => k.keyword.slug === "afrodescendants");
+                return (
+                  <article key={m.id} className="border border-line p-4 hover:border-primary hover:bg-primary-faint">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-light font-display font-bold text-primary-dark">
+                        {m.displayName[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="font-bold leading-tight">
+                          <Link href={profileHref(m.slug)} className="hover:text-primary">{m.displayName}</Link>
+                        </h2>
+                        <p className="card-location mt-0.5">{[m.city, m.country].filter(Boolean).join(" · ")}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h2 className="font-bold leading-tight">
-                        <Link href="/communaute/membres/aichatou-s" className="hover:text-primary">
-                          {m.name}
-                        </Link>
-                      </h2>
-                      <p className="card-location mt-0.5">{m.city}</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {sectors.map((s) => (
+                        <span key={s} className="rounded-full border border-line bg-paper-2 px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-ink-2">{s}</span>
+                      ))}
+                      {m.cvPublished && (
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-ink">CV publié</span>
+                      )}
+                      {afro && (
+                        <span className="rounded-full border border-primary bg-primary-faint px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-primary-dark">Afrodescendant·e</span>
+                      )}
                     </div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {m.sectors.map((s) => (
-                      <span
-                        key={s}
-                        className="rounded-full bg-paper-2 border border-line px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-ink-2"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                    {m.cv && (
-                      <span className="rounded-full bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-ink">
-                        CV publié
-                      </span>
+                    {m.publishedCount > 0 && (
+                      <p className="mt-2 text-xs text-muted">
+                        {m.publishedCount} contenu{m.publishedCount > 1 ? "s" : ""} publié{m.publishedCount > 1 ? "s" : ""}
+                      </p>
                     )}
-                    {m.afro && (
-                      <span className="rounded-full border border-primary bg-primary-faint px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-primary-dark">
-                        Afrodescendant·e
-                      </span>
-                    )}
-                  </div>
-                  {m.pub > 0 && (
-                    <p className="mt-2 text-xs text-muted">
-                      {m.pub} contenu{m.pub > 1 ? "s" : ""} publié{m.pub > 1 ? "s" : ""}
-                    </p>
-                  )}
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
 
-            <button className="mt-6 w-full rounded border-2 border-primary py-2.5 text-sm font-bold uppercase text-primary hover:bg-primary hover:text-white">
-              Afficher plus de résultats
-            </button>
+            {total > membres.length && (
+              <p className="mt-6 text-center text-sm text-muted">
+                {membres.length} affichés sur {total} — affinez avec les filtres.
+              </p>
+            )}
           </div>
 
-          {/* Colonne latérale */}
           <aside className="space-y-8">
             <div className="border-2 border-primary bg-primary-faint p-4 text-center">
               <p className="font-display text-lg font-bold">Rejoindre la communauté</p>
-              <p className="mt-1 text-sm text-ink-2">
-                Inscrivez-vous et publiez directement vos articles, offres et événements.
-              </p>
-              <Link
-                href="/publier"
-                className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark"
-              >
+              <p className="mt-1 text-sm text-ink-2">Inscrivez-vous et publiez directement vos articles, offres et événements.</p>
+              <Link href="/inscription" className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">
                 Je m&apos;inscris
               </Link>
             </div>

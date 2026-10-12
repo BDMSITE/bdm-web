@@ -1,58 +1,135 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { ContentType } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot } from "@/components/site/chrome";
+import { contentIndex, profileIndex } from "@/lib/search";
+import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Recherche" };
 
-/* MAQUETTE — Recherche globale (CDC §7.15), résultats d'exemple pour « cotonou ». */
+/* Recherche globale (CDC §7.15) : Meilisearch, facettes par type,
+   tolérance aux fautes. Membres cherchés dans l'index profils. */
 
-const RESULTATS = [
-  { type: "Offre", t: "Développeur full-stack h/f — fintech, Cotonou", href: "/emploi/offre-exemple" },
-  { type: "Article", t: "Retour à Cotonou : le parcours d'Aïchatou", href: "/magazine/article-exemple" },
-  { type: "Membre", t: "Aïchatou S. — Cotonou · BTP", href: "/communaute/membres/aichatou-s" },
-  { type: "Adresse", t: "Barber Cotonou Style — Lyon", href: "/adresses/adresse-exemple" },
-  { type: "Annonce", t: "Studio meublé à louer, Fidjrossè, Cotonou", href: "/annonces" },
-  { type: "Mot-clé", t: "Cotonou (214 contenus)", href: "/mot/exemple" },
-];
+type Props = { searchParams: Promise<{ q?: string; type?: string }> };
 
-export default function RecherchePage() {
+export default async function RecherchePage({ searchParams }: Props) {
+  const { q = "", type } = await searchParams;
+  const query = q.trim();
+  const typeFilter = type && type in CONTENT_LABEL ? (type as ContentType) : undefined;
+
+  const [contents, profiles] =
+    query && contentIndex && profileIndex
+      ? await Promise.all([
+          contentIndex.search(query, {
+            limit: 30,
+            facets: ["type"],
+            filter: typeFilter ? `type = ${typeFilter}` : undefined,
+            sort: ["publishedAt:desc"],
+          }),
+          type === "PROFILE" || !typeFilter ? profileIndex.search(query, { limit: 12 }) : null,
+        ])
+      : [null, null];
+
+  const facets = (contents?.facetDistribution?.type ?? {}) as Record<string, number>;
+  const totalContents = typeFilter ? contents?.estimatedTotalHits ?? 0 : Object.values(facets).reduce((a, b) => a + b, 0);
+  const totalProfiles = profiles?.estimatedTotalHits ?? 0;
+  const showContents = type !== "PROFILE";
+  const showProfiles = !typeFilter;
+
+  const chips: { label: string; href: string; active: boolean }[] = [
+    { label: `Tout (${totalContents + totalProfiles})`, href: `/recherche?q=${encodeURIComponent(query)}`, active: !type },
+    ...Object.entries(facets).map(([t, n]) => ({
+      label: `${CONTENT_LABEL[t as ContentType] ?? t}s (${n})`,
+      href: `/recherche?q=${encodeURIComponent(query)}&type=${t}`,
+      active: type === t,
+    })),
+    ...(totalProfiles ? [{ label: `Membres (${totalProfiles})`, href: `/recherche?q=${encodeURIComponent(query)}&type=PROFILE`, active: type === "PROFILE" }] : []),
+  ];
+
   return (
     <>
       <SiteHeader />
-      <div className="bg-primary-darker py-10 text-white">
+      <div className="wax-bg bg-primary-darker py-10 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <h1 className="section-title text-2xl">Rechercher <em className="!text-accent">partout</em></h1>
-          <div className="mt-4 flex max-w-2xl gap-2">
+          <form action="/recherche" className="mt-4 flex max-w-2xl gap-2">
             <input
               type="search"
-              defaultValue="cotonou"
+              name="q"
+              defaultValue={query}
+              placeholder="Un métier, une ville, un nom…"
+              autoFocus={!query}
               className="w-full rounded border-2 border-white/30 bg-white px-4 py-3 text-base text-ink focus:border-accent focus:outline-none"
             />
             <button className="rounded bg-accent px-6 py-3 text-sm font-bold uppercase text-ink hover:bg-accent-dark">OK</button>
-          </div>
-          <p className="mt-2 text-xs text-white/60">Articles, offres, membres, associations, adresses, événements, annonces, mots-clés…</p>
+          </form>
+          <p className="mt-2 text-xs text-white/60">Articles, offres, membres, associations, adresses, événements, annonces, lieux de mémoire…</p>
         </div>
       </div>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
-            <div className="mb-5 flex flex-wrap items-center gap-2">
-              {["Tout (63)", "Offres (9)", "Articles (14)", "Membres (22)", "Adresses (7)", "Événements (4)", "Annonces (7)"].map((f, i) => (
-                <button key={f} className={i === 0 ? "rounded-full bg-primary px-3 py-1 text-xs font-bold text-white" : "rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-2 hover:border-primary hover:text-primary"}>{f}</button>
-              ))}
-            </div>
-            <ul className="divide-y divide-line border border-line">
-              {RESULTATS.map((r) => (
-                <li key={r.t} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
-                  <span className="shrink-0 whitespace-nowrap rounded bg-primary-light px-2 py-1 text-xs font-bold uppercase text-primary-dark">{r.type}</span>
-                  <p className="min-w-0 flex-1 font-bold leading-snug">
-                    <Link href={r.href} className="hover:text-primary">{r.t}</Link>
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-muted">Recherche propulsée par Meilisearch : tolérance aux fautes, suggestions instantanées (au développement).</p>
+            {!query && <p className="text-sm text-muted">Saisissez un mot pour lancer la recherche.</p>}
+
+            {query && !contentIndex && (
+              <p role="alert" className="rounded border border-danger bg-danger-light px-3 py-2.5 text-sm text-danger">
+                La recherche est indisponible pour le moment.
+              </p>
+            )}
+
+            {query && contentIndex && (
+              <>
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  {chips.map((c) => (
+                    <Link
+                      key={c.href}
+                      href={c.href}
+                      className={
+                        c.active
+                          ? "whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-bold text-white"
+                          : "whitespace-nowrap rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-2 hover:border-primary hover:text-primary"
+                      }
+                    >
+                      {c.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {totalContents + totalProfiles === 0 && (
+                  <p className="text-sm text-muted">Aucun résultat pour « {query} ». Essayez un autre mot ou une ville.</p>
+                )}
+
+                <ul className="divide-y divide-line border border-line empty:hidden">
+                  {showProfiles &&
+                    profiles?.hits.map((p) => (
+                      <li key={p.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
+                        <span className="shrink-0 whitespace-nowrap rounded bg-accent-light px-2 py-1 text-xs font-bold uppercase text-ink">Membre</span>
+                        <p className="min-w-0 flex-1 font-bold leading-snug">
+                          <Link href={profileHref(p.slug)} className="hover:text-primary">{p.displayName}</Link>
+                          <span className="card-location ml-2">{[p.city, p.country].filter(Boolean).join(" · ")}</span>
+                        </p>
+                      </li>
+                    ))}
+                  {showContents &&
+                    contents?.hits.map((c) => (
+                      <li key={c.id} className="flex items-center gap-4 p-4 hover:bg-primary-faint">
+                        <span className="shrink-0 whitespace-nowrap rounded bg-primary-light px-2 py-1 text-xs font-bold uppercase text-primary-dark">
+                          {CONTENT_LABEL[c.type]}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold leading-snug">
+                            <Link href={contentHref(c.type)} className="hover:text-primary">{c.title}</Link>
+                          </p>
+                          {c.excerpt && <p className="mt-0.5 line-clamp-1 text-sm text-ink-2">{c.excerpt}</p>}
+                          <p className="card-location mt-1">{[c.city, c.country].filter(Boolean).join(" · ")}</p>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </>
+            )}
+            <p className="mt-3 text-xs text-muted">Recherche propulsée par Meilisearch : tolérance aux fautes et résultats instantanés.</p>
           </div>
           <aside className="space-y-8"><AdSlot label="pavé latéral" /></aside>
         </div>

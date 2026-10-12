@@ -8,7 +8,8 @@ services:
       POSTGRES_PASSWORD: bdm
       POSTGRES_DB: bdm
     ports:
-      - "5432:5432"
+      # 5433 côté hôte : un Postgres Homebrew occupe souvent déjà 5432
+      - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
   meilisearch:

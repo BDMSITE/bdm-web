@@ -125,7 +125,7 @@ export async function registerAction(_prev: RegisterState, formData: FormData): 
 
   // Le lien magique sert de confirmation d'adresse (le compte passe ACTIVE au clic)
   try {
-    await signIn("resend", { email, redirect: false });
+    await signIn("resend", { email, redirect: false, redirectTo: "/compte" });
   } catch (e) {
     if (!(e instanceof AuthError)) throw e;
   }

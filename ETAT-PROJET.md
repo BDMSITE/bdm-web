@@ -7,10 +7,24 @@
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
 from scratch en Next.js — remplace l'ancien WordPress de beninois-du-monde.com (audit 14/09/2026).
 
-## 📍 NIVEAU ACTUEL : maquette 100 % terminée, hébergée, en revue HCBE
-**Prochaine étape : SOCLE TECHNIQUE (S1)** — plan détaillé dans Notion « 🏗️ Socle technique ».
-En attente : prérequis Josué (OrbStack, e-mail projet, comptes Vercel déjà OK/Neon/Resend/Brevo/MapTiler),
-retours HCBE sur la maquette, atelier questionnaire (58 questions prêtes dans Notion).
+## 📍 NIVEAU ACTUEL : SOCLE S1 fonctionnel en local (12/10/2026)
+Fait en local : base Postgres + Meilisearch (Docker/OrbStack installé), migration `init`, seed de démo,
+Auth.js (inscription → lien d'activation → connexion, mot de passe + lien magique), annuaire et fiche
+profil en base, recherche Meilisearch, routes protégées, build de prod vert.
+**Reste pour clore S1** : comptes services (Neon, Resend, MapTiler — aucun ouvert à ce jour), variables
+d'env Vercel + base Neon, CI verte sur un push, démo à Josué (critères §7 Notion Socle).
+Toujours en attente : retours HCBE sur la maquette, atelier questionnaire (58 questions dans Notion).
+
+### Lancer le socle en local
+```
+docker compose up -d            # Postgres 5433 + Meilisearch 7700 (docker = ~/.orbstack/bin/docker)
+cp .env.example .env            # puis AUTH_SECRET=$(openssl rand -base64 32)
+pnpm prisma migrate dev && pnpm db:seed && pnpm search:reindex
+pnpm dev --webpack              # Turbopack casse sur next/font Google en worktree
+```
+Comptes de démo : voir `prisma/seed.ts` (admin@…, redaction@…, membres) — mot de passe `DEMO_PASSWORD`.
+Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans la console du serveur.
+⚠️ Un Postgres Homebrew occupe le port 5432 de la machine → la base du projet est sur **5433**.
 
 ## Liens vitaux
 - **Maquette en ligne (publique, envoyée au HCBE)** : https://bdm-web-jojo-devs-projects.vercel.app

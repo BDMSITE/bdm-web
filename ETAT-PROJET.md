@@ -65,7 +65,9 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 - Règles UI actées : libellés courts/2-3 mots toujours en nowrap · cartes d'annuaire hauteurs égales pied calé ·
   largeur stable (main width:100%, scrollbar-gutter stable) · header/footer pleine largeur, contenu max-w-6xl
 - Prisma 7 + Zod installés (schéma 20 entités écrit, prisma.config.ts), lucide-react, maplibre-gl
-- CI GitHub Actions écrite mais **bloquée : Actions désactivé sur les repos privés du compte (facturation)** — repo passé public depuis ? vérifier
+- CI GitHub Actions écrite ; repo **public** depuis, mais **toujours bloquée le 12/10 : « account is locked due to a
+  billing issue »** (run 38231898843 sur staging) → Josué doit régler la facturation GitHub (Settings → Billing),
+  sinon aucune CI ne tourne. Le socle est poussé sur **`staging`** (pas main : il manque AUTH_SECRET/DATABASE_URL sur Vercel).
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)
 
 ## Ce qui RESTE (ordre)

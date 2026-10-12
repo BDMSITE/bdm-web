@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Search, Menu, X } from "lucide-react";
 import { NAV } from "./nav-data";
+import { logoutAction } from "@/lib/actions/auth";
 
 /* Barre sticky compacte : apparaît après 280 px de défilement (proposition 1). */
 
@@ -156,7 +157,7 @@ export function Crumbs() {
 
 /* Menu mobile plein écran (burger) — nav complète + recherche + actions. */
 
-export function MobileMenu() {
+export function MobileMenu({ user }: { user: { name: string | null; staff: boolean } | null }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -225,9 +226,27 @@ export function MobileMenu() {
               <Link href="/publier" onClick={close} className="block rounded bg-accent py-2.5 text-center text-sm font-bold text-ink hover:bg-accent-dark">
                 Publier
               </Link>
-              <Link href="/connexion" onClick={close} className="block rounded border border-white/30 py-2.5 text-center text-sm font-bold text-white/90 hover:border-accent hover:text-accent">
-                Se connecter
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/compte" onClick={close} className="block truncate rounded border border-white/30 py-2.5 text-center text-sm font-bold text-white/90 hover:border-accent hover:text-accent">
+                    {user.name ?? "Mon espace"}
+                  </Link>
+                  {user.staff && (
+                    <Link href="/admin" onClick={close} className="block rounded border border-white/30 py-2.5 text-center text-sm font-bold text-white/90 hover:border-accent hover:text-accent">
+                      Administration
+                    </Link>
+                  )}
+                  <form action={logoutAction}>
+                    <button className="w-full rounded py-2 text-center text-sm font-semibold text-white/60 hover:text-accent">
+                      Se déconnecter
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <Link href="/connexion" onClick={close} className="block rounded border border-white/30 py-2.5 text-center text-sm font-bold text-white/90 hover:border-accent hover:text-accent">
+                  Se connecter
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, BriefcaseBusiness, CircleUserRound } from "lucide-react";
+import { Bell, BriefcaseBusiness, CircleUserRound, LogOut, ShieldCheck } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { logoutAction } from "@/lib/actions/auth";
 import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
@@ -11,7 +13,13 @@ import { LogoWord } from "./logo-word";
 
 export { NAV };
 
-export function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolean }) {
+const STAFF = new Set(["EDITOR", "MODERATOR", "ADMIN"]);
+
+export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolean }) {
+  const session = await auth();
+  const user = session?.user ?? null;
+  const isStaff = STAFF.has(user?.role ?? "");
+
   return (
     <>
       <StickyBar />
@@ -55,20 +63,44 @@ export function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolea
                 </li>
               ))}
             </ul>
-            <Link
-              href="/connexion"
-              className="hidden items-center gap-2 text-sm font-semibold text-ink-2 hover:text-primary md:flex"
-            >
-              <CircleUserRound aria-hidden className="h-6 w-6 text-muted" />
-              Se connecter
-            </Link>
+            {user ? (
+              <div className="hidden items-center gap-3 md:flex">
+                <Link
+                  href="/compte"
+                  className="flex items-center gap-2 text-sm font-semibold text-ink-2 hover:text-primary"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light font-display text-sm font-bold text-primary-dark">
+                    {(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}
+                  </span>
+                  <span className="max-w-[9rem] truncate">{user.name ?? "Mon espace"}</span>
+                </Link>
+                {isStaff && (
+                  <Link href="/admin" aria-label="Administration" title="Administration" className="text-muted hover:text-primary">
+                    <ShieldCheck aria-hidden className="h-5 w-5" />
+                  </Link>
+                )}
+                <form action={logoutAction}>
+                  <button aria-label="Se déconnecter" title="Se déconnecter" className="text-muted hover:text-primary">
+                    <LogOut aria-hidden className="h-5 w-5" />
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <Link
+                href="/connexion"
+                className="hidden items-center gap-2 text-sm font-semibold text-ink-2 hover:text-primary md:flex"
+              >
+                <CircleUserRound aria-hidden className="h-6 w-6 text-muted" />
+                Se connecter
+              </Link>
+            )}
             <Link
               href="/publier"
               className="hidden rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark md:inline-block"
             >
               Publier
             </Link>
-            <MobileMenu />
+            <MobileMenu user={user ? { name: user.name ?? null, staff: isStaff } : null} />
           </div>
         </div>
 

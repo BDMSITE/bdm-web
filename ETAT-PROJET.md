@@ -78,6 +78,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   `vercel env pull` écrit `.env.local` qui **prend le pas sur `.env`** → le supprimer pour rester sur Docker en local.
 - E-mails en prod : compte Resend ou Brevo gratuit à créer (sans domaine = sandbox) → sans clé, les liens magiques
   n'arrivent que dans les logs Vercel.
+- **Plan de progression S1 → S8** consigné dans Notion « 📈 Plan de progression » (~20-24 j de dev) ; **budget** pour le
+  HCBE dans le doc partagé « Budget Béninois du Monde » (tout gratuit au lancement ; Vercel Pro ~18 €/mois dès la
+  première pub ; fonctionnement recommandé ~27 €/mois). E-mails : choix **Brevo** (gratuit, envoie sans domaine) →
+  adapter `src/lib/mail.ts` quand la clé arrive.
 - **À venir (demande Josué 13/10)** : import de la **base Excel des membres** existants → création d'un compte pour
   chacun (statut PENDING_EMAIL, lien d'activation) puis chacun gère son espace. À faire juste après la clôture S1.
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)

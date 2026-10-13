@@ -145,6 +145,7 @@ export default async function MembresPage({ searchParams }: Props) {
                         <h2 className="font-bold leading-tight">
                           <Link href={profileHref(m.slug)} className="hover:text-primary">{m.displayName}</Link>
                         </h2>
+                        {m.headline && <p className="truncate text-sm text-ink-2">{m.headline}</p>}
                         <p className="card-location mt-0.5">{[m.city, m.country].filter(Boolean).join(" · ")}</p>
                       </div>
                     </div>

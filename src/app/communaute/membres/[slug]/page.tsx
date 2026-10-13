@@ -64,7 +64,7 @@ export default async function ProfilPage({ params }: Props) {
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-3xl font-black leading-tight">{profile.displayName}</h1>
               <p className="mt-1 text-sm uppercase tracking-wider text-white/80">
-                {lieu}{sectors.length > 0 && ` — ${sectors.join(", ")}`}
+                {[lieu, profile.headline ?? sectors.join(", ")].filter(Boolean).join(" — ")}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{TYPE_LABEL[profile.user.accountType]}</span>

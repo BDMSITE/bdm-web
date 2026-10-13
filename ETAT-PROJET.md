@@ -86,7 +86,13 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   prêt** : `pnpm import:membres fichier.xlsx` (simulation) puis `--go` ; mapping des en-têtes dans
   `scripts/import-membres.ts` (COLONNES) à ajuster au vrai fichier ; page admin `/admin/imports` pour envoyer les
   invitations par lots (quota Brevo 300/jour), relance auto après 7 j. Testé de bout en bout en local.
-  **Attend** : le fichier Excel du HCBE + la clé Brevo (sans clé, les invitations restent dans les logs).
+  **13/10 — IMPORT FAIT (local + Neon)** depuis `~/Desktop/Base de Données BIG DATA PERSO MAJ NOV 2020.xlsx` :
+  278 comptes PENDING_EMAIL (source `excel-hcbe-2020`, pays/ville normalisés, fonction → `Profile.headline`,
+  téléphone privé → `Profile.phone`), 150 lignes sans e-mail (rapport `rapport-import-*.csv`, à compléter dans
+  l'Excel puis relancer : le script ignore les comptes déjà créés), 17 abonnés « presse » + 3 « coopération
+  décentralisée » (Subscriber, pas de compte). `Synthese_besoins_entreprises_SIAL_Paris_2026.xlsx` → 10 contenus
+  HELP_REQUEST publiés (`pnpm import:sial`). Les comptes importés n'apparaissent dans l'annuaire qu'une fois activés.
+  **Attend** : la clé Brevo pour lancer les invitations depuis /admin/imports (données de 2020 : prévoir des rebonds).
   ⚠️ Toute migration doit être appliquée sur Neon (`prisma migrate deploy` avec DATABASE_URL_UNPOOLED) **avant** le
   push sur main.
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)

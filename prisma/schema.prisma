@@ -133,6 +133,8 @@ model Profile {
   displayName    String
   slug           String   @unique
   photo          String?
+  headline       String?  // fonction / profession affichée
+  phone          String?  // privé : jamais affiché, usage HCBE
   bio            String?
   country        String?
   city           String?

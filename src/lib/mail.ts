@@ -1,18 +1,32 @@
 import { Resend } from "resend";
 
-/* E-mails transactionnels. Sans RESEND_API_KEY (dev local), le message est
-   affiché dans la console du serveur au lieu d'être envoyé. */
+/* E-mails transactionnels. Fournisseur choisi par la clé présente :
+   BREVO_API_KEY (gratuit, envoie sans domaine) > RESEND_API_KEY > console (dev).
+   Sans clé, le message est affiché dans la console du serveur au lieu d'être envoyé. */
 
 const FROM = process.env.EMAIL_FROM ?? "Béninois du Monde <no-reply@localhost>";
 
+function parseFrom(from: string) {
+  const m = from.match(/^(.*?)\s*<([^>]+)>$/);
+  return m ? { name: m[1].trim(), email: m[2] } : { name: "Béninois du Monde", email: from };
+}
+
 async function send(to: string, subject: string, text: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.log(`\n[mail → ${to}] ${subject}\n${text}\n`);
+  if (process.env.BREVO_API_KEY) {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": process.env.BREVO_API_KEY, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ sender: parseFrom(FROM), to: [{ email: to }], subject, textContent: text, htmlContent: html }),
+    });
+    if (!res.ok) throw new Error(`Envoi e-mail impossible (Brevo ${res.status}) : ${await res.text()}`);
     return;
   }
-  const { error } = await new Resend(apiKey).emails.send({ from: FROM, to, subject, text, html });
-  if (error) throw new Error(`Envoi e-mail impossible : ${error.message}`);
+  if (process.env.RESEND_API_KEY) {
+    const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({ from: FROM, to, subject, text, html });
+    if (error) throw new Error(`Envoi e-mail impossible (Resend) : ${error.message}`);
+    return;
+  }
+  console.log(`\n[mail → ${to}] ${subject}\n${text}\n`);
 }
 
 export function sendMagicLink(to: string, url: string) {
@@ -30,5 +44,14 @@ export function sendEmailConfirmation(to: string, url: string) {
     "Confirmez votre adresse — Béninois du Monde",
     `Bienvenue ! Confirmez votre adresse en ouvrant ce lien : ${url}`,
     `<p>Bienvenue sur <strong>Béninois du Monde</strong> !</p><p>Confirmez votre adresse e-mail pour activer votre compte :</p><p><a href="${url}">${url}</a></p>`,
+  );
+}
+
+export function sendInvitation(to: string, displayName: string, url: string) {
+  return send(
+    to,
+    "Votre espace membre vous attend — Béninois du Monde",
+    `Bonjour ${displayName},\n\nLe HCBE a ouvert votre espace sur Béninois du Monde, le réseau de la diaspora béninoise. Activez-le en ouvrant ce lien : ${url}\n\nVous pourrez ensuite compléter votre profil, choisir ce qui est visible et publier.`,
+    `<p>Bonjour ${displayName},</p><p>Le HCBE a ouvert votre espace sur <strong>Béninois du Monde</strong>, le réseau de la diaspora béninoise.</p><p><a href="${url}">Activer mon espace</a></p><p>Vous pourrez ensuite compléter votre profil, choisir ce qui est visible et publier.</p>`,
   );
 }

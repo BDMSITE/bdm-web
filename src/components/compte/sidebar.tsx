@@ -28,17 +28,17 @@ const MENU = [
   { label: "Mes données", href: "/compte/donnees", icon: DatabaseBackup },
 ];
 
-export function CompteSidebar() {
+export function CompteSidebar({ name, meta }: { name: string; meta: string }) {
   const pathname = usePathname();
   return (
     <aside className="h-fit border border-line lg:sticky lg:top-4">
       <div className="flex items-center gap-3 border-b border-line bg-paper-2 p-4">
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent font-display font-black text-ink">
-          A
+          {name.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-bold leading-tight">Aïchatou S.</p>
-          <p className="text-xs text-muted">Membre · Cotonou</p>
+          <p className="truncate font-bold leading-tight">{name}</p>
+          {meta && <p className="text-xs text-muted">{meta}</p>}
         </div>
       </div>
       <nav className="p-2 text-sm">

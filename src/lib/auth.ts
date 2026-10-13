@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { verify } from "argon2";
 import { z } from "zod";
 import { db } from "./db";
-import { sendMagicLink } from "./mail";
+import { sendMagicLink, sendInvitation } from "./mail";
 import { authConfig } from "./auth.config";
 
 /* Auth.js : e-mail + mot de passe (Argon2) et lien magique (Resend).
@@ -52,7 +52,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     Resend({
       from: process.env.EMAIL_FROM,
-      sendVerificationRequest: ({ identifier, url }) => sendMagicLink(identifier, url),
+      // Compte importé jamais activé → e-mail d'invitation ; sinon lien de connexion
+      async sendVerificationRequest({ identifier, url }) {
+        const user = await db.user.findUnique({
+          where: { email: identifier },
+          select: { status: true, importedFrom: true, profile: { select: { displayName: true } } },
+        });
+        if (user?.status === "PENDING_EMAIL" && user.importedFrom) {
+          return sendInvitation(identifier, user.profile?.displayName ?? "", url);
+        }
+        return sendMagicLink(identifier, url);
+      },
     }),
   ],
   events: {

@@ -74,6 +74,8 @@ model User {
   role          Role        @default(USER)
   accountType   AccountType @default(MEMBER)
   status        UserStatus  @default(PENDING_EMAIL)
+  invitedAt     DateTime?   // dernier e-mail d'invitation (comptes importés)
+  importedFrom  String?     // source de l'import (ex. "excel-hcbe-2026-10")
   twoFactorSecret String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

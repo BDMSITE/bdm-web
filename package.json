@@ -10,7 +10,7 @@
     "search:reindex": "tsx scripts/reindex.ts",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "check": "eslint && next typegen && tsc --noEmit",
+    "check": "prisma generate && eslint && next typegen && tsc --noEmit",
     "import:membres": "tsx scripts/import-membres.ts",
     "import:sial": "tsx scripts/import-besoins-sial.ts"
   },

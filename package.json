@@ -10,7 +10,7 @@
     "search:reindex": "tsx scripts/reindex.ts",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "check": "eslint && tsc --noEmit"
+    "check": "eslint && next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

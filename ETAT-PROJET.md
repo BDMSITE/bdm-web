@@ -82,8 +82,13 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   HCBE dans le doc partagé « Budget Béninois du Monde » (tout gratuit au lancement ; Vercel Pro ~18 €/mois dès la
   première pub ; fonctionnement recommandé ~27 €/mois). E-mails : choix **Brevo** (gratuit, envoie sans domaine) →
   adapter `src/lib/mail.ts` quand la clé arrive.
-- **À venir (demande Josué 13/10)** : import de la **base Excel des membres** existants → création d'un compte pour
-  chacun (statut PENDING_EMAIL, lien d'activation) puis chacun gère son espace. À faire juste après la clôture S1.
+- **13/10 — espace membre réel** (`/compte` = compte connecté, `/compte/profil` éditable) et **import des membres
+  prêt** : `pnpm import:membres fichier.xlsx` (simulation) puis `--go` ; mapping des en-têtes dans
+  `scripts/import-membres.ts` (COLONNES) à ajuster au vrai fichier ; page admin `/admin/imports` pour envoyer les
+  invitations par lots (quota Brevo 300/jour), relance auto après 7 j. Testé de bout en bout en local.
+  **Attend** : le fichier Excel du HCBE + la clé Brevo (sans clé, les invitations restent dans les logs).
+  ⚠️ Toute migration doit être appliquée sur Neon (`prisma migrate deploy` avec DATABASE_URL_UNPOOLED) **avant** le
+  push sur main.
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)
 
 ## Ce qui RESTE (ordre)

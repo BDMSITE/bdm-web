@@ -71,9 +71,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 - **Recherche** : Meilisearch si `MEILI_HOST` est défini, sinon **repli Postgres** (Prisma ILIKE) — même page, mêmes
   facettes. En prod, pas de Meilisearch hébergé (payant) tant que ce n'est pas nécessaire.
 - Le socle est poussé sur **`staging`** (pas main : il manque AUTH_SECRET/DATABASE_URL sur Vercel).
-- **Prochaine action bloquante (Josué, 2 min, gratuit)** : `vercel login` dans un terminal (lien par appareil), puis
-  Claude lance `vercel link` + `vercel integration add neon` (Postgres gratuit via Marketplace, sans carte) et pose
-  AUTH_SECRET → bascule sur main. E-mails en prod : compte Resend ou Brevo gratuit à créer (sans domaine = sandbox).
+- **13/10 — Vercel branché** : CLI connecté (compte `spamking035-9849`, équipe JOJO DEV's projects), projet lié,
+  **Neon Postgres gratuit** provisionné via Marketplace (ressource `bdm-db`, région us-east-1, DATABASE_URL + variantes
+  posées sur prod/preview/dev), `AUTH_SECRET` / `AUTH_TRUST_HOST` / `EMAIL_FROM` posés (prod + preview), migration
+  `init` appliquée et seed de démo chargé sur Neon (via DATABASE_URL_UNPOOLED ; le pooler sert au site).
+  `vercel env pull` écrit `.env.local` qui **prend le pas sur `.env`** → le supprimer pour rester sur Docker en local.
+- E-mails en prod : compte Resend ou Brevo gratuit à créer (sans domaine = sandbox) → sans clé, les liens magiques
+  n'arrivent que dans les logs Vercel.
+- **À venir (demande Josué 13/10)** : import de la **base Excel des membres** existants → création d'un compte pour
+  chacun (statut PENDING_EMAIL, lien d'activation) puis chacun gère son espace. À faire juste après la clôture S1.
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)
 
 ## Ce qui RESTE (ordre)

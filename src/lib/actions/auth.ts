@@ -17,7 +17,8 @@ const emailSchema = z.email();
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const suite = String(formData.get("suite") ?? "/compte");
+  const brut = String(formData.get("suite") ?? "");
+  const suite = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/compte";
 
   try {
     await signIn("credentials", { email, password, redirectTo: suite });

@@ -97,6 +97,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   push sur main.
 - .npmrc : fetch-timeout 10 min (connexion lente — les gros paquets échouent sinon)
 
+- **16/10 — sécurité** : mots de passe des 10 comptes de démo **remplacés en prod** (le dépôt est public, l'ancien
+  était lisible dans prisma/seed.ts) → nouveau mot de passe dans `~/Desktop/bdm-acces-demo.txt` (jamais dans le dépôt) ;
+  en-têtes de sécurité (next.config.ts : nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, X-Powered-By
+  retiré) ; redirection post-connexion verrouillée aux chemins internes ; Next 16.3.5 → 16.4.1 (RCE next/og corrigée),
+  sharp 0.35.5, xlsx 0.20.3 (tarball SheetJS : npm reste bloqué en 0.18.5 vulnérable). Audit prod restant : 8 alertes
+  toutes dans l'outil CLI Prisma (studio/lodash/mysql2), jamais exécuté en prod.
+  **Les 10 besoins SIAL sont masqués (IN_MODERATION)** en attendant l'accord de Josué/HCBE.
+  À faire (S7) : rate-limit connexion/inscription/lien magique (Upstash gratuit), Turnstile, 2FA admin, CSP.
+
 ## Ce qui RESTE (ordre)
 1. Retours HCBE sur la maquette → corrections
 2. Prérequis Josué (page Socle §0) puis **S1 socle** : docker compose up, migrate, client Prisma+adapter pg,

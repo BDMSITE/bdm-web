@@ -4,7 +4,8 @@ import { SiteHeader, SiteFooter, SectionTitle, PageBanner } from "@/components/s
 
 export const metadata: Metadata = { title: "Espace recruteur" };
 
-/* MAQUETTE — Espace recruteur (CDC §7.3) : comment ça marche + partenaire RH + CVthèque. */
+/* Espace recruteur (CDC §7.3) : description du service réel de dépôt d'offres.
+   Pas de tarifs, de quotas ni de références clients inventés. */
 
 export default function RecruteursPage() {
   return (
@@ -13,21 +14,21 @@ export default function RecruteursPage() {
       <PageBanner
         pre="Espace"
         em="recruteur"
-        desc="Recrutez au Bénin et dans la diaspora : publiez gratuitement vos premières offres, passez partenaire RH pour la CVthèque et la visibilité."
+        desc="Recrutez au Bénin et dans la diaspora : déposez vos offres d'emploi, de stage et de volontariat, elles sont relues puis publiées dans la rubrique Emploi & stages."
       >
         <Link href="/publier" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
-          Publier une offre (3 tests gratuits)
+          Déposer une offre
         </Link>
       </PageBanner>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 space-y-12">
+      <main className="mx-auto max-w-6xl space-y-12 px-4 py-8">
         <section>
           <SectionTitle pre="Comment ça" em="marche ?" />
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { n: "1", t: "Inscrivez votre structure", d: "Compte entreprise ou association gratuit, fiche dans l'annuaire." },
-              { n: "2", t: "Publiez vos offres", d: "3 offres tests gratuites. Stages et volontariat : toujours gratuits." },
-              { n: "3", t: "Recevez les candidatures", d: "CV directement dans votre tableau de bord, alertes envoyées aux candidats correspondants." },
+              { n: "1", t: "Créez le compte de votre structure", d: "Compte entreprise ou association gratuit, avec une fiche dans l'annuaire." },
+              { n: "2", t: "Déposez votre offre", d: "Titre, contrat, lieu, description et mots-clés depuis le guichet « Publier ». Relecture par la modération avant mise en ligne." },
+              { n: "3", t: "Recevez les candidatures", d: "Les candidats postulent depuis l'offre ; votre adresse e-mail n'est jamais affichée." },
             ].map((s) => (
               <article key={s.n} className="border border-line p-5">
                 <span className="font-display text-3xl font-black text-line">{s.n}</span>
@@ -40,50 +41,34 @@ export default function RecruteursPage() {
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="border-2 border-primary p-6">
-            <h2 className="section-title text-lg">Devenir <em>partenaire RH</em></h2>
-            <ul className="mt-4 space-y-2 text-sm">
-              {[
-                "Offres illimitées et mises en avant (accueil, newsletter, alertes)",
-                "Accès complet à la CVthèque et aux CV PDF",
-                "Alertes « nouveau CV » sur vos critères",
-                "Relais de vos recrutements sur nos réseaux sociaux",
-                "Logo dans « Ils recrutent »",
-              ].map((b) => (
-                <li key={b} className="flex gap-2"><span className="text-primary font-bold">✓</span>{b}</li>
-              ))}
-            </ul>
-            <button className="mt-5 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
-              Demander un devis
-            </button>
-            <p className="mt-2 text-xs text-muted">Abonnement mensuel ou annuel — tarif fixé avec le HCBE (questionnaire D).</p>
+            <h2 className="section-title text-lg">Mettre en avant <em>vos recrutements</em></h2>
+            <p className="mt-3 text-sm text-ink-2">
+              Pour une visibilité renforcée (mise en avant sur l&apos;accueil, relais dans la newsletter et les alertes e-mail),
+              écrivez-nous : les conditions et les tarifs sont communiqués sur demande.
+            </p>
+            <Link href="/contact" className="mt-5 inline-block rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
+              Nous contacter
+            </Link>
           </div>
 
           <div className="border border-line bg-paper-2 p-6">
-            <h2 className="section-title text-lg">La <em>CVthèque</em></h2>
+            <h2 className="section-title text-lg">Les <em>candidats</em></h2>
             <p className="mt-3 text-sm text-ink-2">
-              Des centaines de candidats au Bénin et dans la diaspora, avec CV publié et
-              critères vérifiés : métier, secteur, ville, mobilité, niveau d&apos;études.
+              Les membres peuvent publier leur CV sur leur profil et s&apos;abonner à des alertes par métier, secteur et ville.
+              Vos offres leur sont envoyées dès leur mise en ligne.
             </p>
-            <div className="mt-4 space-y-2">
-              {["Développeuse full-stack · Cotonou · 5 ans", "Comptable senior · Abidjan · mobile Bénin", "Infirmier DE · Lyon · retour envisagé"].map((c) => (
-                <div key={c} className="flex items-center gap-3 border border-line bg-paper p-3 text-sm">
-                  <span className="rounded bg-accent px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-ink">CV</span>
-                  <span className="font-semibold">{c}</span>
-                  <span className="ml-auto text-xs text-muted">🔒 partenaire</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-muted">Aperçu anonymisé — l&apos;accès complet est réservé aux partenaires RH.</p>
+            <Link href="/communaute/membres" className="mt-4 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+              Parcourir l&apos;annuaire des membres →
+            </Link>
           </div>
         </section>
 
-        <section>
-          <SectionTitle pre="Ils nous font" em="confiance" />
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-            {["SONEB", "MTN", "ONG BA", "SOBEBRA", "UAC", "PORT"].map((l) => (
-              <div key={l} className="flex aspect-square items-center justify-center border border-line bg-paper-2 text-xs font-bold text-muted">{l}</div>
-            ))}
-          </div>
+        <section className="border border-line p-6 text-center">
+          <h2 className="font-display text-xl font-bold">Prêt à publier ?</h2>
+          <p className="mx-auto mt-1 max-w-xl text-sm text-ink-2">Connectez-vous avec le compte de votre structure, puis déposez votre offre : elle sera relue avant mise en ligne.</p>
+          <Link href="/publier" className="mt-4 inline-block rounded bg-primary px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
+            Déposer une offre
+          </Link>
         </section>
       </main>
       <SiteFooter />

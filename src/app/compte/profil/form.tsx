@@ -39,7 +39,7 @@ export function ProfilForm({ values }: { values: ProfilFormValues }) {
           <div className="sm:col-span-2">
             <label htmlFor="displayName" className="mb-1 block text-sm font-bold">Nom affiché *</label>
             <input id="displayName" name="displayName" required defaultValue={values.displayName} className={INPUT} />
-            <p className="mt-1 text-xs text-muted">Ex. « Aïchatou S. » — le nom complet n&apos;est jamais obligatoire.</p>
+            <p className="mt-1 text-xs text-muted">Par exemple « Prénom N. » — le nom complet n&apos;est jamais obligatoire.</p>
           </div>
           <div>
             <label htmlFor="city" className="mb-1 block text-sm font-bold">Ville</label>

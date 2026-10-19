@@ -1,81 +1,91 @@
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, TableShell, Th, Td, RowActions, StatCard } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import { PageHead, StatCard, Card, Badge, TableShell, Th, Td, EmptyState, fmtDate, fmtNumber } from "@/components/admin/ui";
 
-export const metadata: Metadata = { title: "Régie publicitaire" };
+export const metadata: Metadata = { title: "Régie pub" };
 
-/* MAQUETTE — Bannières maison, contrats partenaires, publi-articles (CDC §7.14). */
+/* Régie : bannières (Banner) et partenaires (Partner). Lecture seule pour l'instant. */
 
-const BANNIERES = [
-  { n: "Compagnie aérienne — promo Cotonou", slot: "Bandeau haut", periode: "1–30 sept.", imp: "48 210", clics: "612", ctr: "1,3 %", st: "Active", tone: "green" as const },
-  { n: "Transfert d'argent — frais offerts", slot: "Pavé latéral 1", periode: "1–30 sept.", imp: "39 800", clics: "343", ctr: "0,9 %", st: "Active", tone: "green" as const },
-  { n: "École partenaire — rentrée", slot: "Pavé milieu", periode: "à partir du 20 sept.", imp: "—", clics: "—", ctr: "—", st: "Programmée", tone: "yellow" as const },
-  { n: "Hôtel Ouidah — basse saison", slot: "Bas de page", periode: "août", imp: "61 004", clics: "298", ctr: "0,5 %", st: "Terminée", tone: "gray" as const },
-];
+const SLOT_LABEL: Record<string, string> = {
+  top: "Bandeau haut",
+  side1: "Colonne 1",
+  side2: "Colonne 2",
+  mid: "Pavé milieu",
+  bottom: "Bas de page",
+  promo: "Promo",
+};
 
-export default function AdminRegiePage() {
+const PARTNER_LABEL: Record<string, string> = {
+  rh: "Partenaire RH",
+  annonceur: "Annonceur",
+  avantages: "Avantages membres",
+};
+
+export default async function AdminRegiePage() {
+  const now = new Date();
+  const [bannieres, partenaires] = await Promise.all([
+    db.banner.findMany({ orderBy: { endsAt: "desc" }, take: 50 }),
+    db.partner.findMany({
+      orderBy: { startsAt: "desc" },
+      take: 50,
+      select: { id: true, type: true, plan: true, startsAt: true, endsAt: true, profile: { select: { displayName: true, slug: true } } },
+    }),
+  ]);
+  const actives = bannieres.filter((b) => b.startsAt <= now && b.endsAt >= now).length;
+
   return (
     <>
-      <PageHead title="Régie publicitaire" desc="Bannières maison, contrats partenaires, publi-articles et chiffres pour la page Annonceurs.">
-        <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-          + Nouvelle bannière
-        </button>
-        <button className="rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
-          Kit média (PDF)
-        </button>
-      </PageHead>
+      <PageHead title="Régie pub" desc="Bannières programmées et partenaires (RH, annonceurs, avantages)." />
 
-      <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard label="Campagnes actives" value="2" />
-        <StatCard label="Impressions (30 j)" value="149 014" />
-        <StatCard label="Clics (30 j)" value="1 253" hint="CTR moyen 0,9 %" />
-        <StatCard label="Demandes de devis" value="3" tone="warn" hint="à rappeler" />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Bannières actives" value={fmtNumber(actives)} hint="en cours de diffusion aujourd'hui" />
+        <StatCard label="Bannières enregistrées" value={fmtNumber(bannieres.length)} />
+        <StatCard label="Partenaires" value={fmtNumber(partenaires.length)} />
       </div>
 
-      <Card className="mt-5" title="Bannières">
-        <TableShell head={<><Th>Campagne</Th><Th>Emplacement</Th><Th>Période</Th><Th>Impressions</Th><Th>Clics</Th><Th>CTR</Th><Th>Statut</Th><Th>&nbsp;</Th></>}>
-          {BANNIERES.map((b) => (
-            <tr key={b.n} className="hover:bg-primary-faint">
-              <Td className="font-semibold">{b.n}</Td>
-              <Td className="text-ink-2">{b.slot}</Td>
-              <Td className="whitespace-nowrap text-muted">{b.periode}</Td>
-              <Td className="tabular-nums">{b.imp}</Td>
-              <Td className="tabular-nums">{b.clics}</Td>
-              <Td className="tabular-nums">{b.ctr}</Td>
-              <Td><Badge tone={b.tone}>{b.st}</Badge></Td>
-              <Td><RowActions items={["Modifier", "Stats"]} /></Td>
-            </tr>
-          ))}
-        </TableShell>
-      </Card>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card title="Emplacements">
-          <ul className="divide-y divide-line text-sm">
-            {[
-              "Bandeau haut (toutes pages) — 1 rotation",
-              "Pavé latéral 1 et 2 (toutes pages)",
-              "Pavé milieu (accueil)",
-              "Bas de page (toutes pages)",
-              "Liens promotionnels (colonne latérale)",
-              "À la une sponsorisée (accueil, marquée « partenaire »)",
-            ].map((e) => (
-              <li key={e} className="px-4 py-2.5 text-ink-2">{e}</li>
-            ))}
-          </ul>
+      <div className="mt-6 space-y-6">
+        <Card title="Bannières">
+          {bannieres.length === 0 ? (
+            <EmptyState title="Aucune bannière enregistrée.">
+              Le modèle existe en base (image, lien, emplacement, période, poids, impressions, clics) mais la création depuis le back-office n&apos;est pas encore disponible. Aucune publicité n&apos;est diffusée sur le site.
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Emplacement</Th><Th>Lien</Th><Th>Période</Th><Th>Impressions</Th><Th>Clics</Th><Th>État</Th></>}>
+              {bannieres.map((b) => {
+                const active = b.startsAt <= now && b.endsAt >= now;
+                return (
+                  <tr key={b.id} className="hover:bg-primary-faint">
+                    <Td className="font-semibold">{SLOT_LABEL[b.slot] ?? b.slot}</Td>
+                    <Td className="max-w-[260px] truncate text-ink-2">{b.link}</Td>
+                    <Td className="whitespace-nowrap text-muted">{fmtDate(b.startsAt)} → {fmtDate(b.endsAt)}</Td>
+                    <Td className="tabular-nums text-ink-2">{fmtNumber(b.impressions)}</Td>
+                    <Td className="tabular-nums text-ink-2">{fmtNumber(b.clicks)}</Td>
+                    <Td>{active ? <Badge tone="green">En diffusion</Badge> : b.endsAt < now ? <Badge tone="gray">Terminée</Badge> : <Badge tone="blue">Programmée</Badge>}</Td>
+                  </tr>
+                );
+              })}
+            </TableShell>
+          )}
         </Card>
-        <Card title="Publi-articles & contrats">
-          <ul className="divide-y divide-line text-sm">
-            {[
-              { t: "Publi-article : « S'assurer en tant qu'expatrié »", st: "En ligne · marqué partenaire", tone: "green" as const },
-              { t: "Contrat Partenaire RH — PME Fintech", st: "Actif jusqu'au 31 déc.", tone: "green" as const },
-              { t: "Pack annonceur — Compagnie aérienne", st: "Devis envoyé", tone: "yellow" as const },
-            ].map((x) => (
-              <li key={x.t} className="flex items-center justify-between gap-3 px-4 py-3">
-                <span className="font-semibold">{x.t}</span>
-                <Badge tone={x.tone}>{x.st}</Badge>
-              </li>
-            ))}
-          </ul>
+
+        <Card title="Partenaires">
+          {partenaires.length === 0 ? (
+            <EmptyState title="Aucun partenaire enregistré.">
+              Un partenaire est un compte entreprise ou association lié à une formule (RH, annonceur, avantages). La gestion des partenariats arrivera avec la monétisation (FedaPay).
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Partenaire</Th><Th>Type</Th><Th>Formule</Th><Th>Début</Th><Th>Fin</Th></>}>
+              {partenaires.map((p) => (
+                <tr key={p.id} className="hover:bg-primary-faint">
+                  <Td className="font-semibold">{p.profile.displayName}</Td>
+                  <Td className="text-ink-2">{PARTNER_LABEL[p.type] ?? p.type}</Td>
+                  <Td className="text-ink-2">{p.plan ?? "—"}</Td>
+                  <Td className="whitespace-nowrap text-muted">{fmtDate(p.startsAt)}</Td>
+                  <Td className="whitespace-nowrap text-muted">{p.endsAt ? fmtDate(p.endsAt) : "Sans fin"}</Td>
+                </tr>
+              ))}
+            </TableShell>
+          )}
         </Card>
       </div>
     </>

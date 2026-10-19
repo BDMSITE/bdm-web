@@ -20,17 +20,27 @@ import {
   Settings,
   ScrollText,
   ExternalLink,
+  type LucideIcon,
 } from "lucide-react";
 
-/* Barre latérale du back-office — 13 modules (CDC §7.17) + Compétences et En direct. */
+/* Barre latérale du back-office — 13 modules (CDC §7.17) + Compétences et En direct.
+   Les pastilles sont calculées par le layout depuis la base (jamais de chiffre en dur). */
 
-export const ADMIN_NAV = [
+export type AdminNavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  /** Compteur affiché dans la nav (fourni par le layout, absent sinon). */
+  badge?: number;
+};
+
+export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
-  { label: "Modération", href: "/admin/moderation", icon: ShieldAlert, badge: 19 },
+  { label: "Modération", href: "/admin/moderation", icon: ShieldAlert },
   { label: "Rédaction", href: "/admin/redaction", icon: PenLine },
-  { label: "Emploi", href: "/admin/emploi", icon: Briefcase, badge: 2 },
+  { label: "Emploi", href: "/admin/emploi", icon: Briefcase },
   { label: "Communauté", href: "/admin/communaute", icon: Users },
-  { label: "Compétences", href: "/admin/competences", icon: BadgeCheck, badge: 4 },
+  { label: "Compétences", href: "/admin/competences", icon: BadgeCheck },
   { label: "Imports de membres", href: "/admin/imports", icon: Upload },
   { label: "Services", href: "/admin/services", icon: MapPin },
   { label: "Mémoire & HCBE", href: "/admin/memoire", icon: Landmark },
@@ -43,8 +53,16 @@ export const ADMIN_NAV = [
   { label: "Journal d'activité", href: "/admin/journal", icon: ScrollText },
 ];
 
-export function AdminSidebar() {
+export type AdminSidebarProps = {
+  /** Compteurs par href, calculés depuis la base (ex. { "/admin/moderation": 3 }). */
+  badges?: Record<string, number>;
+  /** Personne connectée (nom + libellé du rôle). */
+  user?: { name: string; roleLabel: string };
+};
+
+export function AdminSidebar({ badges = {}, user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const initial = (user?.name ?? "?").trim().charAt(0).toUpperCase() || "?";
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col bg-primary-darker text-white max-lg:hidden sticky top-0">
       <Link href="/admin" className="block border-b border-white/10 px-5 py-5">
@@ -60,6 +78,7 @@ export function AdminSidebar() {
         {ADMIN_NAV.map((n) => {
           const active =
             n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
+          const badge = badges[n.href] ?? n.badge;
           return (
             <Link
               key={n.href}
@@ -72,30 +91,32 @@ export function AdminSidebar() {
             >
               <n.icon aria-hidden className="h-4.5 w-4.5 shrink-0" strokeWidth={2.2} />
               <span className="flex-1">{n.label}</span>
-              {n.badge && (
+              {badge ? (
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[0.65rem] font-bold ${
-                    active ? "bg-ink text-white" : "bg-danger text-white"
+                    active ? "bg-ink text-white" : "bg-accent text-ink"
                   }`}
                 >
-                  {n.badge}
+                  {badge}
                 </span>
-              )}
+              ) : null}
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent font-display font-bold text-ink">
-            J
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold">Josué</p>
-            <p className="text-xs text-white/50">Administrateur</p>
+        {user && (
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent font-display font-bold text-ink">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold">{user.name}</p>
+              <p className="text-xs text-white/50">{user.roleLabel}</p>
+            </div>
           </div>
-        </div>
+        )}
         <Link
           href="/"
           className="mt-3 flex items-center justify-center gap-2 rounded border border-white/25 py-2 text-xs font-bold uppercase tracking-wide text-white/80 hover:border-accent hover:text-accent"

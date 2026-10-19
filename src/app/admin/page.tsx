@@ -1,66 +1,116 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { PageHead, StatCard, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import {
+  PageHead,
+  StatCard,
+  Card,
+  Badge,
+  TableShell,
+  Th,
+  Td,
+  EmptyState,
+  fmtDateTime,
+  fmtNumber,
+  AUDIT_ACTION_LABEL,
+} from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
-/* MAQUETTE — Tableau de bord admin : l'état du site en un coup d'œil. */
+/* Tableau de bord admin : l'état réel du portail, calculé depuis la base. */
 
-const A_TRAITER = [
-  { n: 19, l: "contenus en modération", href: "/admin/moderation", tone: "warn" as const },
-  { n: 1, l: "signalement urgent", href: "/admin/moderation", tone: "danger" as const },
-  { n: 2, l: "comptes pro à valider", href: "/admin/communaute", tone: "warn" as const },
-  { n: 3, l: "offres qui expirent sous 7 j", href: "/admin/emploi", tone: "default" as const },
-];
+const JOUR = 864e5;
 
-const ACTIVITE = [
-  { quoi: "Article membre soumis : « Mon premier Noël à Cotonou »", qui: "Élodie Z.", quand: "il y a 12 min", badge: "À modérer", tone: "yellow" as const },
-  { quoi: "Nouvelle inscription entreprise : BTP Horizon", qui: "Abidjan", quand: "il y a 41 min", badge: "Compte pro", tone: "blue" as const },
-  { quoi: "Profil expert soumis : Dr Mariam A. (Santé)", qui: "Montréal", quand: "il y a 55 min", badge: "Compétences", tone: "blue" as const },
-  { quoi: "Offre validée : Comptable senior h/f", qui: "par Modératrice A.", quand: "il y a 1 h", badge: "Validé", tone: "green" as const },
-  { quoi: "Signalement sur une petite annonce (rencontres)", qui: "Membre #1204", quand: "il y a 2 h", badge: "Urgent", tone: "red" as const },
-  { quoi: "Newsletter de septembre programmée", qui: "par Rédaction", quand: "hier", badge: "Programmé", tone: "gray" as const },
-];
+export default async function AdminDashboard() {
+  const now = new Date();
+  const il7j = new Date(now.getTime() - 7 * JOUR);
+  const dans7j = new Date(now.getTime() + 7 * JOUR);
 
-export default function AdminDashboard() {
+  const [
+    enModeration,
+    signalements,
+    comptesProAConfirmer,
+    offresExpirant,
+    membresActifs,
+    inscrits7j,
+    publies7j,
+    abonnes,
+    activite,
+  ] = await Promise.all([
+    db.content.count({ where: { status: "IN_MODERATION" } }),
+    db.report.count({ where: { status: "open" } }),
+    db.user.count({ where: { status: "PENDING_EMAIL", accountType: { not: "MEMBER" }, importedFrom: null } }),
+    db.content.count({
+      where: { type: { in: ["JOB", "INTERNSHIP"] }, status: "PUBLISHED", expiresAt: { gte: now, lte: dans7j } },
+    }),
+    db.user.count({ where: { status: "ACTIVE" } }),
+    db.user.count({ where: { createdAt: { gte: il7j }, importedFrom: null } }),
+    db.content.count({ where: { status: "PUBLISHED", publishedAt: { gte: il7j } } }),
+    db.subscriber.count(),
+    db.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: { user: { select: { name: true, email: true } } },
+    }),
+  ]);
+
+  const aTraiter = [
+    { n: enModeration, l: "contenus en modération", href: "/admin/moderation", tone: enModeration ? ("warn" as const) : ("default" as const) },
+    { n: signalements, l: "signalements ouverts", href: "/admin/moderation", tone: signalements ? ("danger" as const) : ("default" as const) },
+    { n: comptesProAConfirmer, l: "comptes pro inscrits, e-mail non confirmé", href: "/admin/communaute", tone: "default" as const },
+    { n: offresExpirant, l: "offres qui expirent sous 7 jours", href: "/admin/emploi", tone: "default" as const },
+  ];
+
+  const dateDuJour = now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
   return (
     <>
-      <PageHead title="Tableau de bord" desc="Mardi 16 septembre 2026 — l'état du portail en un coup d'œil.">
+      <PageHead title="Tableau de bord" desc={`${dateDuJour.charAt(0).toUpperCase()}${dateDuJour.slice(1)} — l'état du portail, calculé depuis la base.`}>
         <Link href="/admin/moderation" className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-          Traiter la modération
+          Ouvrir la modération
         </Link>
       </PageHead>
 
       {/* À traiter */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {A_TRAITER.map((s) => (
+        {aTraiter.map((s) => (
           <Link key={s.l} href={s.href}>
-            <StatCard label={s.l} value={String(s.n)} tone={s.tone} hint="Cliquer pour ouvrir" />
+            <StatCard label={s.l} value={fmtNumber(s.n)} tone={s.tone} hint="Cliquer pour ouvrir" />
           </Link>
         ))}
       </div>
 
-      {/* Chiffres du jour */}
+      {/* Chiffres réels */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Visites aujourd'hui" value="1 082" hint="+12 % vs hier — Plausible" />
-        <StatCard label="Nouveaux inscrits (7 j)" value="38" hint="dont 5 entreprises, 3 associations" />
-        <StatCard label="Contenus publiés (7 j)" value="46" hint="12 par la rédaction, 34 par la communauté" />
-        <StatCard label="Alertes envoyées ce matin" value="1 847" hint="taux d'ouverture 41 %" />
+        <StatCard label="Membres actifs" value={fmtNumber(membresActifs)} hint="comptes dont l'e-mail est confirmé" />
+        <StatCard label="Nouveaux inscrits (7 j)" value={fmtNumber(inscrits7j)} hint="hors comptes importés" />
+        <StatCard label="Contenus publiés (7 j)" value={fmtNumber(publies7j)} hint="tous types confondus" />
+        <StatCard label="Abonnés newsletter" value={fmtNumber(abonnes)} hint="envoi via Brevo à venir" />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Activité récente */}
-        <Card title="Activité récente" action={<Link href="/admin/journal" className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">Tout le journal →</Link>}>
-          <TableShell head={<><Th>Événement</Th><Th>Qui</Th><Th>Quand</Th><Th>Statut</Th></>}>
-            {ACTIVITE.map((a) => (
-              <tr key={a.quoi} className="hover:bg-primary-faint">
-                <Td className="font-semibold">{a.quoi}</Td>
-                <Td className="text-ink-2">{a.qui}</Td>
-                <Td className="whitespace-nowrap text-muted">{a.quand}</Td>
-                <Td><Badge tone={a.tone}>{a.badge}</Badge></Td>
-              </tr>
-            ))}
-          </TableShell>
+        {/* Activité récente = journal d'audit */}
+        <Card title="Activité récente" action={<Link href="/admin/journal" className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">Tout le journal</Link>}>
+          {activite.length === 0 ? (
+            <EmptyState title="Aucune action enregistrée pour l'instant.">
+              Les validations, refus, publications et suspensions faits depuis ce back-office apparaîtront ici.
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Action</Th><Th>Détail</Th><Th>Qui</Th><Th>Quand</Th></>}>
+              {activite.map((a) => {
+                const meta = (a.meta ?? {}) as Record<string, unknown>;
+                const detail = typeof meta.title === "string" ? meta.title : typeof meta.name === "string" ? meta.name : a.entityId ?? "—";
+                return (
+                  <tr key={a.id} className="hover:bg-primary-faint">
+                    <Td><Badge tone="gray">{AUDIT_ACTION_LABEL[a.action] ?? a.action}</Badge></Td>
+                    <Td className="font-semibold">{detail}</Td>
+                    <Td className="text-ink-2">{a.user?.name ?? a.user?.email ?? "—"}</Td>
+                    <Td className="whitespace-nowrap text-muted">{fmtDateTime(a.createdAt)}</Td>
+                  </tr>
+                );
+              })}
+            </TableShell>
+          )}
         </Card>
 
         {/* Raccourcis */}
@@ -69,33 +119,17 @@ export default function AdminDashboard() {
             <div className="grid gap-2 p-4">
               {[
                 { l: "Écrire un article", href: "/admin/redaction" },
-                { l: "Composer la newsletter", href: "/admin/newsletter" },
-                { l: "Ajouter une bannière pub", href: "/admin/regie" },
-                { l: "Épingler un message En direct", href: "/admin/direct" },
-                { l: "Valider les profils experts", href: "/admin/competences" },
-                { l: "Importer des associations (CSV)", href: "/admin/communaute" },
+                { l: "Offres d'emploi et stages", href: "/admin/emploi" },
+                { l: "Comptes de la communauté", href: "/admin/communaute" },
+                { l: "Inviter les membres importés", href: "/admin/imports" },
+                { l: "Mots-clés", href: "/admin/mots-cles" },
+                { l: "Statistiques", href: "/admin/statistiques" },
               ].map((r) => (
                 <Link key={r.l} href={r.href} className="rounded border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:border-primary hover:text-primary">
-                  {r.l} →
+                  {r.l}
                 </Link>
               ))}
             </div>
-          </Card>
-          <Card title="Objectifs de lancement (CDC §13)">
-            <ul className="space-y-2.5 p-4 text-sm">
-              {[
-                { l: "Articles rédaction", v: "12 / 40" },
-                { l: "Béninois qui comptent", v: "8 / 50" },
-                { l: "Associations pré-créées", v: "23 / 150" },
-                { l: "Bonnes adresses", v: "31 / 200" },
-                { l: "Offres réelles", v: "7 / 50" },
-              ].map((o) => (
-                <li key={o.l} className="flex items-center justify-between gap-3">
-                  <span className="text-ink-2">{o.l}</span>
-                  <span className="font-bold tabular-nums">{o.v}</span>
-                </li>
-              ))}
-            </ul>
           </Card>
         </div>
       </div>

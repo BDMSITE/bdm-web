@@ -1,62 +1,99 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, TableShell, Th, Td, RowActions, StatCard } from "@/components/admin/ui";
+import type { ContentType } from "@prisma/client";
+import { db } from "@/lib/db";
+import { contentHref } from "@/lib/routes";
+import { setContentStatusAction } from "@/lib/actions/admin";
+import { ActionButton } from "@/components/admin/action-button";
+import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, fmtDate } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Services" };
 
-/* MAQUETTE — Adresses, agenda, avantages, annonces, entraide, accueil (CDC §7.17). */
+/* Services : adresses, événements, avantages, annonces — listes par rubrique avec statut, action Archiver. */
 
-const ONGLETS = ["Bonnes adresses", "Agenda", "Avantages", "Petites annonces", "Entraide", "Accueil & hébergement"];
-
-const ADRESSES = [
-  { n: "Chez Maman Bénin", cat: "Restaurant", ville: "Paris", st: "En ligne · Recommandé", tone: "green" as const },
-  { n: "Restaurant Le Cotonou", cat: "Restaurant", ville: "Marseille", st: "En modération", tone: "yellow" as const },
-  { n: "Épicerie Dantokpa", cat: "Épicerie", ville: "Bruxelles", st: "Revendication en attente", tone: "yellow" as const },
-  { n: "Salon Béninlook", cat: "Coiffure", ville: "Lyon", st: "Signalée fermée", tone: "red" as const },
+const RUBRIQUES: { type: ContentType; titre: string; vide: string }[] = [
+  { type: "PLACE", titre: "Bonnes adresses", vide: "Aucune adresse déposée pour l'instant." },
+  { type: "EVENT", titre: "Agenda (événements)", vide: "Aucun événement déposé pour l'instant." },
+  { type: "DEAL", titre: "Avantages membres", vide: "Aucun avantage enregistré pour l'instant." },
+  { type: "CLASSIFIED", titre: "Petites annonces", vide: "Aucune annonce déposée pour l'instant." },
 ];
 
-export default function AdminServicesPage() {
+export default async function AdminServicesPage() {
+  const listes = await Promise.all(
+    RUBRIQUES.map((r) =>
+      db.content.findMany({
+        where: { type: r.type },
+        orderBy: { updatedAt: "desc" },
+        take: 30,
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          slug: true,
+          status: true,
+          city: true,
+          country: true,
+          publishedAt: true,
+          expiresAt: true,
+          place: { select: { category: true } },
+          event: { select: { startsAt: true, category: true } },
+          classified: { select: { category: true } },
+          deal: { select: { validTo: true } },
+          ownerProfile: { select: { displayName: true } },
+        },
+      }),
+    ),
+  );
+
   return (
     <>
-      <PageHead title="Services" desc="Adresses, agenda, avantages partenaires, annonces, entraide, familles d'accueil." />
+      <PageHead title="Services" desc="Adresses, agenda, avantages et petites annonces : 30 derniers contenus par rubrique, tous statuts." />
 
-      {/* Onglets */}
-      <div className="flex flex-wrap gap-1 border-b border-line">
-        {ONGLETS.map((o, i) => (
-          <button
-            key={o}
-            className={`rounded-t px-4 py-2.5 text-sm font-bold ${
-              i === 0 ? "border border-b-0 border-line bg-paper text-primary" : "text-ink-2 hover:text-primary"
-            }`}
-          >
-            {o}
-          </button>
-        ))}
+      <div className="space-y-6">
+        {RUBRIQUES.map((r, i) => {
+          const rows = listes[i];
+          return (
+            <Card key={r.type} title={`${r.titre} (${rows.length})`} action={<Link href={contentHref(r.type)} className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">Page publique</Link>}>
+              {rows.length === 0 ? (
+                <EmptyState title={r.vide} />
+              ) : (
+                <TableShell head={<><Th>Titre</Th><Th>Catégorie / date</Th><Th>Lieu</Th><Th>Auteur</Th><Th>Statut</Th><Th>Publié</Th><Th>&nbsp;</Th></>}>
+                  {rows.map((c) => {
+                    const detail =
+                      c.type === "EVENT"
+                        ? [c.event?.category, c.event ? fmtDate(c.event.startsAt) : null].filter(Boolean).join(" · ")
+                        : c.type === "DEAL"
+                          ? c.deal?.validTo ? `valable jusqu'au ${fmtDate(c.deal.validTo)}` : "—"
+                          : c.place?.category ?? c.classified?.category ?? "—";
+                    return (
+                      <tr key={c.id} className="hover:bg-primary-faint">
+                        <Td className="max-w-[300px] truncate font-semibold">{c.title}</Td>
+                        <Td className="text-ink-2">{detail || "—"}</Td>
+                        <Td className="whitespace-nowrap text-ink-2">{[c.city, c.country].filter(Boolean).join(", ") || "—"}</Td>
+                        <Td className="text-ink-2">{c.ownerProfile?.displayName ?? "—"}</Td>
+                        <Td><ContentStatusBadge status={c.status} /></Td>
+                        <Td className="whitespace-nowrap text-muted">{fmtDate(c.publishedAt)}</Td>
+                        <Td>
+                          <div className="flex flex-nowrap justify-end gap-2">
+                            {c.status === "PUBLISHED" && (
+                              <Link href={contentHref(c.type, c.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
+                                Voir
+                              </Link>
+                            )}
+                            {c.status !== "ARCHIVED" && c.status !== "IN_MODERATION" && (
+                              <ActionButton action={setContentStatusAction} fields={{ id: c.id, status: "ARCHIVED" }} label="Archiver" confirm={`Archiver « ${c.title} » ?`} />
+                            )}
+                          </div>
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </TableShell>
+              )}
+            </Card>
+          );
+        })}
       </div>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-4">
-        <StatCard label="Adresses en ligne" value="203" hint="objectif 200 ✓" />
-        <StatCard label="À modérer" value="1" tone="warn" />
-        <StatCard label="Revendications" value="1" tone="warn" hint="le gérant veut gérer sa fiche" />
-        <StatCard label="Signalées" value="1" tone="danger" hint="fermée / erreur" />
-      </div>
-
-      <Card className="mt-4" title="Bonnes adresses" action={<button className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">+ Ajouter une adresse</button>}>
-        <TableShell head={<><Th>Adresse</Th><Th>Catégorie</Th><Th>Ville</Th><Th>Statut</Th><Th>&nbsp;</Th></>}>
-          {ADRESSES.map((a) => (
-            <tr key={a.n} className="hover:bg-primary-faint">
-              <Td className="font-semibold">{a.n}</Td>
-              <Td className="text-ink-2">{a.cat}</Td>
-              <Td className="text-ink-2">{a.ville}</Td>
-              <Td><Badge tone={a.tone}>{a.st}</Badge></Td>
-              <Td><RowActions items={a.tone === "yellow" ? ["Valider", "Refuser"] : ["Modifier", "Voir"]} /></Td>
-            </tr>
-          ))}
-        </TableShell>
-      </Card>
-
-      <p className="mt-3 text-xs text-muted">
-        Chaque onglet reprend le même schéma : liste filtrable, badge de statut, validation en un clic. Les avantages partenaires affichent en plus le code promo, les dates de validité et le compteur de clics.
-      </p>
     </>
   );
 }

@@ -8,6 +8,9 @@ import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
 import { LiveTicker } from "./live-ticker";
 import { LogoWord } from "./logo-word";
+import { memberCities, siteCounts } from "@/lib/content";
+import { slugify } from "@/lib/slug";
+import { keywordHref } from "@/lib/routes";
 
 /* Composants de structure partagés par toutes les pages publiques. */
 
@@ -16,7 +19,7 @@ export { NAV };
 const STAFF = new Set(["EDITOR", "MODERATOR", "ADMIN"]);
 
 export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolean }) {
-  const session = await auth();
+  const [session, villes, counts] = await Promise.all([auth(), memberCities(), siteCounts()]);
   const user = session?.user ?? null;
   const isStaff = STAFF.has(user?.role ?? "");
 
@@ -135,7 +138,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
       </header>
 
       {/* Carte : ouverte sur l'accueil, repliée ailleurs */}
-      <MapBand defaultOpen={mapDefaultOpen} />
+      <MapBand defaultOpen={mapDefaultOpen} villes={villes} membres={counts.members} pays={counts.countries} />
     </>
   );
 }
@@ -173,10 +176,10 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
     title: "Magazine",
     href: "/magazine",
     links: [
-      { label: "Portraits", href: "/magazine/article-exemple" },
+      { label: "Portraits", href: "/magazine" },
       { label: "Béninois qui comptent", href: "/magazine/beninois-qui-comptent" },
       { label: "Actualités", href: "/magazine" },
-      { label: "Spécial retour", href: "/retour-au-pays" },
+      { label: "Retour au pays", href: "/retour-au-pays" },
     ],
   },
   {
@@ -327,7 +330,7 @@ export function SiteFooter() {
         <div className="grid items-start gap-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <div>
             <ul className="flex flex-wrap items-center gap-2.5">
-              {["HCBE", "RÉP. DU BÉNIN", "GOOGLE ACTUS"].map((p) => (
+              {["HCBE"].map((p) => (
                 <li
                   key={p}
                   className="flex h-11 w-[74px] items-center justify-center rounded-md border border-white/15 bg-white/5 px-1 text-center text-[0.58rem] font-bold leading-tight tracking-wide text-white/60"
@@ -394,7 +397,7 @@ export function AdSlot({ label }: { label: string }) {
   );
 }
 
-export function AlertsBox({ keywords }: { keywords: string[] }) {
+export function AlertsBox({ keywords = [] }: { keywords?: string[] }) {
   return (
     <div className="border-2 border-primary p-4">
       <h3 className="section-title text-sm">
@@ -403,7 +406,7 @@ export function AlertsBox({ keywords }: { keywords: string[] }) {
       <p className="mt-2 text-sm text-ink-2">
         Recevez par e-mail les offres, articles et événements qui correspondent à vos mots-clés.
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2 empty:hidden">
         {keywords.map((k) => (
           <span
             key={k}
@@ -426,7 +429,7 @@ export function KeywordChips({ keywords }: { keywords: string[] }) {
       {keywords.map((k) => (
         <Link
           key={k}
-          href="/mot/exemple"
+          href={keywordHref(slugify(k))}
           className="whitespace-nowrap rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary-dark hover:bg-primary hover:text-white"
         >
           {k}

@@ -1,75 +1,103 @@
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, TableShell, Th, Td, RowActions, StatCard } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import { PageHead, StatCard, Card, Badge, TableShell, Th, Td, EmptyState, fmtDate, fmtDateTime, fmtNumber } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Newsletter & alertes" };
 
-/* MAQUETTE — Newsletter (Brevo) + supervision des alertes mots-clés (CDC §7.13). */
+/* Newsletter : abonnés (total, par segment, 50 derniers) et numéros. Pas d'envoi : Brevo à brancher. */
 
-const CAMPAGNES = [
-  { n: "Newsletter de septembre", seg: "Tous (10 214)", st: "Programmée · 20 sept. 8h", tone: "yellow" as const, ouv: "—" },
-  { n: "Newsletter d'août", seg: "Tous (9 730)", st: "Envoyée", tone: "green" as const, ouv: "41 %" },
-  { n: "Spécial emploi — recruteurs", seg: "Entreprises (87)", st: "Envoyée", tone: "green" as const, ouv: "56 %" },
-];
+export default async function AdminNewsletterPage() {
+  const [total, confirmes, segmentsBruts, derniers, numeros] = await Promise.all([
+    db.subscriber.count(),
+    db.subscriber.count({ where: { confirmedAt: { not: null } } }),
+    db.subscriber.findMany({ select: { segments: true } }),
+    db.subscriber.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: { id: true, email: true, confirmedAt: true, segments: true, createdAt: true },
+    }),
+    db.newsletterIssue.findMany({ orderBy: { sentAt: "desc" }, take: 50, select: { id: true, subject: true, sentAt: true, contentIds: true } }),
+  ]);
 
-export default function AdminNewsletterPage() {
+  const parSegment = new Map<string, number>();
+  let sansSegment = 0;
+  for (const s of segmentsBruts) {
+    const segs = Array.isArray(s.segments) ? (s.segments as unknown[]).filter((x): x is string => typeof x === "string") : [];
+    if (segs.length === 0) sansSegment++;
+    for (const seg of segs) parSegment.set(seg, (parSegment.get(seg) ?? 0) + 1);
+  }
+  const segments = [...parSegment.entries()].sort((a, b) => b[1] - a[1]);
+  const segs = (v: unknown) => (Array.isArray(v) ? (v as unknown[]).filter((x): x is string => typeof x === "string") : []);
+
   return (
     <>
-      <PageHead title="Newsletter & alertes" desc="Campagnes Brevo et supervision des alertes par mots-clés (Resend).">
-        <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-          + Composer la newsletter
-        </button>
-      </PageHead>
+      <PageHead title="Newsletter & alertes" desc="Abonnés à la lettre d'information et numéros envoyés." />
 
-      <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard label="Abonnés newsletter" value="10 214" hint="+484 ce mois · double opt-in" />
-        <StatCard label="Abonnés aux alertes" value="2 861" hint="objectif 3 000" />
-        <StatCard label="Alertes envoyées ce matin" value="1 847" hint="ouverture 41 %" />
-        <StatCard label="Désinscriptions (30 j)" value="12" hint="0,1 %" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Abonnés" value={fmtNumber(total)} />
+        <StatCard label="Adresses confirmées" value={fmtNumber(confirmes)} hint="double opt-in" />
+        {segments.slice(0, 2).map(([seg, n]) => (
+          <StatCard key={seg} label={`Segment « ${seg} »`} value={fmtNumber(n)} />
+        ))}
       </div>
 
-      <Card className="mt-5" title="Campagnes">
-        <TableShell head={<><Th>Campagne</Th><Th>Segment</Th><Th>Statut</Th><Th>Ouverture</Th><Th>&nbsp;</Th></>}>
-          {CAMPAGNES.map((c) => (
-            <tr key={c.n} className="hover:bg-primary-faint">
-              <Td className="font-semibold">{c.n}</Td>
-              <Td className="text-ink-2">{c.seg}</Td>
-              <Td><Badge tone={c.tone}>{c.st}</Badge></Td>
-              <Td className="tabular-nums">{c.ouv}</Td>
-              <Td><RowActions items={["Ouvrir", "Stats"]} /></Td>
-            </tr>
-          ))}
-        </TableShell>
-      </Card>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card title="Composer — sélection du mois">
-          <p className="px-4 pt-3 text-sm text-ink-2">
-            La newsletter se compose en cochant les contenus du mois : articles, offres,
-            événements. Aperçu, test, puis envoi ou programmation via Brevo.
-          </p>
-          <ul className="space-y-2 p-4 text-sm">
-            {["☑ Retour à Cotonou : le parcours d'Aïchatou", "☑ 12 nouvelles offres au Bénin", "☑ Agenda : 8 événements d'octobre", "☐ Dossier : ouvrir un compte bancaire…"].map((c) => (
-              <li key={c} className="rounded border border-line px-3 py-2 font-semibold">{c}</li>
-            ))}
-          </ul>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <Card title="Par segment">
+          {segments.length === 0 ? (
+            <EmptyState title="Aucun segment." />
+          ) : (
+            <ul className="divide-y divide-line text-sm">
+              {segments.map(([seg, n]) => (
+                <li key={seg} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <span className="font-semibold">{seg}</span>
+                  <span className="tabular-nums text-ink-2">{fmtNumber(n)}</span>
+                </li>
+              ))}
+              {sansSegment > 0 && (
+                <li className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <span className="text-ink-2">Sans segment</span>
+                  <span className="tabular-nums text-ink-2">{fmtNumber(sansSegment)}</span>
+                </li>
+              )}
+            </ul>
+          )}
         </Card>
-        <Card title="Top alertes mots-clés">
-          <TableShell head={<><Th>Mot-clé</Th><Th>Abonnés</Th><Th>Envois (7 j)</Th></>}>
-            {[
-              { k: "Emploi Cotonou", a: 412, e: 386 },
-              { k: "Retour au pays", a: 388, e: 122 },
-              { k: "Informatique", a: 246, e: 208 },
-              { k: "Événements Paris", a: 201, e: 64 },
-            ].map((r) => (
-              <tr key={r.k} className="hover:bg-primary-faint">
-                <Td className="font-semibold">{r.k}</Td>
-                <Td className="tabular-nums">{r.a}</Td>
-                <Td className="tabular-nums">{r.e}</Td>
+
+        <Card title="50 derniers abonnés">
+          {derniers.length === 0 ? (
+            <EmptyState title="Aucun abonné pour l'instant." />
+          ) : (
+            <TableShell head={<><Th>E-mail</Th><Th>Segments</Th><Th>Inscrit le</Th><Th>Confirmé</Th></>}>
+              {derniers.map((s) => (
+                <tr key={s.id} className="hover:bg-primary-faint">
+                  <Td className="font-semibold">{s.email}</Td>
+                  <Td className="text-ink-2">{segs(s.segments).join(", ") || "—"}</Td>
+                  <Td className="whitespace-nowrap text-muted">{fmtDate(s.createdAt)}</Td>
+                  <Td>{s.confirmedAt ? <Badge tone="green">Confirmé</Badge> : <Badge tone="gray">Non confirmé</Badge>}</Td>
+                </tr>
+              ))}
+            </TableShell>
+          )}
+        </Card>
+      </div>
+
+      <Card className="mt-6" title={`Numéros (${numeros.length})`}>
+        {numeros.length === 0 ? (
+          <EmptyState title="Aucun numéro composé pour l'instant.">
+            La composition et l&apos;envoi de la newsletter passeront par Brevo (gratuit, 300 e-mails/jour) — envoi via Brevo à venir.
+          </EmptyState>
+        ) : (
+          <TableShell head={<><Th>Objet</Th><Th>Contenus</Th><Th>Envoyé le</Th></>}>
+            {numeros.map((n) => (
+              <tr key={n.id} className="hover:bg-primary-faint">
+                <Td className="font-semibold">{n.subject}</Td>
+                <Td className="tabular-nums text-ink-2">{Array.isArray(n.contentIds) ? n.contentIds.length : 0}</Td>
+                <Td className="whitespace-nowrap text-muted">{n.sentAt ? fmtDateTime(n.sentAt) : "Non envoyé"}</Td>
               </tr>
             ))}
           </TableShell>
-        </Card>
-      </div>
+        )}
+      </Card>
     </>
   );
 }

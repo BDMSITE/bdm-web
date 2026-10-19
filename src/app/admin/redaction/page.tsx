@@ -1,81 +1,92 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, TableShell, Th, Td, RowActions, FilterChips } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import { contentHref } from "@/lib/routes";
+import { setContentStatusAction } from "@/lib/actions/admin";
+import { ActionButton } from "@/components/admin/action-button";
+import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, TypeBadge, ContentStatusBadge, fmtDate, fmtNumber } from "@/components/admin/ui";
+import { ArticleForm } from "./article-form";
 
 export const metadata: Metadata = { title: "Rédaction" };
 
-/* MAQUETTE — Rédaction : articles, une, rubriques, célébrités, médias (CDC §7.17). */
+/* Rédaction : tous les articles (rédaction + membres, tous statuts) et création d'un article. */
 
-const ARTICLES = [
-  { t: "Retour à Cotonou : le parcours d'Aïchatou", rub: "Portraits", statut: "En ligne", tone: "green" as const, une: true, date: "14 sept.", vues: "2 341" },
-  { t: "Les secteurs qui recrutent au Bénin en 2026", rub: "Emploi", statut: "En ligne", tone: "green" as const, une: true, date: "13 sept.", vues: "1 876" },
-  { t: "Interview : l'ambassadeur du Bénin en France", rub: "Actualités", statut: "Programmé · 18 sept. 7h", tone: "yellow" as const, une: false, date: "—", vues: "—" },
-  { t: "Angélique Kidjo au Zénith : la diaspora en chœur", rub: "Culture", statut: "En ligne", tone: "green" as const, une: false, date: "12 sept.", vues: "1 204" },
-  { t: "Dossier : ouvrir un compte bancaire depuis l'étranger", rub: "Retour au pays", statut: "Brouillon", tone: "gray" as const, une: false, date: "—", vues: "—" },
-];
+export default async function RedactionPage() {
+  const [articles, publies, brouillons, enModeration] = await Promise.all([
+    db.content.findMany({
+      where: { type: { in: ["ARTICLE", "MEMBER_ARTICLE"] } },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        slug: true,
+        status: true,
+        featured: true,
+        publishedAt: true,
+        updatedAt: true,
+        views: true,
+        ownerProfile: { select: { displayName: true } },
+      },
+    }),
+    db.content.count({ where: { type: { in: ["ARTICLE", "MEMBER_ARTICLE"] }, status: "PUBLISHED" } }),
+    db.content.count({ where: { type: { in: ["ARTICLE", "MEMBER_ARTICLE"] }, status: "DRAFT" } }),
+    db.content.count({ where: { type: { in: ["ARTICLE", "MEMBER_ARTICLE"] }, status: "IN_MODERATION" } }),
+  ]);
 
-export default function RedactionPage() {
   return (
     <>
-      <PageHead title="Rédaction" desc="Articles, mise à la une, rubriques, Béninois qui comptent, médiathèque.">
-        <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-          + Écrire un article
-        </button>
-        <button className="rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
-          Gérer la une (9 emplacements)
-        </button>
+      <PageHead title="Rédaction" desc="Articles de la rédaction et des membres, tous statuts confondus.">
+        <ArticleForm />
       </PageHead>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        {[
-          { v: "128", l: "articles publiés" },
-          { v: "3", l: "programmés cette semaine" },
-          { v: "8 / 50", l: "fiches Béninois qui comptent" },
-        ].map((s) => (
-          <div key={s.l} className="rounded border border-line bg-paper p-4">
-            <span className="font-display text-2xl font-extrabold text-primary">{s.v}</span>
-            <p className="text-sm text-ink-2">{s.l}</p>
-          </div>
-        ))}
+        <StatCard label="Articles en ligne" value={fmtNumber(publies)} />
+        <StatCard label="Brouillons" value={fmtNumber(brouillons)} />
+        <StatCard label="Articles membres en modération" value={fmtNumber(enModeration)} tone={enModeration ? "warn" : "default"} />
       </div>
 
-      <FilterChips items={["Tous", "En ligne", "Programmés", "Brouillons", "Portraits", "Actualités", "Retour au pays", "Célébrités"]} />
-
-      <Card className="mt-4">
-        <TableShell head={<><Th>Titre</Th><Th>Rubrique</Th><Th>Statut</Th><Th>À la une</Th><Th>Publié</Th><Th>Vues</Th><Th>&nbsp;</Th></>}>
-          {ARTICLES.map((a) => (
-            <tr key={a.t} className="hover:bg-primary-faint">
-              <Td className="max-w-[320px] truncate font-semibold">{a.t}</Td>
-              <Td className="text-ink-2">{a.rub}</Td>
-              <Td><Badge tone={a.tone}>{a.statut}</Badge></Td>
-              <Td>{a.une ? <Badge tone="yellow">★ Une</Badge> : <span className="text-muted">—</span>}</Td>
-              <Td className="whitespace-nowrap text-muted">{a.date}</Td>
-              <Td className="tabular-nums text-ink-2">{a.vues}</Td>
-              <Td><RowActions items={["Modifier", "Voir"]} /></Td>
-            </tr>
-          ))}
-        </TableShell>
+      <Card title={`Articles (${articles.length}${articles.length === 100 ? ", 100 plus récents" : ""})`}>
+        {articles.length === 0 ? (
+          <EmptyState title="Aucun article pour l'instant.">
+            Utilisez « Écrire un article » ci-dessus. Les articles déposés par les membres apparaîtront aussi ici.
+          </EmptyState>
+        ) : (
+          <TableShell head={<><Th>Titre</Th><Th>Type</Th><Th>Auteur</Th><Th>Statut</Th><Th>Publié</Th><Th>Vues</Th><Th>&nbsp;</Th></>}>
+            {articles.map((a) => (
+              <tr key={a.id} className="hover:bg-primary-faint">
+                <Td className="max-w-[320px]">
+                  <p className="truncate font-semibold">{a.title}</p>
+                  {a.featured && <p className="text-xs text-muted">À la une</p>}
+                </Td>
+                <Td><TypeBadge type={a.type} /></Td>
+                <Td className="text-ink-2">{a.ownerProfile?.displayName ?? "—"}</Td>
+                <Td><ContentStatusBadge status={a.status} /></Td>
+                <Td className="whitespace-nowrap text-muted">{fmtDate(a.publishedAt)}</Td>
+                <Td className="tabular-nums text-ink-2">{fmtNumber(a.views)}</Td>
+                <Td>
+                  <div className="flex flex-nowrap justify-end gap-2">
+                    {a.status === "PUBLISHED" ? (
+                      <Link href={contentHref(a.type, a.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
+                        Voir
+                      </Link>
+                    ) : a.status === "DRAFT" ? (
+                      <ActionButton action={setContentStatusAction} fields={{ id: a.id, status: "PUBLISHED" }} label="Publier" tone="primary" />
+                    ) : null}
+                    {a.status !== "ARCHIVED" && a.status !== "IN_MODERATION" && (
+                      <ActionButton action={setContentStatusAction} fields={{ id: a.id, status: "ARCHIVED" }} label="Archiver" confirm={`Archiver « ${a.title} » ?`} />
+                    )}
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </TableShell>
+        )}
+        <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
+          La modification d&apos;un article existant et la mise à la une ne sont pas encore disponibles depuis cette page.
+        </p>
       </Card>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card title="Béninois qui comptent" action={<button className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">+ Nouvelle fiche</button>}>
-          <ul className="divide-y divide-line text-sm">
-            {["Angélique Kidjo — Musique", "Djimon Hounsou — Cinéma", "Steve Mounié — Football"].map((c) => (
-              <li key={c} className="flex items-center justify-between px-4 py-2.5">
-                <span className="font-semibold">{c}</span>
-                <RowActions items={["Modifier"]} />
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card title="Médiathèque" action={<button className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">Téléverser</button>}>
-          <div className="grid grid-cols-4 gap-2 p-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-square rounded border border-line bg-paper-2" />
-            ))}
-          </div>
-          <p className="px-4 pb-3 text-xs text-muted">51 fichiers · 340 Mo — images optimisées en WebP à l&apos;envoi</p>
-        </Card>
-      </div>
     </>
   );
 }

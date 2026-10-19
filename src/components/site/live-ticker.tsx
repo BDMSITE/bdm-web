@@ -1,30 +1,31 @@
 import Link from "next/link";
+import { db } from "@/lib/db";
+import { CONTENT_LABEL, contentHref } from "@/lib/routes";
 
-/* Bandeau « diaspora en direct » sous la navigation : dernières activités du
-   réseau en défilement continu. Données d'exemple — alimenté par la base (S5)
-   et piloté depuis l'admin (En direct). */
+/* Bandeau « En direct » : les derniers contenus publiés, rien d'autre.
+   Masqué tant qu'il n'y a rien à annoncer. */
 
-const ITEMS: { text: string; href: string }[] = [
-  { text: "Nouvelle offre : Développeur full-stack h/f — Cotonou", href: "/emploi/offre-exemple" },
-  { text: "Awa M. vient de rejoindre le réseau depuis Montréal", href: "/communaute/membres" },
-  { text: "Pique-nique des Béninois d'Île-de-France — dans 3 jours", href: "/agenda" },
-  { text: "Nouvelle bonne adresse : Chez Maman Bénin — Paris 18e", href: "/adresses" },
-  { text: "312 membres à Cotonou — voir la carte de la diaspora", href: "/" },
-  { text: "Article membre publié : Le vodun expliqué à mes enfants", href: "/magazine/article-exemple" },
-];
+async function latest() {
+  return db.content.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { publishedAt: "desc" },
+    take: 8,
+    select: { id: true, type: true, title: true, slug: true, city: true },
+  });
+}
 
-function TickerItems({ hidden = false }: { hidden?: boolean }) {
+function TickerItems({ items, hidden = false }: { items: Awaited<ReturnType<typeof latest>>; hidden?: boolean }) {
   return (
     <ul className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
-      {ITEMS.map((it) => (
-        <li key={it.text} className="flex items-center">
+      {items.map((it) => (
+        <li key={it.id} className="flex items-center">
           <span aria-hidden className="mx-5 h-1.5 w-1.5 rounded-full bg-accent" />
           <Link
-            href={it.href}
+            href={contentHref(it.type, it.slug)}
             tabIndex={hidden ? -1 : undefined}
             className="whitespace-nowrap text-[0.8rem] font-semibold text-white/85 hover:text-accent"
           >
-            {it.text}
+            {CONTENT_LABEL[it.type]} : {it.title}{it.city ? ` — ${it.city}` : ""}
           </Link>
         </li>
       ))}
@@ -32,7 +33,9 @@ function TickerItems({ hidden = false }: { hidden?: boolean }) {
   );
 }
 
-export function LiveTicker() {
+export async function LiveTicker() {
+  const items = await latest();
+  if (items.length === 0) return null;
   return (
     <div className="bdm-ticker flex items-stretch overflow-hidden bg-primary-darker text-white">
       <span className="z-10 flex shrink-0 items-center gap-2 bg-accent px-3 py-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-ink sm:px-4">
@@ -40,8 +43,8 @@ export function LiveTicker() {
         En direct
       </span>
       <div className="bdm-ticker-track items-center">
-        <TickerItems />
-        <TickerItems hidden />
+        <TickerItems items={items} />
+        <TickerItems items={items} hidden />
       </div>
     </div>
   );

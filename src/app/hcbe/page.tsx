@@ -4,16 +4,18 @@ import { SiteHeader, SiteFooter, SectionTitle, PageBanner } from "@/components/s
 
 export const metadata: Metadata = { title: "Le HCBE" };
 
-/* MAQUETTE — Page institutionnelle HCBE (CDC §7.12), contenus à fournir par le HCBE. */
+/* Page institutionnelle HCBE (CDC §7.12). Présentation factuelle et prudente :
+   aucune date, chiffre ou nom non fourni par le HCBE. Le texte officiel
+   (histoire, missions détaillées, bureau) sera rédigé par le HCBE. */
 
-const BUREAU = ["Président·e", "Vice-président·e", "Secrétaire général·e", "Trésorier·ère", "Chargé·e de communication", "Conseiller·ère juridique"];
-
-const CONSULATS = [
-  { city: "Paris · France", type: "Ambassade", tel: "+33 1 XX XX XX XX" },
-  { city: "Bruxelles · Belgique", type: "Ambassade", tel: "+32 2 XX XX XX" },
-  { city: "Washington · USA", type: "Ambassade", tel: "+1 202 XXX XXXX" },
-  { city: "Ottawa · Canada", type: "Ambassade", tel: "+1 613 XXX XXXX" },
-];
+function AVenir({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border border-dashed border-line bg-paper-2 p-5 text-sm text-ink-2">
+      <p className="font-bold text-ink">Texte officiel en cours de rédaction par le HCBE</p>
+      <p className="mt-1">{children}</p>
+    </div>
+  );
+}
 
 export default function HcbePage() {
   return (
@@ -22,17 +24,32 @@ export default function HcbePage() {
       <PageBanner
         pre="Le"
         em="HCBE"
-        desc="Le Haut Conseil des Béninois de l'Extérieur édite Béninois du Monde. Missions, bureau exécutif et services aux ressortissants."
+        desc="Le Haut Conseil des Béninois de l'Extérieur est l'organe de représentation des Béninois vivant hors du pays. Il édite Béninois du Monde."
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 space-y-12">
+      <main className="mx-auto max-w-6xl space-y-12 px-4 py-8">
+        <section>
+          <SectionTitle pre="Qui sommes-" em="nous ?" />
+          <div className="max-w-3xl space-y-4 text-[1.02rem] leading-relaxed text-ink">
+            <p>
+              Le Haut Conseil des Béninois de l&apos;Extérieur (HCBE) représente les Béninois établis hors du pays.
+              Il sert de relais entre la diaspora, ses associations et les institutions du Bénin.
+            </p>
+            <p>
+              Béninois du Monde est le portail qu&apos;il édite pour relier les Béninois où qu&apos;ils vivent :
+              un média, un annuaire des membres, des entreprises, des associations et des artistes, des offres
+              d&apos;emploi, un agenda et des services pratiques.
+            </p>
+          </div>
+        </section>
+
         <section>
           <SectionTitle pre="Nos" em="missions" />
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { t: "Fédérer", d: "Rassembler les Béninois de l'extérieur et leurs associations autour d'un réseau commun." },
-              { t: "Servir", d: "Informer sur les démarches consulaires, l'installation et le retour au pays." },
-              { t: "Connecter", d: "Relier la diaspora aux opportunités du Bénin : emploi, investissement, culture." },
+              { t: "Représenter", d: "Porter la voix des Béninois de l'extérieur auprès des institutions." },
+              { t: "Relier", d: "Mettre en réseau les membres de la diaspora, leurs associations et le Bénin." },
+              { t: "Informer", d: "Diffuser une information utile : démarches, opportunités, vie de la communauté." },
             ].map((m) => (
               <article key={m.t} className="border border-line p-5">
                 <h3 className="font-display text-lg font-bold text-primary">{m.t}</h3>
@@ -40,49 +57,30 @@ export default function HcbePage() {
               </article>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted">Textes d&apos;exemple — les missions officielles seront fournies par le HCBE (questionnaire H).</p>
+          <div className="mt-4">
+            <AVenir>Les missions officielles, l&apos;historique et les textes fondateurs du HCBE seront publiés ici dès validation.</AVenir>
+          </div>
         </section>
 
         <section>
           <SectionTitle pre="Le bureau" em="exécutif" />
-          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
-            {BUREAU.map((r) => (
-              <article key={r} className="border border-line p-3 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-light font-display text-xl font-black text-primary-dark">?</div>
-                <p className="mt-2 text-sm font-bold leading-tight">Nom à venir</p>
-                <p className="text-xs text-muted">{r}</p>
-              </article>
-            ))}
-          </div>
+          <AVenir>La composition du bureau exécutif sera publiée ici une fois communiquée par le HCBE.</AVenir>
         </section>
 
         <section>
           <SectionTitle pre="Services" em="consulaires" />
-          <div className="tablewrap overflow-x-auto border border-line">
-            <table className="w-full min-w-[560px] text-sm">
-              <thead>
-                <tr className="bg-paper-2 text-left text-xs font-bold uppercase tracking-wider text-ink-2">
-                  <th className="p-3">Représentation</th><th className="p-3">Type</th><th className="p-3">Téléphone</th><th className="p-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {CONSULATS.map((c) => (
-                  <tr key={c.city} className="border-t border-line hover:bg-primary-faint">
-                    <td className="p-3 font-bold">{c.city}</td>
-                    <td className="p-3">{c.type}</td>
-                    <td className="p-3">{c.tel}</td>
-                    <td className="p-3 text-right"><button className="whitespace-nowrap text-xs font-bold uppercase text-primary hover:underline">Détails →</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <p className="max-w-3xl text-sm leading-relaxed text-ink-2">
+            Les démarches consulaires (passeport, état civil, visas) relèvent des ambassades et consulats du Bénin.
+            Le HCBE n&apos;instruit pas ces démarches mais oriente les ressortissants vers la représentation compétente.
+          </p>
+          <div className="mt-4">
+            <AVenir>La liste des ambassades et consulats du Bénin, avec leurs coordonnées officielles, sera publiée ici dès validation.</AVenir>
           </div>
-          <p className="mt-3 text-xs text-muted">Liste complète des ambassades et consulats à fournir par le HCBE.</p>
         </section>
 
         <section className="border-2 border-primary p-6 text-center">
           <h2 className="font-display text-xl font-bold">Nous écrire</h2>
-          <p className="mx-auto mt-1 max-w-xl text-sm text-ink-2">Question consulaire, presse, partenariat : le formulaire de contact route votre message au bon service.</p>
+          <p className="mx-auto mt-1 max-w-xl text-sm text-ink-2">Question, presse, partenariat : le formulaire de contact transmet votre message à l&apos;équipe.</p>
           <Link href="/contact" className="mt-4 inline-block rounded bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-dark">Ouvrir le formulaire de contact</Link>
         </section>
       </main>

@@ -1,108 +1,123 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, FilterChips } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import { contentHref } from "@/lib/routes";
+import { moderateContentAction } from "@/lib/actions/admin";
+import { ActionButton } from "@/components/admin/action-button";
+import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, TypeBadge, fmtDateTime } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Modération" };
 
-/* MAQUETTE — Modération : files par type + panneau de détail (CDC §7.17). */
+/* Modération : contenus en attente (IN_MODERATION) + signalements ouverts.
+   Valider = PUBLISHED (publishedAt = maintenant, indexation), Refuser = REJECTED. */
 
-const FILES = [
-  { l: "Tout", n: 19 },
-  { l: "Articles membres", n: 4 },
-  { l: "Offres", n: 2 },
-  { l: "Événements", n: 3 },
-  { l: "Annonces", n: 6 },
-  { l: "Adresses", n: 1 },
-  { l: "Comptes pro", n: 2 },
-  { l: "Signalements", n: 1 },
-];
+export default async function ModerationPage() {
+  const [enAttente, signalements] = await Promise.all([
+    db.content.findMany({
+      where: { status: "IN_MODERATION" },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        city: true,
+        country: true,
+        createdAt: true,
+        ownerProfile: { select: { displayName: true, slug: true } },
+      },
+    }),
+    db.report.findMany({
+      where: { status: "open" },
+      orderBy: { createdAt: "asc" },
+      take: 50,
+      select: {
+        id: true,
+        reason: true,
+        createdAt: true,
+        content: { select: { title: true, type: true, slug: true } },
+        reporter: { select: { name: true, email: true } },
+      },
+    }),
+  ]);
 
-const EN_ATTENTE = [
-  { type: "Article membre", t: "Mon premier Noël à Cotonou après 15 ans", by: "Élodie Z. · Lyon", d: "il y a 2 h", sel: true },
-  { type: "Offre", t: "Ingénieur structures h/f — bureau d'études", by: "PME Fintech", d: "il y a 5 h" },
-  { type: "Annonce · rencontres", t: "Femme 34 ans cherche relation sérieuse…", by: "Membre #1204", d: "hier", sensible: true },
-  { type: "Compte pro", t: "ASBL Racines Bénin — Bruxelles", by: "Inscription", d: "hier" },
-  { type: "Événement", t: "Tournoi de foot inter-assos — Paris", by: "Amicale des Écureuils", d: "hier" },
-  { type: "Adresse", t: "Restaurant Le Cotonou — Marseille", by: "proposé par Ulrich T.", d: "avant-hier" },
-];
-
-export default function ModerationPage() {
   return (
     <>
-      <PageHead title="Modération" desc="Objectif de traitement : 48 h ouvrées. « Rencontres » et premiers contenus d'un compte : validation a priori." />
+      <PageHead
+        title="Modération"
+        desc="Les contenus déposés par les membres passent ici avant publication. Plus ancien d'abord."
+      />
 
-      <FilterChips items={FILES.map((f) => `${f.l} (${f.n})`)} />
-
-      <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-        {/* File d'attente */}
-        <Card title="En attente (19)" action={<span className="text-xs text-muted">plus ancien d&apos;abord</span>}>
-          <ul className="divide-y divide-line">
-            {EN_ATTENTE.map((a) => (
-              <li
-                key={a.t}
-                className={`cursor-pointer px-4 py-3 ${a.sel ? "border-l-4 border-primary bg-primary-faint" : "border-l-4 border-transparent hover:bg-primary-faint"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Badge tone={a.sensible ? "red" : "blue"}>{a.type}</Badge>
-                  <span className="ml-auto text-xs text-muted">{a.d}</span>
-                </div>
-                <p className="mt-1.5 truncate font-bold">{a.t}</p>
-                <p className="text-xs text-ink-2">{a.by}</p>
-              </li>
-            ))}
-          </ul>
+      <div className="space-y-6">
+        <Card title={`En attente (${enAttente.length})`}>
+          {enAttente.length === 0 ? (
+            <EmptyState title="Rien à modérer.">
+              Les contenus déposés par les membres (articles, offres, annonces, événements, adresses) apparaîtront ici dès leur soumission.
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Contenu</Th><Th>Type</Th><Th>Auteur</Th><Th>Soumis le</Th><Th>&nbsp;</Th></>}>
+              {enAttente.map((c) => (
+                <tr key={c.id} className="hover:bg-primary-faint">
+                  <Td className="max-w-[360px]">
+                    <p className="truncate font-semibold">{c.title}</p>
+                    {c.excerpt && <p className="truncate text-xs text-muted">{c.excerpt}</p>}
+                    <p className="text-xs text-muted">{[c.city, c.country].filter(Boolean).join(", ") || "Lieu non renseigné"}</p>
+                  </Td>
+                  <Td><TypeBadge type={c.type} /></Td>
+                  <Td className="text-ink-2">
+                    {c.ownerProfile ? (
+                      <Link href={`/communaute/membres/${c.ownerProfile.slug}`} className="hover:text-primary hover:underline">{c.ownerProfile.displayName}</Link>
+                    ) : (
+                      "—"
+                    )}
+                  </Td>
+                  <Td className="whitespace-nowrap text-muted">{fmtDateTime(c.createdAt)}</Td>
+                  <Td>
+                    <div className="flex flex-nowrap justify-end gap-2">
+                      <ActionButton action={moderateContentAction} fields={{ id: c.id, decision: "publish" }} label="Valider" tone="primary" />
+                      <ActionButton
+                        action={moderateContentAction}
+                        fields={{ id: c.id, decision: "reject" }}
+                        label="Refuser"
+                        tone="danger"
+                        confirm={`Refuser « ${c.title} » ?`}
+                      />
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+            </TableShell>
+          )}
         </Card>
 
-        {/* Panneau de détail */}
-        <Card title="Aperçu — Article membre">
-          <div className="p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="blue">Article membre</Badge>
-              <Badge tone="gray">1re publication de ce compte</Badge>
-              <span className="ml-auto text-xs text-muted">soumis il y a 2 h</span>
-            </div>
-
-            <h2 className="font-display mt-3 text-2xl font-extrabold leading-tight">
-              Mon premier Noël à Cotonou après 15 ans
-            </h2>
-            <p className="mt-1 text-sm text-ink-2">
-              par <strong>Élodie Z.</strong> · Lyon, France · mots-clés : Retour au pays, Fêtes, Cotonou
-            </p>
-
-            <div className="mt-4 max-w-2xl space-y-3 rounded border border-line bg-paper-2 p-4 text-sm leading-relaxed">
-              <p>
-                Quinze ans que je n&apos;avais pas passé décembre au pays. Quand l&apos;avion a
-                touché la piste de Cadjèhoun, ma fille de huit ans a applaudi — elle qui ne
-                connaissait le Bénin que par les récits de sa grand-mère…
-              </p>
-              <p className="text-muted">[ aperçu du contenu complet — 4 200 caractères, 2 photos jointes ]</p>
-            </div>
-
-            <div className="mt-5 border-t border-line pt-4">
-              <label htmlFor="motif" className="mb-1 block text-sm font-bold">
-                Message au membre (obligatoire en cas de refus)
-              </label>
-              <textarea
-                id="motif"
-                rows={2}
-                placeholder="Ex. : merci de flouter les visages des enfants sur la photo 2…"
-                className="w-full max-w-2xl rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none"
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button className="whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-                  ✓ Valider et publier
-                </button>
-                <button className="rounded border border-line px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
-                  Valider + mettre à la une
-                </button>
-                <button className="rounded border border-danger px-4 py-2 text-sm font-bold text-danger hover:bg-danger hover:text-white">
-                  Refuser
-                </button>
-                <button className="ml-auto text-sm font-semibold text-ink-2 hover:text-primary">
-                  Passer au suivant →
-                </button>
-              </div>
-            </div>
-          </div>
+        <Card title={`Signalements ouverts (${signalements.length})`}>
+          {signalements.length === 0 ? (
+            <EmptyState title="Aucun signalement ouvert.">
+              Les signalements envoyés par les membres depuis une fiche apparaîtront ici.
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Contenu signalé</Th><Th>Motif</Th><Th>Par</Th><Th>Quand</Th></>}>
+              {signalements.map((r) => (
+                <tr key={r.id} className="hover:bg-primary-faint">
+                  <Td className="font-semibold">
+                    {r.content ? (
+                      <Link href={contentHref(r.content.type, r.content.slug)} className="hover:text-primary hover:underline">{r.content.title}</Link>
+                    ) : (
+                      <Badge tone="gray">Contenu supprimé</Badge>
+                    )}
+                  </Td>
+                  <Td className="max-w-[360px] text-ink-2">{r.reason}</Td>
+                  <Td className="text-ink-2">{r.reporter.name ?? r.reporter.email}</Td>
+                  <Td className="whitespace-nowrap text-muted">{fmtDateTime(r.createdAt)}</Td>
+                </tr>
+              ))}
+            </TableShell>
+          )}
+          <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
+            Le traitement d&apos;un signalement (clôture, retrait du contenu) n&apos;est pas encore disponible depuis cette page.
+          </p>
         </Card>
       </div>
     </>

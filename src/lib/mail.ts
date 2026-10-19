@@ -55,3 +55,16 @@ export function sendInvitation(to: string, displayName: string, url: string) {
     `<p>Bonjour ${displayName},</p><p>Le HCBE a ouvert votre espace sur <strong>Béninois du Monde</strong>, le réseau de la diaspora béninoise.</p><p><a href="${url}">Activer mon espace</a></p><p>Vous pourrez ensuite compléter votre profil, choisir ce qui est visible et publier.</p>`,
   );
 }
+
+/* Formulaire de contact : le message part vers l'adresse de contact du HCBE
+   (CONTACT_EMAIL, sinon EMAIL_FROM). L'expéditeur n'est jamais affiché sur le site. */
+export function sendContactMessage(from: { name: string; email: string }, subject: string, message: string) {
+  const to = process.env.CONTACT_EMAIL ?? parseFrom(FROM).email;
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+  return send(
+    to,
+    `[Contact] ${subject}`,
+    `Message reçu via le formulaire de contact de Béninois du Monde.\n\nDe : ${from.name} <${from.email}>\nSujet : ${subject}\n\n${message}`,
+    `<p>Message reçu via le formulaire de contact de <strong>Béninois du Monde</strong>.</p><p><strong>De :</strong> ${esc(from.name)} &lt;${esc(from.email)}&gt;<br><strong>Sujet :</strong> ${esc(subject)}</p><p style="white-space:pre-line">${esc(message)}</p>`,
+  );
+}

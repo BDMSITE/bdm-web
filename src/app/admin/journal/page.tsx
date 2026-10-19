@@ -1,42 +1,71 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { PageHead, Card, Badge, TableShell, Th, Td, FilterChips } from "@/components/admin/ui";
+import { db } from "@/lib/db";
+import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, fmtDateTime, fmtNumber, AUDIT_ACTION_LABEL } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Journal d'activité" };
 
-/* MAQUETTE — Journal d'audit : qui a fait quoi, quand (CDC §10.3). */
+/* Journal d'audit : qui a fait quoi, quand (AuditLog), 50 par page. */
 
-const LOGS = [
-  { q: "Validation", d: "Article « Mon premier Noël à Cotonou » validé et publié", by: "Modératrice A.", t: "16 sept. 09:41", tone: "green" as const },
-  { q: "Refus", d: "Annonce refusée (motif : coordonnées dans le texte)", by: "Modératrice A.", t: "16 sept. 09:12", tone: "red" as const },
-  { q: "Compte", d: "BTP Horizon validé comme entreprise", by: "Josué", t: "15 sept. 18:03", tone: "green" as const },
-  { q: "Régie", d: "Bannière « École partenaire » programmée (pavé milieu)", by: "Josué", t: "15 sept. 17:40", tone: "blue" as const },
-  { q: "Paramètre", d: "Quota offres tests passé de 2 à 3", by: "Josué", t: "14 sept. 11:20", tone: "yellow" as const },
-  { q: "Bannissement", d: "Compte #0847 banni (spam répété)", by: "Josué", t: "13 sept. 22:08", tone: "red" as const },
-  { q: "Une", d: "« Retour à Cotonou » ajouté à la une (position 1)", by: "Rédaction", t: "13 sept. 08:00", tone: "blue" as const },
-];
+const PAR_PAGE = 50;
 
-export default function AdminJournalPage() {
+type Props = { searchParams: Promise<{ page?: string }> };
+
+export default async function AdminJournalPage({ searchParams }: Props) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
+
+  const [total, logs] = await Promise.all([
+    db.auditLog.count(),
+    db.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAR_PAGE,
+      take: PAR_PAGE,
+      include: { user: { select: { name: true, email: true } } },
+    }),
+  ]);
+  const pages = Math.max(1, Math.ceil(total / PAR_PAGE));
+
   return (
     <>
-      <PageHead title="Journal d'activité" desc="Toutes les actions sensibles, horodatées et attribuées. Conservation 12 mois.">
-        <button className="rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
-          Exporter (CSV)
-        </button>
-      </PageHead>
+      <PageHead title="Journal d'activité" desc={`${fmtNumber(total)} action${total > 1 ? "s" : ""} enregistrée${total > 1 ? "s" : ""} depuis le back-office.`} />
 
-      <FilterChips items={["Tout", "Validations", "Refus", "Comptes", "Régie", "Paramètres", "Par personne"]} />
-
-      <Card className="mt-4">
-        <TableShell head={<><Th>Type</Th><Th>Action</Th><Th>Par</Th><Th>Quand</Th></>}>
-          {LOGS.map((l) => (
-            <tr key={l.d} className="hover:bg-primary-faint">
-              <Td><Badge tone={l.tone}>{l.q}</Badge></Td>
-              <Td className="font-semibold">{l.d}</Td>
-              <Td className="text-ink-2">{l.by}</Td>
-              <Td className="whitespace-nowrap text-muted">{l.t}</Td>
-            </tr>
-          ))}
-        </TableShell>
+      <Card title={`Page ${page} sur ${pages}`}>
+        {logs.length === 0 ? (
+          <EmptyState title="Aucune action enregistrée.">
+            Chaque validation, refus, publication, archivage, suspension ou ajout de mot-clé fait depuis le back-office est consigné ici.
+          </EmptyState>
+        ) : (
+          <TableShell head={<><Th>Quand</Th><Th>Action</Th><Th>Entité</Th><Th>Détail</Th><Th>Par</Th></>}>
+            {logs.map((l) => {
+              const meta = (l.meta ?? {}) as Record<string, unknown>;
+              const detail = typeof meta.title === "string" ? meta.title : typeof meta.name === "string" ? meta.name : l.entityId ?? "—";
+              return (
+                <tr key={l.id} className="hover:bg-primary-faint">
+                  <Td className="whitespace-nowrap text-muted">{fmtDateTime(l.createdAt)}</Td>
+                  <Td><Badge tone="gray">{AUDIT_ACTION_LABEL[l.action] ?? l.action}</Badge></Td>
+                  <Td className="text-ink-2">{l.entity}</Td>
+                  <Td className="max-w-[360px] truncate font-semibold">{detail}</Td>
+                  <Td className="text-ink-2">{l.user?.name ?? l.user?.email ?? "Système"}</Td>
+                </tr>
+              );
+            })}
+          </TableShell>
+        )}
+        {pages > 1 && (
+          <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-sm">
+            {page > 1 ? (
+              <Link href={`/admin/journal?page=${page - 1}`} className="font-bold text-primary hover:underline">Plus récent</Link>
+            ) : (
+              <span />
+            )}
+            {page < pages ? (
+              <Link href={`/admin/journal?page=${page + 1}`} className="font-bold text-primary hover:underline">Plus ancien</Link>
+            ) : (
+              <span />
+            )}
+          </div>
+        )}
       </Card>
     </>
   );

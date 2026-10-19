@@ -1,23 +1,21 @@
 import type { ContentType } from "@prisma/client";
 
-/* Libellés et URL par type de contenu. Les fiches détail dynamiques
-   arrivent sprint par sprint (S2 magazine, S4 emploi…) : d'ici là, un
-   contenu renvoie vers la liste de sa rubrique. */
+/* Libellés, rubriques et URL par type de contenu. */
 
 export const CONTENT_LABEL: Record<ContentType, string> = {
   ARTICLE: "Article",
   MEMBER_ARTICLE: "Article membre",
-  JOB: "Offre",
+  JOB: "Offre d'emploi",
   INTERNSHIP: "Stage",
   EVENT: "Événement",
   CLASSIFIED: "Annonce",
   PLACE: "Adresse",
   DEAL: "Avantage",
-  HELP_REQUEST: "Entraide",
+  HELP_REQUEST: "Mise en relation",
   MEMORY_PLACE: "Lieu de mémoire",
 };
 
-const SECTION: Record<ContentType, string> = {
+export const SECTION: Record<ContentType, string> = {
   ARTICLE: "/magazine",
   MEMBER_ARTICLE: "/magazine",
   JOB: "/emploi",
@@ -30,10 +28,14 @@ const SECTION: Record<ContentType, string> = {
   MEMORY_PLACE: "/memoire",
 };
 
-export function contentHref(type: ContentType) {
-  return SECTION[type];
+export function contentHref(type: ContentType, slug?: string) {
+  return slug ? `${SECTION[type]}/${slug}` : SECTION[type];
 }
 
 export function profileHref(slug: string) {
   return `/communaute/membres/${slug}`;
+}
+
+export function keywordHref(slug: string) {
+  return `/mot/${slug}`;
 }

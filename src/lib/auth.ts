@@ -65,11 +65,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    // Lien magique : un compte suspendu ou supprimé ne rentre pas
+    async signIn({ user, account }) {
+      if (account?.provider !== "resend" || !user.email) return true;
+      const u = await db.user.findUnique({ where: { email: user.email }, select: { status: true } });
+      return !u || (u.status !== "SUSPENDED" && u.status !== "DELETED");
+    },
+  },
   events: {
     async signIn({ user, account }) {
       if (account?.provider === "resend" && user.id) {
-        await db.user.update({
-          where: { id: user.id },
+        await db.user.updateMany({
+          where: { id: user.id, status: "PENDING_EMAIL" },
           data: { status: "ACTIVE", emailVerified: new Date() },
         });
       }

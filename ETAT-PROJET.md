@@ -7,7 +7,7 @@
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
 from scratch en Next.js — remplace l'ancien WordPress de beninois-du-monde.com (audit 14/09/2026).
 
-## 📍 NIVEAU ACTUEL : SOCLE S1 fonctionnel en local (12/10/2026)
+## 📍 NIVEAU ACTUEL : site réel, vidé de toute donnée fictive, en attente de contenu (19/10/2026)
 Fait en local : base Postgres + Meilisearch (Docker/OrbStack installé), migration `init`, seed de démo,
 Auth.js (inscription → lien d'activation → connexion, mot de passe + lien magique), annuaire et fiche
 profil en base, recherche Meilisearch, routes protégées, build de prod vert.
@@ -105,6 +105,17 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   toutes dans l'outil CLI Prisma (studio/lodash/mysql2), jamais exécuté en prod.
   **Les 10 besoins SIAL sont masqués (IN_MODERATION)** en attendant l'accord de Josué/HCBE.
   À faire (S7) : rate-limit connexion/inscription/lien magique (Upstash gratuit), Turnstile, 2FA admin, CSP.
+
+- **19/10 — GRAND NETTOYAGE (validé par Josué) : plus aucune donnée inventée sur le site.** 66 pages → toutes lisent
+  la base ou affichent un état vide honnête. Couche de données `src/lib/content.ts` + composants `content.tsx` /
+  `section-page.tsx` (fabrique des rubriques + fiche détail générique `/[rubrique]/[slug]`). Pages « exemple »
+  supprimées, 23 contenus de démo purgés (local + prod), profils de démo retirés de l'annuaire (comptes gardés).
+  Réels désormais : accueil, ticker (derniers contenus), carte (membres géolocalisés), 7 rubriques + fiches, mot-clé
+  `/mot/[slug]`, communauté (4 annuaires), **guichet Publier** (→ IN_MODERATION), contact (relais e-mail),
+  espace membre complet (alertes, publications, CV, sécurité, export/suppression RGPD), **back-office** (modération
+  publier/refuser, rédaction d'articles, emploi, services, mots-clés, newsletter, journal d'audit, paramètres).
+  Pages légales et HCBE : squelettes « à compléter par le HCBE ». Inventaire du contenu à fournir : Notion
+  « 📋 Pages à remplir ». Sécurité : un compte suspendu ne peut plus rentrer par lien magique.
 
 ## Ce qui RESTE (ordre)
 1. Retours HCBE sur la maquette → corrections

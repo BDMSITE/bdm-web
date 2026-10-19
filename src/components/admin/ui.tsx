@@ -1,32 +1,29 @@
 import Link from "next/link";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import type { ContentStatus, UserStatus, ContentType } from "@prisma/client";
+import { CONTENT_LABEL } from "@/lib/routes";
 
 /* Briques partagées du back-office. */
 
 export function AdminTopbar() {
   return (
     <div className="sticky top-0 z-20 flex items-center gap-4 border-b border-line bg-paper px-6 py-3">
-      <div className="relative max-w-sm flex-1">
+      <form action="/recherche" method="get" role="search" className="relative max-w-sm flex-1">
         <Search
           aria-hidden
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
         />
         <input
           type="search"
-          placeholder="Rechercher un contenu, un membre, une offre…"
+          name="q"
+          placeholder="Rechercher sur le site…"
+          aria-label="Rechercher sur le site"
           className="w-full rounded border border-line bg-paper-2 py-2 pl-9 pr-3 text-sm focus:border-primary focus:outline-none"
         />
-      </div>
-      <span className="ml-auto hidden text-xs text-muted md:block">
-        Maquette — données d&apos;exemple
-      </span>
-      <button aria-label="Notifications" className="relative text-ink-2 hover:text-primary">
-        <Bell aria-hidden className="h-5 w-5" />
-        <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-danger" />
-      </button>
+      </form>
       <Link
         href="/"
-        className="rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-primary-dark lg:hidden"
+        className="ml-auto rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-primary-dark lg:hidden"
       >
         Site
       </Link>
@@ -199,3 +196,85 @@ export function FilterChips({ items }: { items: string[] }) {
     </div>
   );
 }
+
+/* ---------- Briques ajoutées avec le back-office réel ---------- */
+
+export function EmptyState({ title, children }: { title: string; children?: React.ReactNode }) {
+  return (
+    <div className="px-4 py-8 text-center">
+      <p className="font-semibold text-ink">{title}</p>
+      {children && <div className="mx-auto mt-1 max-w-prose text-sm text-muted">{children}</div>}
+    </div>
+  );
+}
+
+export const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
+  DRAFT: "Brouillon",
+  IN_MODERATION: "En modération",
+  SCHEDULED: "Programmé",
+  PUBLISHED: "En ligne",
+  REJECTED: "Refusé",
+  EXPIRED: "Expiré",
+  ARCHIVED: "Archivé",
+};
+
+const CONTENT_STATUS_TONE: Record<ContentStatus, "gray" | "green" | "yellow" | "red" | "blue"> = {
+  DRAFT: "gray",
+  IN_MODERATION: "yellow",
+  SCHEDULED: "blue",
+  PUBLISHED: "green",
+  REJECTED: "red",
+  EXPIRED: "gray",
+  ARCHIVED: "gray",
+};
+
+export function ContentStatusBadge({ status }: { status: ContentStatus }) {
+  return <Badge tone={CONTENT_STATUS_TONE[status]}>{CONTENT_STATUS_LABEL[status]}</Badge>;
+}
+
+export const USER_STATUS_LABEL: Record<UserStatus, string> = {
+  PENDING_EMAIL: "E-mail à confirmer",
+  ACTIVE: "Actif",
+  SUSPENDED: "Suspendu",
+  DELETED: "Supprimé",
+};
+
+const USER_STATUS_TONE: Record<UserStatus, "gray" | "green" | "yellow" | "red" | "blue"> = {
+  PENDING_EMAIL: "yellow",
+  ACTIVE: "green",
+  SUSPENDED: "red",
+  DELETED: "gray",
+};
+
+export function UserStatusBadge({ status }: { status: UserStatus }) {
+  return <Badge tone={USER_STATUS_TONE[status]}>{USER_STATUS_LABEL[status]}</Badge>;
+}
+
+export function TypeBadge({ type }: { type: ContentType }) {
+  return <Badge tone="blue">{CONTENT_LABEL[type]}</Badge>;
+}
+
+export function fmtDate(d: Date | null | undefined) {
+  return d ? d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—";
+}
+
+export function fmtDateTime(d: Date | null | undefined) {
+  return d
+    ? d.toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "—";
+}
+
+export function fmtNumber(n: number) {
+  return n.toLocaleString("fr-FR");
+}
+
+/* Libellés des actions du journal (AuditLog.action). */
+export const AUDIT_ACTION_LABEL: Record<string, string> = {
+  "content.publish": "Publication",
+  "content.reject": "Refus",
+  "content.archive": "Archivage",
+  "content.create": "Création",
+  "user.suspend": "Suspension",
+  "user.reactivate": "Réactivation",
+  "keyword.create": "Mot-clé ajouté",
+};

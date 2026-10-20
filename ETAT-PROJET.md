@@ -125,6 +125,13 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   (mentions, confidentialité RGPD + APDP Bénin, CGU + charte HCBE) dans `/legal/[slug]` : seuls l'identité légale
   du HCBE, le directeur de publication et le contact données restent « à compléter ».
 
+- **20/10 — S3/S4 cœur livré** : **messagerie relais** (écrire à un membre depuis sa fiche, répondre à une offre /
+  annonce / demande depuis la fiche contenu, fils de discussion dans `/compte/messages`, notification e-mail sans
+  adresse exposée, quota 20 messages/h) ; **candidatures** (formulaire sur les offres, CV pré-rempli, `/compte/candidatures`
+  côté candidat, `/compte/candidatures-recues` côté recruteur avec réponse relais) ; **édition / retrait / republication**
+  de ses publications (retour en modération) ; **favoris** ; **géocodage Nominatim** des villes (à l'enregistrement du
+  profil + `pnpm geocode` de rattrapage, fait en local et en prod) → la carte affichera les membres dès activation.
+
 ## Ce qui RESTE (ordre)
 1. Retours HCBE sur la maquette → corrections
 2. Prérequis Josué (page Socle §0) puis **S1 socle** : docker compose up, migrate, client Prisma+adapter pg,

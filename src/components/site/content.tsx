@@ -3,8 +3,9 @@ import Image from "next/image";
 import type { ContentFull } from "@/lib/content";
 import { CONTENT_LABEL, contentHref, keywordHref, profileHref } from "@/lib/routes";
 import { RelayForm, ApplyForm } from "@/components/site/relay-form";
+import { FavoriteButton } from "@/components/site/favorite-button";
 
-export type Viewer = { id: string; cvUrl: string | null } | null;
+export type Viewer = { id: string; cvUrl: string | null; favori: boolean } | null;
 
 /* Briques d'affichage des contenus réels : carte, liste, fiche, état vide.
    Pas d'image = pas de bloc image (aucun faux « photo »). */
@@ -114,7 +115,10 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
 
   return (
     <article className="min-w-0">
-      <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">{CONTENT_LABEL[item.type]}</span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">{CONTENT_LABEL[item.type]}</span>
+        {viewer && <FavoriteButton contentId={item.id} initial={viewer.favori} compact />}
+      </div>
       <h1 className="font-display mt-3 text-3xl font-black leading-tight md:text-4xl">{item.title}</h1>
       {item.excerpt && <p className="mt-3 text-lg leading-relaxed text-ink-2">{item.excerpt}</p>}
 

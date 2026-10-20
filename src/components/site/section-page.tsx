@@ -112,7 +112,13 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
   if (!item || !types.includes(item.type)) notFound();
   const [related, session] = await Promise.all([relatedContents(item), auth()]);
   const viewer = session?.user
-    ? { id: session.user.id, cvUrl: (await db.profile.findUnique({ where: { userId: session.user.id }, select: { cvUrl: true } }))?.cvUrl ?? null }
+    ? await (async () => {
+        const [p, f] = await Promise.all([
+          db.profile.findUnique({ where: { userId: session.user.id }, select: { cvUrl: true } }),
+          db.favorite.findUnique({ where: { userId_contentId: { userId: session.user.id, contentId: item.id } }, select: { userId: true } }),
+        ]);
+        return { id: session.user.id, cvUrl: p?.cvUrl ?? null, favori: Boolean(f) };
+      })()
     : null;
   return (
     <>

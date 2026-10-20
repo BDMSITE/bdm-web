@@ -1,29 +1,24 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CONTENT_LABEL, contentHref } from "@/lib/routes";
 import { EmptyState, fmtDate } from "@/components/site/content";
+import { StatusBadge } from "./status";
+import { WithdrawButton, RepublishButton } from "./[id]/form";
 
 export const metadata: Metadata = { title: "Mes publications" };
 
-/* Contenus du membre connecté, tous statuts (CDC §7.16). */
-
-const STATUS: Record<string, { label: string; tone: string }> = {
-  PUBLISHED: { label: "En ligne", tone: "bg-primary-light text-primary-dark" },
-  IN_MODERATION: { label: "En modération", tone: "bg-accent-light text-ink" },
-  DRAFT: { label: "Brouillon", tone: "border border-line bg-paper-2 text-ink-2" },
-  SCHEDULED: { label: "Programmé", tone: "bg-accent-light text-ink" },
-  REJECTED: { label: "Refusé", tone: "bg-danger-light text-danger" },
-  EXPIRED: { label: "Expiré", tone: "border border-line bg-paper-2 text-ink-2" },
-  ARCHIVED: { label: "Archivé", tone: "border border-line bg-paper-2 text-ink-2" },
-};
+/* Contenus du membre connecté, tous statuts (CDC §7.16) : voir, modifier, retirer, republier. */
 
 export default async function PublicationsPage({ searchParams }: { searchParams: Promise<{ envoye?: string }> }) {
   const sp = await searchParams;
   const session = await auth();
+  if (!session?.user) redirect("/connexion?callbackUrl=/compte/publications");
+
   const contents = await db.content.findMany({
-    where: { ownerProfile: { userId: session!.user.id } },
+    where: { ownerProfile: { userId: session.user.id } },
     orderBy: { updatedAt: "desc" },
     select: { id: true, title: true, slug: true, type: true, status: true, publishedAt: true, createdAt: true, expiresAt: true },
   });
@@ -58,7 +53,7 @@ export default async function PublicationsPage({ searchParams }: { searchParams:
             {contents.length} contenu{contents.length > 1 ? "s" : ""}
           </p>
           <div className="overflow-x-auto border border-line">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-paper-2 text-left text-xs font-bold uppercase tracking-wider text-ink-2">
                 <tr>
                   <th className="px-4 py-2.5">Contenu</th>
@@ -69,33 +64,36 @@ export default async function PublicationsPage({ searchParams }: { searchParams:
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {contents.map((c) => {
-                  const st = STATUS[c.status] ?? { label: c.status, tone: "border border-line bg-paper-2 text-ink-2" };
-                  return (
-                    <tr key={c.id} className="hover:bg-primary-faint">
-                      <td className="px-4 py-3 font-bold">{c.title}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-ink-2">{CONTENT_LABEL[c.type]}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted">
-                        {fmtDate(c.publishedAt ?? c.createdAt, { day: "numeric", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`whitespace-nowrap rounded px-2 py-0.5 text-xs font-bold ${st.tone}`}>{st.label}</span>
-                        {c.status === "PUBLISHED" && c.expiresAt && (
-                          <span className="ml-2 whitespace-nowrap text-xs text-muted">jusqu&apos;au {fmtDate(c.expiresAt, { day: "numeric", month: "short" })}</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right">
-                        {c.status === "PUBLISHED" ? (
+                {contents.map((c) => (
+                  <tr key={c.id} className="hover:bg-primary-faint">
+                    <td className="px-4 py-3 font-bold">
+                      <Link href={`/compte/publications/${c.id}`} className="hover:text-primary">{c.title}</Link>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-ink-2">{CONTENT_LABEL[c.type]}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {fmtDate(c.publishedAt ?? c.createdAt, { day: "numeric", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={c.status} />
+                      {c.status === "PUBLISHED" && c.expiresAt && (
+                        <span className="ml-2 whitespace-nowrap text-xs text-muted">jusqu&apos;au {fmtDate(c.expiresAt, { day: "numeric", month: "short" })}</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                        {c.status === "PUBLISHED" && (
                           <Link href={contentHref(c.type, c.slug)} className="text-xs font-bold uppercase text-primary hover:underline">
                             Voir la fiche
                           </Link>
-                        ) : (
-                          <span className="text-xs text-muted">Non visible</span>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <Link href={`/compte/publications/${c.id}`} className="text-xs font-bold uppercase text-primary hover:underline">
+                          Modifier
+                        </Link>
+                        {c.status === "ARCHIVED" ? <RepublishButton id={c.id} compact /> : <WithdrawButton id={c.id} compact />}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -103,8 +101,8 @@ export default async function PublicationsPage({ searchParams }: { searchParams:
       )}
 
       <p className="text-xs text-muted">
-        Un contenu « en modération » est visible de vous seul jusqu&apos;à sa validation par la rédaction. La modification et le
-        retrait d&apos;un contenu depuis cet espace arrivent prochainement.
+        Un contenu « en modération » est visible de vous seul jusqu&apos;à sa validation par la rédaction. Modifier un contenu en
+        ligne le renvoie en modération ; un contenu retiré reste dans votre espace et peut être republié.
       </p>
     </div>
   );

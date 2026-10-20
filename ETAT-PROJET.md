@@ -117,6 +117,14 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   Pages légales et HCBE : squelettes « à compléter par le HCBE ». Inventaire du contenu à fournir : Notion
   « 📋 Pages à remplir ». Sécurité : un compte suspendu ne peut plus rentrer par lien magique.
 
+- **20/10 — reprise de l'ancien site + textes légaux.** L'ancien WordPress (beninois-du-monde.com) est toujours en
+  ligne et expose ses contenus par API : `pnpm import:wordpress --go` a repris **23 lieux de mémoire + 2 itinéraires**
+  (textes courts du HCBE, source citée, catégorie déduite, à relire par un historien) et la **Charte de la communauté**
+  (`src/content/charte-communaute.json`). Ressources (5) et guides (4) trop courts (110-200 car.) : non importés.
+  Les pages Mentions légales / Confidentialité / À propos de l'ancien site sont vides. **Textes légaux v1 rédigés**
+  (mentions, confidentialité RGPD + APDP Bénin, CGU + charte HCBE) dans `/legal/[slug]` : seuls l'identité légale
+  du HCBE, le directeur de publication et le contact données restent « à compléter ».
+
 ## Ce qui RESTE (ordre)
 1. Retours HCBE sur la maquette → corrections
 2. Prérequis Josué (page Socle §0) puis **S1 socle** : docker compose up, migrate, client Prisma+adapter pg,

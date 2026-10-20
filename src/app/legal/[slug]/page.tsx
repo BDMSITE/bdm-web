@@ -2,92 +2,95 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, PageBanner } from "@/components/site/chrome";
+import charte from "@/content/charte-communaute.json";
 
-/* Pages légales : squelette structuré (sections obligatoires) à compléter par
-   le HCBE et son conseil juridique. Aucune raison sociale, immatriculation,
-   adresse ou date inventée. Seuls les prestataires techniques réels sont nommés. */
+/* Pages légales — version 1 rédigée par le prestataire à partir du
+   fonctionnement réel du site, à valider par le HCBE et son conseil juridique.
+   Les seuls éléments laissés ouverts sont l'identité légale du HCBE (forme,
+   adresse, immatriculation, directeur de publication, contact données). */
 
-type Section = { title: string; known?: React.ReactNode; todo: string };
+type Bloc = { h?: string; p?: string[]; li?: string[]; todo?: string };
 
-const PAGES: Record<string, { title: string; em: string; intro: string; sections: Section[] }> = {
+const IDENTITE_TODO = "Forme juridique, adresse du siège, numéro d'immatriculation et coordonnées officielles du HCBE.";
+
+const PAGES: Record<string, { title: string; em: string; intro: string; blocs: Bloc[] }> = {
   "mentions-legales": {
     title: "Mentions",
     em: "légales",
-    intro: "Identité de l'éditeur, hébergement et responsabilités.",
-    sections: [
-      {
-        title: "Éditeur du site",
-        known: <>Le site Béninois du Monde est édité par le Haut Conseil des Béninois de l&apos;Extérieur (HCBE).</>,
-        todo: "Forme juridique, siège social, immatriculation et coordonnées officielles du HCBE.",
-      },
-      { title: "Directeur de la publication", todo: "Nom et qualité du directeur de la publication." },
-      {
-        title: "Hébergement",
-        known: <>Le site est hébergé par Vercel Inc. (États-Unis). La base de données est hébergée par Neon.</>,
-        todo: "Coordonnées complètes des hébergeurs, région d'hébergement retenue et, le cas échéant, hébergeur des pièces jointes.",
-      },
-      { title: "Propriété intellectuelle", todo: "Conditions de réutilisation des contenus du site, des contributions des membres et des photos (crédits)." },
-      { title: "Responsabilité éditoriale et modération", todo: "Règles de modération, délais de traitement des signalements, contact pour un retrait." },
-      { title: "Droit applicable", todo: "Droit applicable et juridiction compétente." },
+    intro: "Qui édite le site, qui l'héberge, quelles responsabilités.",
+    blocs: [
+      { h: "1. Éditeur du site", p: ["Le site Béninois du Monde est édité par le Haut Conseil des Béninois de l'Extérieur (HCBE), organe de représentation des Béninois vivant hors du Bénin."], todo: IDENTITE_TODO },
+      { h: "2. Directeur de la publication", todo: "Nom et qualité du directeur de la publication (responsable du contenu éditorial)." },
+      { h: "3. Réalisation technique", p: ["Conception et développement : JOJO.DEV's. Le code du site est maintenu par le prestataire pour le compte du HCBE."] },
+      { h: "4. Hébergement", p: ["Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis (vercel.com). La base de données est hébergée par Neon Inc. (neon.com), région États-Unis. Les e-mails transactionnels sont envoyés par un prestataire d'envoi d'e-mails (Brevo, Paris, France) dès sa mise en service."] },
+      { h: "5. Propriété intellectuelle", p: ["La structure du site, sa charte graphique et les contenus produits par la rédaction sont la propriété du HCBE. Les contenus publiés par les membres (articles, offres, événements, annonces, photos) restent la propriété de leurs auteurs, qui accordent au HCBE une licence non exclusive de diffusion sur le site et dans ses lettres d'information. Toute reproduction à des fins commerciales sans accord écrit est interdite. Les photos doivent être libres de droits ou accompagnées de leur crédit."] },
+      { h: "6. Responsabilité éditoriale et modération", p: ["Les contenus proposés par les membres sont relus par la modération avant mise en ligne. Le HCBE peut refuser, modifier ou retirer un contenu contraire à la Charte de la communauté ou à la loi. Tout contenu peut être signalé depuis le site ; les signalements sont traités dans les meilleurs délais. Les informations publiées par les membres (offres, adresses, annonces) relèvent de leur responsabilité : le HCBE ne garantit pas leur exactitude et n'est pas partie aux relations qui en découlent."] },
+      { h: "7. Liens et contenus tiers", p: ["Le site peut renvoyer vers des sites tiers. Le HCBE n'exerce aucun contrôle sur leur contenu et décline toute responsabilité à leur égard."] },
+      { h: "8. Droit applicable", p: ["Le site est régi par le droit de la République du Bénin. Les membres résidant dans l'Union européenne bénéficient en outre des droits prévus par le Règlement général sur la protection des données (RGPD)."], todo: "Juridiction compétente en cas de litige, à préciser par le conseil juridique." },
     ],
   },
   confidentialite: {
     title: "Politique de",
     em: "confidentialité",
-    intro: "Quelles données sont collectées, pourquoi, combien de temps, et vos droits.",
-    sections: [
-      {
-        title: "Données collectées",
-        known: <>À l&apos;inscription : nom, prénom, e-mail, pays, ville, secteur d&apos;activité, mot de passe (stocké chiffré). Sur le profil, selon ce que vous choisissez de renseigner : fonction, biographie, site web, CV, mots-clés. Pour les comptes importés par le HCBE : téléphone (jamais affiché).</>,
-        todo: "Liste définitive des données et des sources, validée par le HCBE.",
-      },
-      { title: "Finalités et bases légales", todo: "Finalités (gestion des comptes, annuaire, alertes e-mail, newsletter, mesure d'audience) et base légale de chacune." },
-      {
-        title: "Visibilité choisie par le membre",
-        known: <>Chaque membre choisit s&apos;il apparaît dans l&apos;annuaire public. L&apos;adresse e-mail n&apos;est jamais affichée : tout contact passe par un formulaire relais.</>,
-        todo: "Détail des réglages de visibilité par champ.",
-      },
-      { title: "Durées de conservation", todo: "Durées de conservation des comptes, des contenus, des candidatures et des messages." },
-      { title: "Vos droits (APDP / RGPD)", todo: "Modalités d'exercice des droits d'accès, de rectification, d'effacement et d'opposition ; autorité de contrôle compétente." },
-      { title: "Cookies et mesure d'audience", todo: "Liste des cookies et traceurs utilisés, et outil de mesure d'audience retenu." },
-      {
-        title: "Contact données personnelles",
-        known: <>Pour toute demande relative à vos données, utilisez le <Link href="/contact" className="font-bold text-primary hover:underline">formulaire de contact</Link> (sujet « Données personnelles »).</>,
-        todo: "Identité du responsable de traitement et, le cas échéant, du délégué à la protection des données.",
-      },
+    intro: "Quelles données nous collectons, pourquoi, combien de temps, et vos droits.",
+    blocs: [
+      { h: "1. Responsable du traitement", p: ["Le responsable du traitement des données collectées sur le site est le Haut Conseil des Béninois de l'Extérieur (HCBE)."], todo: "Coordonnées du responsable et, le cas échéant, du délégué à la protection des données (DPO) ; adresse de contact pour l'exercice des droits." },
+      { h: "2. Données collectées", li: [
+        "Compte : adresse e-mail, mot de passe (stocké haché, jamais en clair), nom, type de compte, dates de création et de connexion.",
+        "Profil public : nom affiché, ville, pays, fonction, biographie, site web, mots-clés, CV (lien) — chaque membre choisit ce qui apparaît dans l'annuaire.",
+        "Données privées du profil : numéro de téléphone (jamais affiché), préférences d'alertes.",
+        "Contenus publiés : articles, offres, événements, adresses, annonces, candidatures, messages envoyés par formulaire relais.",
+        "Données techniques : journaux de connexion et d'administration (date, action), nécessaires à la sécurité du service.",
+        "Newsletter : adresse e-mail et segments d'abonnement.",
+      ] },
+      { h: "3. Finalités et bases légales", li: [
+        "Gérer votre compte et votre espace membre — exécution du service demandé.",
+        "Publier votre profil dans l'annuaire et vos contenus sur le site — votre consentement, modifiable à tout moment depuis votre profil.",
+        "Vous envoyer les e-mails d'activation, de connexion et les notifications liées à vos actions — exécution du service.",
+        "Vous envoyer les alertes par mots-clés et la lettre d'information — votre consentement, avec désabonnement à chaque envoi.",
+        "Mettre en relation les membres sans exposer leur adresse e-mail (formulaire relais) — exécution du service.",
+        "Assurer la sécurité du site et tracer les actions d'administration — intérêt légitime.",
+      ] },
+      { h: "4. Durées de conservation", li: [
+        "Compte et profil : tant que le compte est actif, puis anonymisation à la suppression du compte.",
+        "Contenus publiés : tant qu'ils sont en ligne ; les contenus retirés sont archivés 12 mois puis supprimés.",
+        "Comptes importés jamais activés : 12 mois après la dernière invitation, puis suppression.",
+        "Journaux de sécurité et d'administration : 12 mois.",
+        "Abonnement à la lettre d'information : jusqu'au désabonnement.",
+      ] },
+      { h: "5. Destinataires et sous-traitants", p: ["Les données sont traitées par le HCBE et ses prestataires techniques, uniquement pour les finalités ci-dessus : Vercel (hébergement du site, États-Unis), Neon (base de données, États-Unis), prestataire d'envoi d'e-mails (Brevo, France). Aucune donnée n'est vendue ni cédée à des tiers. Les adresses e-mail des membres ne sont jamais affichées sur le site."] },
+      { h: "6. Transferts hors de l'Union européenne", p: ["L'hébergement du site et de la base de données est situé aux États-Unis. Pour les membres résidant dans l'Union européenne, ces transferts sont encadrés par les clauses contractuelles types des prestataires."] },
+      { h: "7. Vos droits", p: ["Vous pouvez à tout moment : accéder à vos données et les télécharger (Mon espace → Mes données → Télécharger mes données), les rectifier (Mon profil), limiter leur visibilité (champ par champ), retirer votre consentement (alertes, newsletter, annuaire) et supprimer votre compte (Mon espace → Mes données). Vous pouvez aussi exercer vos droits par le formulaire de contact. Les membres de l'Union européenne peuvent saisir leur autorité de contrôle ; au Bénin, l'autorité compétente est l'APDP (Autorité de protection des données personnelles)."] },
+      { h: "8. Cookies", p: ["Le site utilise uniquement des cookies strictement nécessaires au fonctionnement (session de connexion, sécurité). Aucun cookie publicitaire ni de suivi tiers n'est déposé. Si un outil de mesure d'audience respectueux de la vie privée est ajouté, cette politique sera mise à jour."] },
+      { h: "9. Sécurité", p: ["Mots de passe hachés (Argon2), connexions chiffrées (HTTPS), accès au back-office limité aux rôles habilités et journalisé, e-mails jamais exposés publiquement."] },
     ],
   },
   cgu: {
-    title: "CGU & charte de",
-    em: "publication",
-    intro: "Règles d'utilisation du site, de publication et de modération.",
-    sections: [
-      {
-        title: "Inscription et comptes",
-        known: <>L&apos;inscription est gratuite et ouverte aux particuliers, entreprises, associations et artistes. Elle nécessite une adresse e-mail confirmée.</>,
-        todo: "Conditions d'âge, règles sur les comptes multiples et la véracité des informations.",
-      },
-      {
-        title: "Règles de publication",
-        known: <>Tout contenu déposé par un membre est relu par la modération avant mise en ligne. Les coordonnées personnelles ne doivent pas figurer dans les textes : le contact passe par le formulaire relais.</>,
-        todo: "Charte détaillée : contenus interdits, exigences de localisation et de mots-clés, droits sur les contenus publiés.",
-      },
-      { title: "Modération et signalements", todo: "Procédure de signalement, délais, recours." },
-      { title: "Petites annonces et mises en relation", todo: "Règles propres aux annonces et aux mises en relation ; responsabilité des membres ; rappel que le site ne demande jamais d'argent pour une mise en relation." },
-      { title: "Comptes professionnels", todo: "Conditions applicables aux comptes entreprise, association et artiste (validation, offres d'emploi, contenus promotionnels)." },
-      { title: "Suspension et bannissement", todo: "Motifs et procédure de suspension ou de suppression d'un compte." },
+    title: "Conditions d'utilisation &",
+    em: "charte",
+    intro: "Les règles d'usage du site et la Charte de la communauté du HCBE.",
+    blocs: [
+      { h: "1. Objet", p: ["Béninois du Monde est un portail d'information et de mise en réseau des Béninois de l'extérieur, des Béninois du pays et des afrodescendants, édité par le HCBE. L'inscription et l'usage des services sont gratuits ; certaines fonctions réservées aux partenaires (régie publicitaire, offres d'emploi payantes) feront l'objet de conditions spécifiques communiquées sur demande."] },
+      { h: "2. Compte", p: ["Un compte est personnel et correspond à une adresse e-mail. L'activation se fait par le lien reçu à cette adresse. Vous êtes responsable de la confidentialité de vos identifiants. Quatre types de comptes existent : membre, entreprise, association, artiste. Le HCBE peut suspendre un compte en cas de manquement à la présente charte."] },
+      { h: "3. Publication de contenus", p: ["Tout contenu proposé (article, offre, événement, adresse, annonce, demande d'entraide) est relu par la modération avant mise en ligne. Vous garantissez détenir les droits sur ce que vous publiez (textes, photos) et l'exactitude des informations pratiques (offres, adresses). Sont interdits : contenus illicites, discriminatoires, diffamatoires, trompeurs, publicités déguisées, collecte de données personnelles, contenus sans rapport avec l'objet du site."] },
+      { h: "4. Relations entre membres", p: ["Les mises en relation passent par le formulaire relais du site : aucune adresse e-mail n'est communiquée sans votre accord. Le HCBE n'intervient pas dans les relations commerciales, d'emploi ou de logement conclues entre membres et ne saurait en être tenu responsable."] },
+      { h: "5. Signalement et retrait", p: ["Tout membre peut signaler un contenu ou un profil. Le HCBE peut retirer un contenu, suspendre ou supprimer un compte, sans préavis en cas d'atteinte grave. Un contenu retiré peut être contesté par le formulaire de contact."] },
+      { h: "6. Données personnelles", p: ["Le traitement de vos données est décrit dans la Politique de confidentialité, qui fait partie des présentes conditions."] },
+      { h: "7. Évolution des conditions", p: ["Les présentes conditions peuvent évoluer ; la date de dernière mise à jour figure en bas de page et les membres sont informés par e-mail des changements substantiels."] },
+      { h: charte.title, p: [`Texte adopté par le HCBE et publié sur l'ancien site (mise à jour du ${new Date(charte.modified).toLocaleDateString("fr-FR")}). Il fait partie intégrante des conditions d'utilisation.`] },
+      ...charte.blocks.reduce<Bloc[]>((acc, b) => {
+        if (b.type === "h") acc.push({ h: b.text });
+        else if (b.type === "li") { const last = acc[acc.length - 1]; if (last && last.li) last.li.push(b.text); else acc.push({ li: [b.text] }); }
+        else acc.push({ p: [b.text] });
+        return acc;
+      }, []),
     ],
   },
 };
 
-export function generateStaticParams() {
-  return Object.keys(PAGES).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const page = PAGES[slug];
-  return { title: page ? `${page.title} ${page.em}` : "Page légale" };
+  const page = PAGES[(await params).slug];
+  return { title: page ? `${page.title} ${page.em}` : "Page introuvable" };
 }
 
 export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -100,24 +103,31 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
       <SiteHeader />
       <PageBanner pre={page.title} em={page.em} desc={page.intro} />
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="max-w-2xl space-y-8">
+        <div className="max-w-2xl space-y-6">
           <p className="border-l-4 border-accent bg-accent-light p-4 text-sm">
-            <strong>Document en cours de rédaction.</strong> Le texte définitif est préparé par le HCBE et son conseil juridique.
-            Les sections ci-dessous indiquent ce qui est déjà en vigueur sur le site et ce qui reste à compléter.
+            <strong>Version 1 du 20 octobre 2026</strong> — rédigée à partir du fonctionnement réel du site, en cours de validation par le HCBE et son conseil juridique. Les points signalés « à compléter » le seront avant la mise en ligne officielle.
           </p>
-          {page.sections.map((s, i) => (
-            <section key={s.title}>
-              <h2 className="section-title text-lg">{i + 1}. {s.title}</h2>
-              {s.known && <p className="mt-2 text-sm leading-relaxed text-ink">{s.known}</p>}
-              <div className="mt-3 border border-dashed border-line bg-paper-2 p-3 text-sm text-ink-2">
-                <span className="font-bold text-ink">À compléter par le HCBE : </span>{s.todo}
-              </div>
+          {page.blocs.map((b, i) => (
+            <section key={i}>
+              {b.h && <h2 className="section-title mt-8 text-lg">{b.h}</h2>}
+              {b.p?.map((t, j) => <p key={j} className="mt-2 text-sm leading-relaxed text-ink">{t}</p>)}
+              {b.li && (
+                <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-ink">
+                  {b.li.map((t, j) => <li key={j}>{t}</li>)}
+                </ul>
+              )}
+              {b.todo && (
+                <div className="mt-3 border border-dashed border-line bg-paper-2 p-3 text-sm text-ink-2">
+                  <span className="font-bold text-ink">À compléter par le HCBE : </span>{b.todo}
+                </div>
+              )}
             </section>
           ))}
           <nav className="flex flex-wrap gap-4 border-t border-line pt-4 text-sm font-bold text-primary">
             {Object.entries(PAGES).filter(([k]) => k !== slug).map(([k, v]) => (
               <Link key={k} href={`/legal/${k}`} className="hover:underline">{v.title} {v.em} →</Link>
             ))}
+            <Link href="/contact" className="hover:underline">Contact →</Link>
           </nav>
         </div>
       </main>

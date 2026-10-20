@@ -102,7 +102,7 @@ export async function applyAction(_prev: RelayState, formData: FormData): Promis
   await db.application.create({ data: { contentId: d.contentId, userId: session.user.id, message: d.message, cvUrl } });
 
   if (offre.ownerProfile?.user.status === "ACTIVE") {
-    const texte = `${d.message}${cvUrl ? `\n\nCV : ${cvUrl}` : ""}`;
+    const texte = `${d.message}${cvUrl ? `\n\nCV : ${cvUrl.startsWith("/") ? BASE_URL + cvUrl : cvUrl}` : ""}`;
     await sendRelayNotification(offre.ownerProfile.user.email, me?.displayName ?? "Un membre", `Candidature : ${offre.title}`, texte, `${BASE_URL}/compte/candidatures-recues`).catch(() => {});
   }
 

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { setContentStatusAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, TypeBadge, ContentStatusBadge, fmtDate, fmtNumber } from "@/components/admin/ui";
+import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, TypeBadge, ContentStatusBadge, EditLink, fmtDate, fmtNumber } from "@/components/admin/ui";
 import { ArticleForm } from "./article-form";
 
 export const metadata: Metadata = { title: "Rédaction" };
@@ -67,6 +67,7 @@ export default async function RedactionPage() {
                 <Td className="tabular-nums text-ink-2">{fmtNumber(a.views)}</Td>
                 <Td>
                   <div className="flex flex-nowrap justify-end gap-2">
+                    <EditLink id={a.id} />
                     {a.status === "PUBLISHED" ? (
                       <Link href={contentHref(a.type, a.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
                         Voir
@@ -84,7 +85,7 @@ export default async function RedactionPage() {
           </TableShell>
         )}
         <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-          La modification d&apos;un article existant et la mise à la une ne sont pas encore disponibles depuis cette page.
+          « Modifier » ouvre l&apos;édition complète (texte, lieu, mots-clés, mise à la une, statut).
         </p>
       </Card>
     </>

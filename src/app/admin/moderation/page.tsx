@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { moderateContentAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, TypeBadge, fmtDateTime } from "@/components/admin/ui";
+import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, TypeBadge, EditLink, fmtDateTime } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Modération" };
 
@@ -76,6 +76,7 @@ export default async function ModerationPage() {
                   <Td className="whitespace-nowrap text-muted">{fmtDateTime(c.createdAt)}</Td>
                   <Td>
                     <div className="flex flex-nowrap justify-end gap-2">
+                      <EditLink id={c.id} />
                       <ActionButton action={moderateContentAction} fields={{ id: c.id, decision: "publish" }} label="Valider" tone="primary" />
                       <ActionButton
                         action={moderateContentAction}

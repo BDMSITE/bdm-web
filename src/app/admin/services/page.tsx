@@ -5,17 +5,20 @@ import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { setContentStatusAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, fmtDate } from "@/components/admin/ui";
+import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, EditLink, fmtDate } from "@/components/admin/ui";
+import { ServiceContentPanel } from "./form";
 
 export const metadata: Metadata = { title: "Services" };
 
-/* Services : adresses, événements, avantages, annonces — listes par rubrique avec statut, action Archiver. */
+/* Services : adresses, événements, avantages, annonces, mises en relation — listes par
+   rubrique avec statut, création par l'équipe, Modifier / Archiver. */
 
 const RUBRIQUES: { type: ContentType; titre: string; vide: string }[] = [
   { type: "PLACE", titre: "Bonnes adresses", vide: "Aucune adresse déposée pour l'instant." },
   { type: "EVENT", titre: "Agenda (événements)", vide: "Aucun événement déposé pour l'instant." },
   { type: "DEAL", titre: "Avantages membres", vide: "Aucun avantage enregistré pour l'instant." },
   { type: "CLASSIFIED", titre: "Petites annonces", vide: "Aucune annonce déposée pour l'instant." },
+  { type: "HELP_REQUEST", titre: "Chercher / trouver (mises en relation)", vide: "Aucune demande de mise en relation pour l'instant." },
 ];
 
 export default async function AdminServicesPage() {
@@ -47,7 +50,9 @@ export default async function AdminServicesPage() {
 
   return (
     <>
-      <PageHead title="Services" desc="Adresses, agenda, avantages et petites annonces : 30 derniers contenus par rubrique, tous statuts." />
+      <PageHead title="Services" desc="Adresses, agenda, avantages, petites annonces et mises en relation : 30 derniers contenus par rubrique, tous statuts.">
+        <ServiceContentPanel />
+      </PageHead>
 
       <div className="space-y-6">
         {RUBRIQUES.map((r, i) => {
@@ -75,6 +80,7 @@ export default async function AdminServicesPage() {
                         <Td className="whitespace-nowrap text-muted">{fmtDate(c.publishedAt)}</Td>
                         <Td>
                           <div className="flex flex-nowrap justify-end gap-2">
+                            <EditLink id={c.id} />
                             {c.status === "PUBLISHED" && (
                               <Link href={contentHref(c.type, c.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
                                 Voir

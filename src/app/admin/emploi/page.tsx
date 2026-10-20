@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { setContentStatusAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, TypeBadge, ContentStatusBadge, fmtDate, fmtNumber } from "@/components/admin/ui";
+import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, TypeBadge, ContentStatusBadge, EditLink, fmtDate, fmtNumber } from "@/components/admin/ui";
+import { JobOfferPanel } from "./form";
 
 export const metadata: Metadata = { title: "Emploi" };
 
@@ -43,7 +44,9 @@ export default async function AdminEmploiPage() {
 
   return (
     <>
-      <PageHead title="Emploi & stages" desc="Toutes les offres déposées, quel que soit leur statut." />
+      <PageHead title="Emploi & stages" desc="Toutes les offres déposées, quel que soit leur statut.">
+        <JobOfferPanel />
+      </PageHead>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <StatCard label="Offres en ligne" value={fmtNumber(enLigne)} />
@@ -54,7 +57,7 @@ export default async function AdminEmploiPage() {
       <Card title={`Offres (${offres.length}${offres.length === 100 ? ", 100 plus récentes" : ""})`}>
         {offres.length === 0 ? (
           <EmptyState title="Aucune offre pour l'instant.">
-            Les offres déposées par les entreprises et associations depuis « Publier » apparaîtront ici.
+            Les offres déposées par les entreprises et associations depuis « Publier » apparaîtront ici. L&apos;équipe peut aussi en créer avec « Nouvelle offre ».
           </EmptyState>
         ) : (
           <TableShell head={<><Th>Offre</Th><Th>Type</Th><Th>Contrat</Th><Th>Recruteur</Th><Th>Statut</Th><Th>Publiée</Th><Th>Expire</Th><Th>&nbsp;</Th></>}>
@@ -77,6 +80,7 @@ export default async function AdminEmploiPage() {
                   </Td>
                   <Td>
                     <div className="flex flex-nowrap justify-end gap-2">
+                      <EditLink id={o.id} />
                       {o.status === "PUBLISHED" ? (
                         <Link href={contentHref(o.type, o.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
                           Voir

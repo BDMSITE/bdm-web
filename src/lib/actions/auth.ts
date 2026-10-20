@@ -7,6 +7,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { signIn, signOut } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
+import { clientIp, rateLimit } from "@/lib/ratelimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 /* Actions serveur : connexion, lien magique, inscription, déconnexion.
    Les erreurs reviennent par l'URL (?erreur=…) pour rester en composants
@@ -16,6 +18,8 @@ const emailSchema = z.email();
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const ip = await clientIp();
+  if (!(await rateLimit(`login:${ip}`, 10, 900)) || !(await rateLimit(`login:${email}`, 5, 900))) redirect("/connexion?erreur=trop");
   const password = String(formData.get("password") ?? "");
   const brut = String(formData.get("suite") ?? "");
   const suite = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/compte";
@@ -34,6 +38,7 @@ export async function loginAction(formData: FormData) {
 export async function magicLinkAction(formData: FormData) {
   const parsed = emailSchema.safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!parsed.success) redirect("/connexion?erreur=email");
+  if (!(await rateLimit(`magic:${await clientIp()}`, 5, 900)) || !(await rateLimit(`magic:${parsed.data}`, 3, 3600))) redirect("/connexion?erreur=trop");
 
   try {
     await signIn("resend", { email: parsed.data, redirectTo: "/compte" });
@@ -70,6 +75,9 @@ const registerSchema = z
 export type RegisterState = { error?: string; champ?: string };
 
 export async function registerAction(_prev: RegisterState, formData: FormData): Promise<RegisterState> {
+  const ip = await clientIp();
+  if (!(await rateLimit(`register:${ip}`, 5, 3600))) return { error: "Trop de tentatives depuis votre connexion : réessayez dans une heure." };
+  if (!(await verifyTurnstile(String(formData.get("cf-turnstile-response") ?? ""), ip))) return { error: "Vérification anti-robot échouée : rechargez la page et réessayez." };
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     const issue = parsed.error.issues[0];

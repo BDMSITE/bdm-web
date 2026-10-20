@@ -423,3 +423,9 @@ model AuditLog {
   meta      Json?
   createdAt DateTime @default(now())
 }
+
+model RateLimit {
+  key         String   @id // ex. "login:1.2.3.4", "register:email@x"
+  windowStart DateTime
+  count       Int      @default(1)
+}

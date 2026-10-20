@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader, SiteFooter, PageBanner } from "@/components/site/chrome";
 import { InscriptionForm } from "./form";
+import { turnstileSiteKey } from "@/lib/turnstile";
 
 export const metadata: Metadata = { title: "Créer un compte" };
 
@@ -19,7 +20,7 @@ export default function InscriptionPage() {
       />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <InscriptionForm />
+          <InscriptionForm turnstileSiteKey={turnstileSiteKey} />
 
           <aside className="space-y-6">
             <div className="border-2 border-primary bg-primary-faint p-5">

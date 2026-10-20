@@ -1,5 +1,7 @@
 "use client";
 
+import { isHostedCv } from "@/lib/cv";
+
 import { useActionState } from "react";
 import { sendMessageAction, applyAction, type RelayState } from "@/lib/actions/messages";
 
@@ -30,6 +32,7 @@ export function RelayForm({ toProfileId, contentId, parentId, label = "Envoyer",
 }
 
 export function ApplyForm({ contentId, cvUrl }: { contentId: string; cvUrl: string | null }) {
+  const hosted = isHostedCv(cvUrl);
   const [state, action, pending] = useActionState<RelayState, FormData>(applyAction, {});
   if (state.ok) {
     return <p role="status" className="rounded border border-primary bg-primary-faint px-3 py-2.5 text-sm text-primary-dark">Candidature envoyée. Suivez-la dans « Mes candidatures ».</p>;
@@ -44,8 +47,8 @@ export function ApplyForm({ contentId, cvUrl }: { contentId: string; cvUrl: stri
       </div>
       <div>
         <label htmlFor="apply-cv" className="mb-1 block text-sm font-bold">Lien vers votre CV</label>
-        <input id="apply-cv" name="cvUrl" type="url" defaultValue={cvUrl ?? ""} placeholder="https://" className={INPUT} />
-        <p className="mt-1 text-xs text-muted">{cvUrl ? "Pré-rempli depuis votre profil." : "Ajoutez votre CV dans Mon espace → Mon CV pour le pré-remplir."}</p>
+        <input id="apply-cv" name="cvUrl" type="url" defaultValue={hosted ? "" : (cvUrl ?? "")} placeholder="https://" className={INPUT} />
+        <p className="mt-1 text-xs text-muted">{hosted ? "Votre CV déposé sur le site sera joint ; indiquez un lien seulement pour en utiliser un autre." : cvUrl ? "Pré-rempli depuis votre profil." : "Ajoutez votre CV dans Mon espace → Mon CV pour le pré-remplir."}</p>
       </div>
       <button type="submit" disabled={pending} className="rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60">
         {pending ? "Envoi…" : "Envoyer ma candidature"}

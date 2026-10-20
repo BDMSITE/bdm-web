@@ -7,7 +7,7 @@
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
 from scratch en Next.js — remplace l'ancien WordPress de beninois-du-monde.com (audit 14/09/2026).
 
-## 📍 NIVEAU ACTUEL : site réel, vidé de toute donnée fictive, en attente de contenu (19/10/2026)
+## 📍 NIVEAU ACTUEL : site réel et sécurisé (S7 livré), en attente de contenu et de la clé Brevo (20/10/2026)
 Fait en local : base Postgres + Meilisearch (Docker/OrbStack installé), migration `init`, seed de démo,
 Auth.js (inscription → lien d'activation → connexion, mot de passe + lien magique), annuaire et fiche
 profil en base, recherche Meilisearch, routes protégées, build de prod vert.
@@ -104,7 +104,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   sharp 0.35.5, xlsx 0.20.3 (tarball SheetJS : npm reste bloqué en 0.18.5 vulnérable). Audit prod restant : 8 alertes
   toutes dans l'outil CLI Prisma (studio/lodash/mysql2), jamais exécuté en prod.
   **Les 10 besoins SIAL sont masqués (IN_MODERATION)** en attendant l'accord de Josué/HCBE.
-  À faire (S7) : rate-limit connexion/inscription/lien magique (Upstash gratuit), Turnstile, 2FA admin, CSP.
+  S7 fait le 20/10 (voir plus bas). Reste : 2FA admin, CSP.
 
 - **19/10 — GRAND NETTOYAGE (validé par Josué) : plus aucune donnée inventée sur le site.** 66 pages → toutes lisent
   la base ou affichent un état vide honnête. Couche de données `src/lib/content.ts` + composants `content.tsx` /
@@ -132,11 +132,28 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   de ses publications (retour en modération) ; **favoris** ; **géocodage Nominatim** des villes (à l'enregistrement du
   profil + `pnpm geocode` de rattrapage, fait en local et en prod) → la carte affichera les membres dès activation.
 
+- **20/10 — S7 sécurité + back-office complet.** **Sauvegarde quotidienne** de la base : cron Vercel 03:00 UTC →
+  `/api/cron/backup` (protégé par CRON_SECRET, posé en prod/preview) → export JSON de toutes les tables dans le **Blob
+  privé Vercel** `bdm-fichiers` (store créé, jeton BLOB_READ_WRITE_TOKEN en prod/preview/.env), 30 derniers conservés ;
+  `pnpm db:backup` en local (→ `backups/`, gitignoré). **Limitation des tentatives** sans service externe (table
+  `RateLimit`, migration appliquée en local et sur Neon) : connexion 5/e-mail et 10/IP par ¼ h, lien magique, inscription
+  5/IP/h, contact 5/IP/h, messages déjà 20/h. **Anti-robot Cloudflare Turnstile** prêt (inscription + contact) : inactif
+  tant que `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` ne sont pas posées (compte Cloudflare gratuit à
+  créer, S8). **Dépôt de fichier CV** (PDF ≤ 3 Mo) dans le Blob privé, servi par `/api/cv/[id]` uniquement au
+  propriétaire, à l'équipe, aux membres connectés si « CV visible » et aux recruteurs ayant reçu sa candidature ;
+  le lien externe reste possible. **Formulaires admin** : « Nouveau lieu de mémoire », « Nouvelle personnalité »
+  (Béninois qui comptent), « Nouveau contenu » (adresse, événement, bon plan, annonce, demande d'aide), « Nouvelle offre »
+  (emploi/stage), **édition de tout contenu** `/admin/contenus/[id]` (statut, lieu géocodé, coordonnées, détails par
+  type, journal d'audit). ⚠️ `vercel blob`/`vercel env pull` écrivent un `.env.local` (Neon) qui prend le pas sur
+  `.env` : le supprimer aussitôt. Catégories de lieux de mémoire (Site historique, Musée, Monument…) à valider HCBE.
+
 ## Ce qui RESTE (ordre)
-1. Retours HCBE sur la maquette → corrections
-2. Prérequis Josué (page Socle §0) puis **S1 socle** : docker compose up, migrate, client Prisma+adapter pg,
-   seed démo, Auth.js 4 types de comptes, routes protégées, Meilisearch, Resend, env Vercel — critères de fin §7
-3. Atelier questionnaire HCBE → figer nom/monétisation/adhésion → S2 magazine dynamique, etc. (Étapes Notion)
+1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
+   Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, décision sur les 10 besoins SIAL (masqués),
+   identité légale (3 trous dans /legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
+2. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
+   d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
+3. Plus tard : 2FA admin, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

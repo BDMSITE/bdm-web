@@ -4,6 +4,7 @@ import { FileUser } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CvForm } from "./form";
+import { cvRoute } from "@/lib/cv";
 
 export const metadata: Metadata = { title: "Mon CV" };
 
@@ -12,10 +13,12 @@ export const metadata: Metadata = { title: "Mon CV" };
 export default async function CvPage() {
   const session = await auth();
   const [profile, nbCandidatures] = await Promise.all([
-    db.profile.findUnique({ where: { userId: session!.user.id }, select: { cvUrl: true, cvPublished: true } }),
+    db.profile.findUnique({ where: { userId: session!.user.id }, select: { id: true, cvUrl: true, cvPublished: true } }),
     db.application.count({ where: { userId: session!.user.id } }),
   ]);
   if (!profile) return <p className="text-sm text-muted">Profil introuvable.</p>;
+  const hosted = profile.cvUrl === cvRoute(profile.id);
+  const uploadEnabled = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
   return (
     <div className="space-y-6">
@@ -30,20 +33,20 @@ export default async function CvPage() {
           {profile.cvUrl ? (
             <>
               <a href={profile.cvUrl} target="_blank" rel="noopener noreferrer" className="break-all font-bold text-primary hover:underline">
-                {profile.cvUrl}
+                {hosted ? "Mon CV déposé (PDF)" : profile.cvUrl}
               </a>
               <p className="text-xs text-muted">{profile.cvPublished ? "Visible des recruteurs" : "Réservé à vos candidatures"}</p>
             </>
           ) : (
             <>
               <p className="font-bold">Aucun CV enregistré</p>
-              <p className="text-xs text-muted">Ajoutez le lien de votre CV ci-dessous.</p>
+              <p className="text-xs text-muted">{uploadEnabled ? "Déposez un PDF ou ajoutez un lien ci-dessous." : "Ajoutez le lien de votre CV ci-dessous."}</p>
             </>
           )}
         </div>
       </div>
 
-      <CvForm cvUrl={profile.cvUrl ?? ""} cvPublished={profile.cvPublished} />
+      <CvForm cvUrl={profile.cvUrl ?? ""} cvPublished={profile.cvPublished} hosted={hosted} uploadEnabled={uploadEnabled} />
 
       <p className="text-sm text-ink-2">
         {nbCandidatures === 0 ? "Aucune candidature envoyée" : `${nbCandidatures} candidature${nbCandidatures > 1 ? "s" : ""} envoyée${nbCandidatures > 1 ? "s" : ""}`}

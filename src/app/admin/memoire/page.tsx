@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { setContentStatusAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, fmtDate } from "@/components/admin/ui";
+import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, EditLink, fmtDate } from "@/components/admin/ui";
+import { MemoryPlacePanel, CelebrityForm } from "./form";
 
 export const metadata: Metadata = { title: "Mémoire & HCBE" };
 
@@ -27,13 +28,15 @@ export default async function AdminMemoirePage() {
         <Link href="/memoire" className="whitespace-nowrap rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
           Page publique
         </Link>
+        <MemoryPlacePanel />
+        <CelebrityForm />
       </PageHead>
 
       <div className="space-y-6">
         <Card title={`Lieux de mémoire (${lieux.length})`}>
           {lieux.length === 0 ? (
             <EmptyState title="Aucun lieu de mémoire enregistré.">
-              La création de lieux de mémoire depuis le back-office n&apos;est pas encore disponible.
+              Utilisez « Nouveau lieu de mémoire » ci-dessus : titre, texte, ville, pays, catégorie, adresse et coordonnées pour la carte.
             </EmptyState>
           ) : (
             <TableShell head={<><Th>Lieu</Th><Th>Localisation</Th><Th>Statut</Th><Th>Publié</Th><Th>&nbsp;</Th></>}>
@@ -45,6 +48,7 @@ export default async function AdminMemoirePage() {
                   <Td className="whitespace-nowrap text-muted">{fmtDate(l.publishedAt)}</Td>
                   <Td>
                     <div className="flex flex-nowrap justify-end gap-2">
+                      <EditLink id={l.id} />
                       {l.status === "PUBLISHED" ? (
                         <Link href={contentHref(l.type, l.slug)} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">Voir</Link>
                       ) : l.status !== "IN_MODERATION" ? (
@@ -64,7 +68,7 @@ export default async function AdminMemoirePage() {
         <Card title={`Béninois qui comptent (${celebrites.length})`}>
           {celebrites.length === 0 ? (
             <EmptyState title="Aucune fiche pour l'instant.">
-              Le modèle existe en base (nom, domaine, biographie, liens) mais aucune fiche n&apos;a été créée. Le formulaire de création arrivera avec la rubrique publique.
+              Utilisez « Nouvelle personnalité » ci-dessus (nom, domaine, biographie, photo, liens). Les fiches apparaissent sur /magazine/beninois-qui-comptent.
             </EmptyState>
           ) : (
             <TableShell head={<><Th>Nom</Th><Th>Domaine</Th><Th>Adresse</Th></>}>
@@ -76,6 +80,11 @@ export default async function AdminMemoirePage() {
                 </tr>
               ))}
             </TableShell>
+          )}
+          {celebrites.length > 0 && (
+            <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
+              La modification d&apos;une fiche existante n&apos;est pas encore disponible depuis cette page.
+            </p>
           )}
         </Card>
       </div>

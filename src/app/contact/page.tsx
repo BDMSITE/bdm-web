@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { SiteHeader, SiteFooter, PageBanner } from "@/components/site/chrome";
 import { sendContactMessage } from "@/lib/mail";
+import { clientIp, rateLimit } from "@/lib/ratelimit";
+import { turnstileSiteKey, verifyTurnstile } from "@/lib/turnstile";
+import { Turnstile } from "@/components/site/turnstile";
 
 export const metadata: Metadata = { title: "Contact" };
 
@@ -38,10 +41,15 @@ const ERREURS: Record<string, string> = {
   consent: "Vous devez accepter le traitement de votre demande.",
   spam: "Le formulaire n'a pas pu être envoyé.",
   envoi: "Envoi impossible pour le moment. Réessayez dans quelques instants.",
+  trop: "Trop de messages envoyés depuis votre connexion : réessayez dans une heure.",
+  robot: "Vérification anti-robot échouée : rechargez la page et réessayez.",
 };
 
 async function contactAction(formData: FormData) {
   "use server";
+  const ip = await clientIp();
+  if (!(await rateLimit(`contact:${ip}`, 5, 3600))) redirect("/contact?erreur=trop");
+  if (!(await verifyTurnstile(String(formData.get("cf-turnstile-response") ?? ""), ip))) redirect("/contact?erreur=robot");
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(`/contact?erreur=${parsed.error.issues[0].message}`);
   const d = parsed.data;
@@ -113,6 +121,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                 <input type="checkbox" name="consent" required className="mt-0.5 h-4 w-4 accent-primary" />
                 J&apos;accepte que mes informations soient utilisées pour traiter ma demande. *
               </label>
+              <Turnstile siteKey={turnstileSiteKey} />
               <button type="submit" className="rounded bg-primary px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
                 Envoyer
               </button>

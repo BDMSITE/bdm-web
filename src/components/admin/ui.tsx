@@ -250,6 +250,36 @@ export function UserStatusBadge({ status }: { status: UserStatus }) {
   return <Badge tone={USER_STATUS_TONE[status]}>{USER_STATUS_LABEL[status]}</Badge>;
 }
 
+/* Types qu'un membre de l'équipe peut créer depuis le back-office (MEMBER_ARTICLE
+   reste réservé au guichet Publier) et statuts choisissables à la modification
+   (SCHEDULED et EXPIRED sont automatiques). */
+export const ADMIN_CONTENT_TYPES = ["ARTICLE", "JOB", "INTERNSHIP", "EVENT", "CLASSIFIED", "PLACE", "DEAL", "HELP_REQUEST", "MEMORY_PLACE"] as const;
+export type AdminContentType = (typeof ADMIN_CONTENT_TYPES)[number];
+export const ADMIN_STATUSES = ["DRAFT", "IN_MODERATION", "PUBLISHED", "REJECTED", "ARCHIVED"] as const;
+
+/* Page admin qui liste un type de contenu (retour après édition). */
+export const ADMIN_LIST_HREF: Record<ContentType, string> = {
+  ARTICLE: "/admin/redaction",
+  MEMBER_ARTICLE: "/admin/redaction",
+  JOB: "/admin/emploi",
+  INTERNSHIP: "/admin/emploi",
+  EVENT: "/admin/services",
+  CLASSIFIED: "/admin/services",
+  PLACE: "/admin/services",
+  DEAL: "/admin/services",
+  HELP_REQUEST: "/admin/services",
+  MEMORY_PLACE: "/admin/memoire",
+};
+
+/* Lien « Modifier » vers l'édition admin d'un contenu. */
+export function EditLink({ id }: { id: string }) {
+  return (
+    <Link href={`/admin/contenus/${id}`} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
+      Modifier
+    </Link>
+  );
+}
+
 export function TypeBadge({ type }: { type: ContentType }) {
   return <Badge tone="blue">{CONTENT_LABEL[type]}</Badge>;
 }
@@ -274,6 +304,8 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "content.reject": "Refus",
   "content.archive": "Archivage",
   "content.create": "Création",
+  "content.update": "Modification",
+  "celebrity.create": "Personnalité ajoutée",
   "user.suspend": "Suspension",
   "user.reactivate": "Réactivation",
   "keyword.create": "Mot-clé ajouté",

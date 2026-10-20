@@ -10,6 +10,8 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { indexProfile } from "@/lib/search";
 import { CONTENT_LABEL } from "@/lib/routes";
+import { put, del } from "@vercel/blob";
+import { cvBlobPath, cvRoute, CV_MAX_BYTES } from "@/lib/cv";
 
 /* Actions serveur de l'espace membre : alertes, CV, mot de passe, suppression
    du compte. Chaque action exige une session et n'écrit que sur les lignes
@@ -86,28 +88,62 @@ export async function deleteAlertAction(formData: FormData) {
 /* --- CV ----------------------------------------------------------------- */
 
 const cvSchema = z.object({
-  cvUrl: z.union([z.literal(""), z.url("Adresse du CV invalide (elle doit commencer par https://)")]),
+  cvUrl: z.union([z.literal(""), z.string().regex(/^\/api\/cv\/[\w-]+$/), z.url("Adresse du CV invalide (elle doit commencer par https://)")]),
   cvPublished: z.string().optional(),
 });
 
+
+async function removeHostedCv(profileId: string, cvUrl: string | null) {
+  if (cvUrl === cvRoute(profileId) && process.env.BLOB_READ_WRITE_TOKEN) {
+    await del(cvBlobPath(profileId)).catch((e) => console.error("[cv] suppression Blob impossible", e));
+  }
+}
+
 export async function updateCvAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await requireUserId("/compte/cv");
+  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, cvUrl: true } });
+  if (!profile) return { error: "Profil introuvable" };
 
-  const parsed = cvSchema.safeParse(Object.fromEntries(formData));
+  const file = formData.get("cvFile");
+  const hosted = profile.cvUrl === cvRoute(profile.id);
+
+  if (file instanceof File && file.size > 0) {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) return { error: "Le dépôt de fichier n'est pas activé sur ce serveur : collez un lien à la place." };
+    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) return { error: "Le CV doit être un fichier PDF." };
+    if (file.size > CV_MAX_BYTES) return { error: "Le fichier dépasse 3 Mo : allégez votre PDF." };
+    await put(cvBlobPath(profile.id), file, { access: "private", contentType: "application/pdf", addRandomSuffix: false, allowOverwrite: true });
+    await db.profile.update({ where: { id: profile.id }, data: { cvUrl: cvRoute(profile.id), cvPublished: formData.get("cvPublished") === "on" } });
+    revalidatePath("/compte");
+    revalidatePath("/compte/cv");
+    return { ok: true };
+  }
+
+  const parsed = cvSchema.safeParse({ cvUrl: hosted && !formData.get("cvUrl") ? profile.cvUrl : formData.get("cvUrl"), cvPublished: formData.get("cvPublished") });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
 
-  if (d.cvUrl && !d.cvUrl.startsWith("https://")) return { error: "Le lien du CV doit commencer par https://" };
-  if (!d.cvUrl && d.cvPublished === "on") return { error: "Ajoutez un lien vers votre CV avant de le rendre visible" };
+  if (d.cvUrl && !d.cvUrl.startsWith("https://") && d.cvUrl !== cvRoute(profile.id)) return { error: "Le lien du CV doit commencer par https://" };
+  if (!d.cvUrl && d.cvPublished === "on") return { error: "Ajoutez votre CV avant de le rendre visible" };
+  if (d.cvUrl !== profile.cvUrl) await removeHostedCv(profile.id, profile.cvUrl);
 
   await db.profile.update({
-    where: { userId },
+    where: { id: profile.id },
     data: { cvUrl: d.cvUrl || null, cvPublished: Boolean(d.cvUrl) && d.cvPublished === "on" },
   });
 
   revalidatePath("/compte");
   revalidatePath("/compte/cv");
   return { ok: true };
+}
+
+export async function removeCvAction(): Promise<void> {
+  const userId = await requireUserId("/compte/cv");
+  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, cvUrl: true } });
+  if (!profile) return;
+  await removeHostedCv(profile.id, profile.cvUrl);
+  await db.profile.update({ where: { id: profile.id }, data: { cvUrl: null, cvPublished: false } });
+  revalidatePath("/compte");
+  revalidatePath("/compte/cv");
 }
 
 /* --- Mot de passe ------------------------------------------------------- */
@@ -145,7 +181,8 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
     return { error: "Tapez SUPPRIMER en majuscules pour confirmer" };
   }
 
-  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, visibility: true } });
+  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, visibility: true, cvUrl: true } });
+  if (profile) await removeHostedCv(profile.id, profile.cvUrl);
   const visibility = ((profile?.visibility as Record<string, unknown> | null) ?? {}) as Record<string, unknown>;
 
   await db.$transaction([

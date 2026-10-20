@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { UserRound, Building2, HeartHandshake, Music4 } from "lucide-react";
 import { registerAction, type RegisterState } from "@/lib/actions/auth";
+import { Turnstile } from "@/components/site/turnstile";
 
 const TYPES = [
   { value: "MEMBER", icon: UserRound, t: "Membre", d: "Particulier de la diaspora ou du Bénin : profil, alertes, CV, publications." },
@@ -14,7 +15,7 @@ const TYPES = [
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none aria-[invalid=true]:border-danger";
 
-export function InscriptionForm() {
+export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: string }) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(registerAction, {});
   const invalid = (champ: string) => (state.champ === champ ? true : undefined);
 
@@ -105,6 +106,7 @@ export function InscriptionForm() {
           </label>
         </div>
 
+        <Turnstile siteKey={turnstileSiteKey} />
         <div className="flex flex-wrap items-center gap-4">
           <button
             type="submit"

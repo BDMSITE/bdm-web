@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, AdSlot, KeywordChips } from "@/components/site/chrome";
 import { db } from "@/lib/db";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
+import { auth } from "@/lib/auth";
+import { RelayForm } from "@/components/site/relay-form";
 
 /* Fiche profil membre (CDC §7.5) — données en base. Le contact passe par
    un formulaire relais (S3) : l'e-mail n'est jamais affiché. */
@@ -29,8 +31,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfilPage({ params }: Props) {
-  const profile = await getProfile((await params).slug);
+  const [profile, session] = await Promise.all([getProfile((await params).slug), auth()]);
   if (!profile) notFound();
+  const viewerId = session?.user?.id ?? null;
+  const isSelf = viewerId === profile.userId;
 
   const sectors = profile.keywords.filter((k) => k.keyword.family === "SECTOR").map((k) => k.keyword.name);
   const allKeywords = profile.keywords.map((k) => k.keyword.name);
@@ -74,14 +78,13 @@ export default async function ProfilPage({ params }: Props) {
                 </span>
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap gap-3">
-              <button className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
-                Écrire à {prenom}
-              </button>
-              <button className="whitespace-nowrap rounded border-2 border-white/60 px-4 py-2 text-sm font-bold hover:border-accent hover:text-accent">
-                Suivre
-              </button>
-            </div>
+            {!isSelf && (
+              <div className="flex shrink-0 flex-wrap gap-3">
+                <a href="#ecrire" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
+                  Écrire à {prenom}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -130,6 +133,19 @@ export default async function ProfilPage({ params }: Props) {
               )}
             </section>
 
+            {!isSelf && (
+              <section id="ecrire" className="border-2 border-primary p-4">
+                <h2 className="section-title text-lg">Écrire à <em>{prenom}</em></h2>
+                {viewerId ? (
+                  <div className="mt-3"><RelayForm toProfileId={profile.id} label={`Envoyer à ${prenom}`} /></div>
+                ) : (
+                  <>
+                    <p className="mt-2 text-sm text-ink-2">Le contact passe par un formulaire relais : l&apos;e-mail de {prenom} n&apos;est jamais affiché. Réservé aux membres connectés.</p>
+                    <Link href={`/connexion?callbackUrl=${encodeURIComponent(profileHref(profile.slug))}`} className="mt-3 inline-block rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">Se connecter pour écrire</Link>
+                  </>
+                )}
+              </section>
+            )}
             <p className="text-xs text-muted">
               Ce membre choisit ce qui est public, réservé aux membres ou privé. Le contact passe
               par un formulaire relais : son e-mail n&apos;est jamais affiché.

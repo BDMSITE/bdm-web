@@ -88,6 +88,8 @@ model User {
   messagesSent Message[]     @relation("MessageFrom")
   reports      Report[]
   auditLogs    AuditLog[]
+  favorites    Favorite[]
+  messagesReceived Message[] @relation("MessageToUser")
 }
 
 // --- Auth.js (comptes OAuth futurs, sessions, jetons de lien magique) ---
@@ -210,6 +212,8 @@ model Content {
   keywords     ContentKeyword[]
   applications Application[]
   reports      Report[]
+  favorites    Favorite[]
+  messages     Message[]
 
   @@index([type, status, publishedAt])
   @@index([country, city])
@@ -324,10 +328,30 @@ model Message {
   from        User     @relation("MessageFrom", fields: [fromUserId], references: [id])
   toProfileId String
   to          Profile  @relation("MessageTo", fields: [toProfileId], references: [id])
+  toUserId    String?
+  toUser      User?    @relation("MessageToUser", fields: [toUserId], references: [id])
   contentId   String?
+  content     Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  parentId    String?
+  parent      Message? @relation("Thread", fields: [parentId], references: [id])
+  replies     Message[] @relation("Thread")
   body        String
+  readAt      DateTime?
   status      String   @default("sent")
   createdAt   DateTime @default(now())
+
+  @@index([toProfileId, createdAt])
+  @@index([fromUserId, createdAt])
+}
+
+model Favorite {
+  userId    String
+  contentId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, contentId])
 }
 
 model Report {

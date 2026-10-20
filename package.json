@@ -13,7 +13,8 @@
     "check": "prisma generate && eslint && next typegen && tsc --noEmit",
     "import:membres": "tsx scripts/import-membres.ts",
     "import:sial": "tsx scripts/import-besoins-sial.ts",
-    "import:wordpress": "tsx scripts/import-wordpress.ts"
+    "import:wordpress": "tsx scripts/import-wordpress.ts",
+    "geocode": "tsx scripts/geocode.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

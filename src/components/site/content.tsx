@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import type { ContentFull } from "@/lib/content";
 import { CONTENT_LABEL, contentHref, keywordHref, profileHref } from "@/lib/routes";
+import { RelayForm, ApplyForm } from "@/components/site/relay-form";
+
+export type Viewer = { id: string; cvUrl: string | null } | null;
 
 /* Briques d'affichage des contenus réels : carte, liste, fiche, état vide.
    Pas d'image = pas de bloc image (aucun faux « photo »). */
@@ -100,8 +103,9 @@ function Details({ item }: { item: ContentFull }) {
   );
 }
 
-export function ContentDetail({ item, related }: { item: ContentFull; related: ContentFull[] }) {
+export function ContentDetail({ item, related, viewer = null }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer }) {
   const owner = item.ownerProfile;
+  const isJob = item.type === "JOB" || item.type === "INTERNSHIP";
   const cta =
     item.type === "JOB" || item.type === "INTERNSHIP" ? "Postuler" :
     item.type === "EVENT" ? "Contacter l'organisateur" :
@@ -136,10 +140,20 @@ export function ContentDetail({ item, related }: { item: ContentFull; related: C
       {cta && (
         <div className="mt-8 border-2 border-primary p-4">
           <p className="font-display text-lg font-bold">{cta}</p>
-          <p className="mt-1 text-sm text-ink-2">Le contact passe par un formulaire relais : votre e-mail n&apos;est jamais affiché. Réservé aux membres connectés.</p>
-          <Link href={`/connexion?callbackUrl=${encodeURIComponent(contentHref(item.type, item.slug))}`} className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">
-            Se connecter pour continuer
-          </Link>
+          {!viewer ? (
+            <>
+              <p className="mt-1 text-sm text-ink-2">Le contact passe par un formulaire relais : votre e-mail n&apos;est jamais affiché. Réservé aux membres connectés.</p>
+              <Link href={`/connexion?callbackUrl=${encodeURIComponent(contentHref(item.type, item.slug))}`} className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">
+                Se connecter pour continuer
+              </Link>
+            </>
+          ) : !owner ? (
+            <p className="mt-1 text-sm text-ink-2">Ce contenu a été publié par la rédaction : utilisez le <Link href="/contact" className="font-bold text-primary hover:underline">formulaire de contact</Link>.</p>
+          ) : isJob ? (
+            <div className="mt-3"><ApplyForm contentId={item.id} cvUrl={viewer.cvUrl} /></div>
+          ) : (
+            <div className="mt-3"><RelayForm contentId={item.id} label={cta} placeholder={`Votre message à ${owner.displayName}…`} /></div>
+          )}
         </div>
       )}
 

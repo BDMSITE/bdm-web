@@ -6,6 +6,8 @@ import { SiteHeader, SiteFooter, AdSlot, AlertsBox, PageBanner } from "@/compone
 import { ContentList, ContentDetail } from "@/components/site/content";
 import { getContent, listCategories, listContents, listContractTypes, listCountries, relatedContents } from "@/lib/content";
 import { CONTENT_LABEL, SECTION } from "@/lib/routes";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 
 /* Fabrique des pages de rubrique : bandeau, filtres (GET), liste réelle,
    état vide honnête, colonne latérale. Et la fiche détail générique. */
@@ -108,13 +110,16 @@ export async function contentMetadata(slug: string, fallback: string): Promise<M
 export async function ContentDetailPage({ slug, types }: { slug: string; types: ContentType[] }) {
   const item = await getContent(slug);
   if (!item || !types.includes(item.type)) notFound();
-  const related = await relatedContents(item);
+  const [related, session] = await Promise.all([relatedContents(item), auth()]);
+  const viewer = session?.user
+    ? { id: session.user.id, cvUrl: (await db.profile.findUnique({ where: { userId: session.user.id }, select: { cvUrl: true } }))?.cvUrl ?? null }
+    : null;
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <ContentDetail item={item} related={related} />
+          <ContentDetail item={item} related={related} viewer={viewer} />
           <aside className="space-y-8">
             <AdSlot label="pavé latéral" />
             <AlertsBox />

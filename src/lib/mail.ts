@@ -68,3 +68,15 @@ export function sendContactMessage(from: { name: string; email: string }, subjec
     `<p>Message reçu via le formulaire de contact de <strong>Béninois du Monde</strong>.</p><p><strong>De :</strong> ${esc(from.name)} &lt;${esc(from.email)}&gt;<br><strong>Sujet :</strong> ${esc(subject)}</p><p style="white-space:pre-line">${esc(message)}</p>`,
   );
 }
+
+/* Messagerie relais : le destinataire reçoit le message et un lien pour répondre
+   sur le site. L'adresse de l'expéditeur n'est jamais transmise. */
+export function sendRelayNotification(to: string, fromName: string, subject: string, body: string, link: string) {
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+  return send(
+    to,
+    `${subject} — Béninois du Monde`,
+    `${fromName} vous a écrit via Béninois du Monde :\n\n${body}\n\nRépondre (sans dévoiler votre adresse) : ${link}`,
+    `<p><strong>${esc(fromName)}</strong> vous a écrit via <strong>Béninois du Monde</strong> :</p><blockquote style="border-left:3px solid #008751;padding-left:12px;white-space:pre-line">${esc(body)}</blockquote><p><a href="${link}">Répondre sur le site</a> — votre adresse e-mail n'est jamais communiquée.</p>`,
+  );
+}

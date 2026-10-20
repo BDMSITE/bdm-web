@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { indexProfile } from "@/lib/search";
+import { geocode } from "@/lib/geocode";
 
 const schema = z.object({
   displayName: z.string().trim().min(2, "Nom affiché trop court").max(80),
@@ -30,9 +31,14 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
 
   const keywordNames = [...new Set(d.keywords.split(",").map((k) => k.trim()).filter(Boolean))].slice(0, 15);
 
+  const avant = await db.profile.findUnique({ where: { userId: session.user.id }, select: { city: true, country: true, lat: true } });
+  const lieuChange = !avant || avant.city !== (d.city || null) || avant.country !== (d.country || null) || avant.lat === null;
+  const geo = lieuChange && d.city ? await geocode(d.city, d.country) : null;
+
   const profile = await db.profile.update({
     where: { userId: session.user.id },
     data: {
+      ...(lieuChange && { lat: geo?.lat ?? null, lng: geo?.lng ?? null }),
       displayName: d.displayName,
       city: d.city || null,
       country: d.country || null,

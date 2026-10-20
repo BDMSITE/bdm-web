@@ -20,7 +20,7 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
   const [session, sp] = await Promise.all([auth(), searchParams]);
   const userId = session!.user.id;
 
-  const [profile, contents, nbPublished, nbAlerts, alerts] = await Promise.all([
+  const [profile, contents, nbPublished, nbAlerts, alerts, nbMessages] = await Promise.all([
     db.profile.findUnique({ where: { userId }, select: { id: true, displayName: true, cvPublished: true, cvUrl: true, slug: true } }),
     db.content.findMany({
       where: { ownerProfile: { userId } },
@@ -31,6 +31,7 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
     db.content.count({ where: { ownerProfile: { userId }, status: "PUBLISHED" } }),
     db.alert.count({ where: { userId } }),
     db.alert.findMany({ where: { userId }, take: 3, select: { id: true, keywordIds: true } }),
+    db.message.count({ where: { toUserId: userId, readAt: null } }),
   ]);
   const prenom = (profile?.displayName ?? session!.user.name ?? "").split(" ")[0];
 
@@ -51,7 +52,7 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
         {[
           { n: nbPublished, l: `publication${nbPublished > 1 ? "s" : ""} en ligne`, href: "/compte/publications" },
           { n: nbAlerts, l: `alerte${nbAlerts > 1 ? "s" : ""} active${nbAlerts > 1 ? "s" : ""}`, href: "/compte/alertes" },
-          { n: profile?.cvPublished ? "Oui" : "Non", l: "CV visible des recruteurs", href: "/compte/cv" },
+          { n: nbMessages, l: `message${nbMessages > 1 ? "s" : ""} non lu${nbMessages > 1 ? "s" : ""}`, href: "/compte/messages" },
         ].map((s) => (
           <Link key={s.l} href={s.href} className="border border-line p-4 hover:border-primary">
             <span className="font-display text-3xl font-extrabold text-primary">{s.n}</span>

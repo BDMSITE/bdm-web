@@ -90,7 +90,7 @@ async function main() {
     console.log(`\nCharte de la communauté : ${blocks.length} blocs → src/content/charte-communaute.json`);
   }
 
-  console.log(`\n : -e · ignorés : `);
+  console.log(`\n${go ? "Créés ou mis à jour" : "À créer (simulation)"} : ${crees + maj}${go ? ` (dont mis à jour : ${maj})` : ""} · ignorés : ${ignores}`);
   await db.$disconnect();
 }
 

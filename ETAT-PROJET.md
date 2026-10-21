@@ -103,7 +103,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   retiré) ; redirection post-connexion verrouillée aux chemins internes ; Next 16.3.5 → 16.4.1 (RCE next/og corrigée),
   sharp 0.35.5, xlsx 0.20.3 (tarball SheetJS : npm reste bloqué en 0.18.5 vulnérable). Audit prod restant : 8 alertes
   toutes dans l'outil CLI Prisma (studio/lodash/mysql2), jamais exécuté en prod.
-  **Les 10 besoins SIAL sont masqués (IN_MODERATION)** en attendant l'accord de Josué/HCBE.
+  **Les 10 besoins SIAL sont PUBLIÉS depuis le 21/10** (rubrique Chercher / trouver, local + prod) ; `pnpm sial:statut --masquer` pour les retirer d'un coup.
   S7 fait le 20/10 (voir plus bas). Reste : 2FA admin, CSP.
 
 - **19/10 — GRAND NETTOYAGE (validé par Josué) : plus aucune donnée inventée sur le site.** 66 pages → toutes lisent
@@ -122,8 +122,12 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   (textes courts du HCBE, source citée, catégorie déduite, à relire par un historien) et la **Charte de la communauté**
   (`src/content/charte-communaute.json`). Ressources (5) et guides (4) trop courts (110-200 car.) : non importés.
   Les pages Mentions légales / Confidentialité / À propos de l'ancien site sont vides. **Textes légaux v1 rédigés**
-  (mentions, confidentialité RGPD + APDP Bénin, CGU + charte HCBE) dans `/legal/[slug]` : seuls l'identité légale
-  du HCBE, le directeur de publication et le contact données restent « à compléter ».
+  (mentions, confidentialité RGPD + APDP Bénin, CGU + charte HCBE) dans `/legal/[slug]`. **21/10 : identité légale
+  remplie avec les seuls faits vérifiés** (hcbe-monde.org + 2 sources : association d'utilité publique, créée à Cotonou en
+  déc. 1997, enregistrée n° 2000/399/MISAT/DC/SG/DAI/SAAP-Assoc du 06/11/2000, siège Cotonou) ; directeur de publication
+  = le Président du Bureau exécutif mondial en exercice (nom à confirmer par le HCBE — sources publiques : Romain Da Costa) ;
+  juridiction par défaut : Cotonou (à faire valider par le conseil juridique) ; pas de numéro de décret (2001-153 / 2001-155
+  selon les sources). Plus aucun encadré « à compléter ».
 
 - **20/10 — S3/S4 cœur livré** : **messagerie relais** (écrire à un membre depuis sa fiche, répondre à une offre /
   annonce / demande depuis la fiche contenu, fils de discussion dans `/compte/messages`, notification e-mail sans
@@ -149,8 +153,8 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
-   Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, décision sur les 10 besoins SIAL (masqués),
-   identité légale (3 trous dans /legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
+   Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication
+   et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
 2. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
    d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
 3. Plus tard : 2FA admin, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».

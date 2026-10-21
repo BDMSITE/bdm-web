@@ -6,12 +6,11 @@ import charte from "@/content/charte-communaute.json";
 
 /* Pages légales — version 1 rédigée par le prestataire à partir du
    fonctionnement réel du site, à valider par le HCBE et son conseil juridique.
-   Les seuls éléments laissés ouverts sont l'identité légale du HCBE (forme,
-   adresse, immatriculation, directeur de publication, contact données). */
+   Identité du HCBE : uniquement des faits publiés par le HCBE lui-même
+   (hcbe-monde.org) ou recoupés par deux sources ; pas de numéro de décret
+   (sources divergentes), pas de nom tant que le HCBE ne l'a pas confirmé. */
 
 type Bloc = { h?: string; p?: string[]; li?: string[]; todo?: string };
-
-const IDENTITE_TODO = "Forme juridique, adresse du siège, numéro d'immatriculation et coordonnées officielles du HCBE.";
 
 const PAGES: Record<string, { title: string; em: string; intro: string; blocs: Bloc[] }> = {
   "mentions-legales": {
@@ -19,14 +18,18 @@ const PAGES: Record<string, { title: string; em: string; intro: string; blocs: B
     em: "légales",
     intro: "Qui édite le site, qui l'héberge, quelles responsabilités.",
     blocs: [
-      { h: "1. Éditeur du site", p: ["Le site Béninois du Monde est édité par le Haut Conseil des Béninois de l'Extérieur (HCBE), organe de représentation des Béninois vivant hors du Bénin."], todo: IDENTITE_TODO },
-      { h: "2. Directeur de la publication", todo: "Nom et qualité du directeur de la publication (responsable du contenu éditorial)." },
+      { h: "1. Éditeur du site", p: [
+        "Le site Béninois du Monde est édité par le Haut Conseil des Béninois de l'Extérieur (HCBE), association apolitique, laïque et à but non lucratif reconnue d'utilité publique par l'État béninois, qui fédère et représente les Béninois vivant hors du Bénin.",
+        "Créé à Cotonou en décembre 1997 à l'initiative des communautés béninoises de l'extérieur, le HCBE est enregistré sous le n° 2000/399/MISAT/DC/SG/DAI/SAAP-Assoc du 6 novembre 2000. Siège social : Cotonou, République du Bénin. Site institutionnel : hcbe-monde.org.",
+        "Pour joindre l'éditeur, utilisez le formulaire de contact du site : aucune adresse e-mail n'est publiée afin de limiter le démarchage et les usurpations.",
+      ] },
+      { h: "2. Directeur de la publication", p: ["Le directeur de la publication est le Président du Bureau exécutif mondial du HCBE, en exercice à la date de consultation. La rédaction et la modération agissent sous son autorité."] },
       { h: "3. Réalisation technique", p: ["Conception et développement : JOJO.DEV's. Le code du site est maintenu par le prestataire pour le compte du HCBE."] },
       { h: "4. Hébergement", p: ["Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis (vercel.com). La base de données est hébergée par Neon Inc. (neon.com), région États-Unis. Les e-mails transactionnels sont envoyés par un prestataire d'envoi d'e-mails (Brevo, Paris, France) dès sa mise en service."] },
       { h: "5. Propriété intellectuelle", p: ["La structure du site, sa charte graphique et les contenus produits par la rédaction sont la propriété du HCBE. Les contenus publiés par les membres (articles, offres, événements, annonces, photos) restent la propriété de leurs auteurs, qui accordent au HCBE une licence non exclusive de diffusion sur le site et dans ses lettres d'information. Toute reproduction à des fins commerciales sans accord écrit est interdite. Les photos doivent être libres de droits ou accompagnées de leur crédit."] },
       { h: "6. Responsabilité éditoriale et modération", p: ["Les contenus proposés par les membres sont relus par la modération avant mise en ligne. Le HCBE peut refuser, modifier ou retirer un contenu contraire à la Charte de la communauté ou à la loi. Tout contenu peut être signalé depuis le site ; les signalements sont traités dans les meilleurs délais. Les informations publiées par les membres (offres, adresses, annonces) relèvent de leur responsabilité : le HCBE ne garantit pas leur exactitude et n'est pas partie aux relations qui en découlent."] },
       { h: "7. Liens et contenus tiers", p: ["Le site peut renvoyer vers des sites tiers. Le HCBE n'exerce aucun contrôle sur leur contenu et décline toute responsabilité à leur égard."] },
-      { h: "8. Droit applicable", p: ["Le site est régi par le droit de la République du Bénin. Les membres résidant dans l'Union européenne bénéficient en outre des droits prévus par le Règlement général sur la protection des données (RGPD)."], todo: "Juridiction compétente en cas de litige, à préciser par le conseil juridique." },
+      { h: "8. Droit applicable", p: ["Le site est régi par le droit de la République du Bénin. Les membres résidant dans l'Union européenne bénéficient en outre des droits prévus par le Règlement général sur la protection des données (RGPD).", "En cas de litige, et après recherche d'une solution amiable par le formulaire de contact, les juridictions compétentes sont celles de Cotonou (République du Bénin), sans préjudice des règles impératives protégeant les consommateurs dans leur pays de résidence."] },
     ],
   },
   confidentialite: {
@@ -34,7 +37,7 @@ const PAGES: Record<string, { title: string; em: string; intro: string; blocs: B
     em: "confidentialité",
     intro: "Quelles données nous collectons, pourquoi, combien de temps, et vos droits.",
     blocs: [
-      { h: "1. Responsable du traitement", p: ["Le responsable du traitement des données collectées sur le site est le Haut Conseil des Béninois de l'Extérieur (HCBE)."], todo: "Coordonnées du responsable et, le cas échéant, du délégué à la protection des données (DPO) ; adresse de contact pour l'exercice des droits." },
+      { h: "1. Responsable du traitement", p: ["Le responsable du traitement des données collectées sur le site est le Haut Conseil des Béninois de l'Extérieur (HCBE), association reconnue d'utilité publique dont le siège est à Cotonou (République du Bénin).", "Pour toute question ou pour exercer vos droits, écrivez-nous par le formulaire de contact en choisissant le sujet « Données personnelles » : la demande est transmise au responsable du traitement, qui répond dans un délai d'un mois. Aucun délégué à la protection des données n'a été désigné à ce jour."] },
       { h: "2. Données collectées", li: [
         "Compte : adresse e-mail, mot de passe (stocké haché, jamais en clair), nom, type de compte, dates de création et de connexion.",
         "Profil public : nom affiché, ville, pays, fonction, biographie, site web, mots-clés, CV (lien) — chaque membre choisit ce qui apparaît dans l'annuaire.",

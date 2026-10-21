@@ -36,6 +36,11 @@ export default function HcbePage() {
               Il sert de relais entre la diaspora, ses associations et les institutions du Bénin.
             </p>
             <p>
+              Association apolitique, laïque et à but non lucratif, le HCBE a été créé à Cotonou en décembre 1997
+              à l&apos;initiative des communautés béninoises de l&apos;extérieur, puis reconnu d&apos;utilité publique
+              par l&apos;État béninois. Son siège est à Cotonou ; il est organisé en sections par pays de résidence.
+            </p>
+            <p>
               Béninois du Monde est le portail qu&apos;il édite pour relier les Béninois où qu&apos;ils vivent :
               un média, un annuaire des membres, des entreprises, des associations et des artistes, des offres
               d&apos;emploi, un agenda et des services pratiques.

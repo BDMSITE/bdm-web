@@ -5,9 +5,11 @@ import { PubCarousel } from "./pub-carousel";
 
 /* Emplacement publicitaire. Composant serveur : charge les campagnes actives
    de l'emplacement (vendues, sinon maison), les mélange, et confie le
-   défilement au carrousel. Ne rend rien s'il n'y a rien à diffuser. */
+   défilement au carrousel. Ne rend rien s'il n'y a rien à diffuser.
+   Pas de mention visible (choix Josué) : le caractère publicitaire reste
+   signalé aux lecteurs d'écran (aria-label) et aux moteurs (rel=sponsored). */
 
-export async function AdSlot({ slot, section, className = "", onPhoto = false }: { slot: BannerSlot; section?: string; className?: string; onPhoto?: boolean }) {
+export async function AdSlot({ slot, section, className = "" }: { slot: BannerSlot; section?: string; className?: string }) {
   const pool = await listBanners(slot, { section });
   if (pool.length === 0) return null;
   const spec = SLOT_BY_CODE[slot];
@@ -17,7 +19,6 @@ export async function AdSlot({ slot, section, className = "", onPhoto = false }:
   return (
     <div className={`pub ${className}`} data-slot={slot}>
       <PubCarousel slides={slides} tall={tall} width={spec.desktop.w} height={spec.desktop.h} />
-      <p className={`mt-1.5 text-[10px] uppercase tracking-[0.18em] ${onPhoto ? "text-white/80 drop-shadow" : "text-muted"}`}>Publicité{pool.length > 1 ? ` · ${pool.length} partenaires` : ` · ${pool[0].advertiser}`}</p>
     </div>
   );
 }

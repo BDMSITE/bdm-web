@@ -26,7 +26,7 @@ export default async function AdminRegiePage() {
   const now = new Date();
   const depuis30j = new Date(now.getTime() - 30 * 864e5);
   const [campagnes, partenaires, stats30] = await Promise.all([
-    db.banner.findMany({ orderBy: [{ status: "asc" }, { updatedAt: "desc" }], take: 200 }),
+    db.banner.findMany({ orderBy: [{ status: "asc" }, { updatedAt: "desc" }], take: 200, include: { profile: { select: { slug: true, displayName: true } } } }),
     db.partner.findMany({ orderBy: { startsAt: "desc" }, take: 50, select: { id: true, type: true, plan: true, startsAt: true, endsAt: true, profile: { select: { displayName: true } } } }),
     db.bannerStat.aggregate({ where: { day: { gte: depuis30j } }, _sum: { impressions: true, clicks: true } }),
   ]);
@@ -75,7 +75,10 @@ export default async function AdminRegiePage() {
                   <tr key={b.id} className="hover:bg-primary-faint">
                     <Td>
                       <Link href={`/admin/regie/${b.id}`} className="font-semibold hover:text-primary hover:underline">{b.title}</Link>
-                      <p className="text-xs text-muted">{b.advertiser}{b.house ? " · maison" : ""} · {b.kind === "CARD" ? "carte" : "visuel"} · poids {b.weight}</p>
+                      <p className="text-xs text-muted">
+                        {b.profile ? <Link href={`/communaute/membres/${b.profile.slug}`} className="font-bold text-primary hover:underline">{b.profile.displayName}</Link> : b.advertiser}
+                        {b.house ? " · maison" : b.profile ? " · déposée par le membre" : ""} · {b.kind === "CARD" ? "carte" : "visuel"} · poids {b.weight}
+                      </p>
                     </Td>
                     <Td className="whitespace-nowrap text-ink-2">{SLOT_BY_CODE[b.slot].label}</Td>
                     <Td className="whitespace-nowrap text-muted">{fmtDate(b.startsAt)} → {b.endsAt ? fmtDate(b.endsAt) : "∞"}</Td>

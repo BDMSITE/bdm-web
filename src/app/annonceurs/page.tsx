@@ -23,8 +23,8 @@ export default function AnnonceursPage() {
         em="partenaires"
         desc="Touchez la diaspora béninoise et le Bénin : Béninois du Monde propose des emplacements publicitaires et des partenariats de contenu."
       >
-        <Link href="/contact" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
-          Demander les tarifs
+        <Link href="/compte/publicite?nouvelle=1" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
+          Déposer une campagne
         </Link>
       </PageBanner>
 
@@ -56,8 +56,8 @@ export default function AnnonceursPage() {
 
         <section className="border-2 border-primary p-6 text-center">
           <h2 className="font-display text-xl font-bold">Réserver une campagne</h2>
-          <p className="mx-auto mt-1 max-w-xl text-sm text-ink-2">Écrivez-nous en précisant votre activité et vos objectifs : nous vous répondrons avec les tarifs et les disponibilités.</p>
-          <Link href="/contact" className="mt-4 inline-block rounded bg-primary px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
+          <p className="mx-auto mt-1 max-w-xl text-sm text-ink-2">Déposez votre campagne depuis votre espace membre (compte gratuit) : la régie vous répond avec le tarif et la date de mise en ligne. Vous pouvez aussi nous écrire par le formulaire de contact.</p>
+          <Link href="/compte/publicite?nouvelle=1" className="mt-4 inline-block rounded bg-primary px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
             Nous contacter
           </Link>
         </section>

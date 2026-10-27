@@ -6,7 +6,8 @@ import { put } from "@vercel/blob";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { SLOTS } from "@/lib/pub";
+import { SLOTS } from "@/lib/pub-slots";
+import { sendBannerDecision } from "@/lib/mail";
 
 /* Régie publicitaire : création, modification, mise en ligne, archivage des
    campagnes. Accès : rôle Régie ou Admin. Visuels déposés dans le Blob
@@ -136,10 +137,14 @@ export async function setBannerStatusAction(_prev: RegieState, formData: FormDat
   if (!user) return REFUS;
   const parsed = statusSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "Données invalides." };
-  const b = await db.banner.findUnique({ where: { id: parsed.data.id }, select: { status: true, title: true } });
+  const b = await db.banner.findUnique({ where: { id: parsed.data.id }, select: { status: true, title: true, profile: { select: { user: { select: { email: true, status: true } } } } } });
   if (!b) return { error: "Campagne introuvable." };
   await db.banner.update({ where: { id: parsed.data.id }, data: { status: parsed.data.status } });
   await db.auditLog.create({ data: { userId: user.id, action: "banner.status", entity: "Banner", entityId: parsed.data.id, meta: { title: b.title, from: b.status, to: parsed.data.status } } });
+  if (b.profile?.user.status === "ACTIVE" && (parsed.data.status === "PUBLISHED" || parsed.data.status === "REJECTED")) {
+    const base = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    await sendBannerDecision(b.profile.user.email, b.title, parsed.data.status === "PUBLISHED", `${base}/compte/publicite/${parsed.data.id}`).catch(() => {});
+  }
   refresh(parsed.data.id);
   const LIB: Record<string, string> = { PUBLISHED: "Campagne en diffusion.", ARCHIVED: "Campagne archivée.", REJECTED: "Campagne refusée.", DRAFT: "Campagne repassée en brouillon." };
   return { ok: true, message: LIB[parsed.data.status] };

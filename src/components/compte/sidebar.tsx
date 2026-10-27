@@ -14,6 +14,7 @@ import {
   Heart,
   ShieldCheck,
   DatabaseBackup,
+  Megaphone,
 } from "lucide-react";
 
 /* Menu de l'espace membre (CDC §7.16). */
@@ -28,6 +29,7 @@ const MENU = [
   { label: "Mes candidatures", href: "/compte/candidatures", icon: Send },
   { label: "Candidatures reçues", href: "/compte/candidatures-recues", icon: Inbox },
   { label: "Mes favoris", href: "/compte/favoris", icon: Heart },
+  { label: "Ma publicité", href: "/compte/publicite", icon: Megaphone },
   { label: "Sécurité", href: "/compte/securite", icon: ShieldCheck },
   { label: "Mes données", href: "/compte/donnees", icon: DatabaseBackup },
 ];

@@ -227,7 +227,7 @@ function BottomPageBox() {
   return (
     <div className="relative">
       <div className="relative z-10 mx-auto hidden max-w-3xl px-4 md:block">
-        <AdSlot slot="BOTTOM" />
+        <AdSlot slot="BOTTOM" onPhoto />
       </div>
       <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
         <Image

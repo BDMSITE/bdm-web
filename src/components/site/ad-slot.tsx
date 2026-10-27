@@ -7,7 +7,7 @@ import { PubCarousel } from "./pub-carousel";
    de l'emplacement (vendues, sinon maison), les mélange, et confie le
    défilement au carrousel. Ne rend rien s'il n'y a rien à diffuser. */
 
-export async function AdSlot({ slot, section, className = "" }: { slot: BannerSlot; section?: string; className?: string }) {
+export async function AdSlot({ slot, section, className = "", onPhoto = false }: { slot: BannerSlot; section?: string; className?: string; onPhoto?: boolean }) {
   const pool = await listBanners(slot, { section });
   if (pool.length === 0) return null;
   const spec = SLOT_BY_CODE[slot];
@@ -17,7 +17,7 @@ export async function AdSlot({ slot, section, className = "" }: { slot: BannerSl
   return (
     <div className={`pub ${className}`} data-slot={slot}>
       <PubCarousel slides={slides} tall={tall} width={spec.desktop.w} height={spec.desktop.h} />
-      <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] text-muted">Publicité{pool.length > 1 ? ` · ${pool.length} partenaires` : ` · ${pool[0].advertiser}`}</p>
+      <p className={`mt-1.5 text-[10px] uppercase tracking-[0.18em] ${onPhoto ? "text-white/80 drop-shadow" : "text-muted"}`}>Publicité{pool.length > 1 ? ` · ${pool.length} partenaires` : ` · ${pool[0].advertiser}`}</p>
     </div>
   );
 }

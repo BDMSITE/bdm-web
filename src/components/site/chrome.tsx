@@ -221,8 +221,8 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
 ];
 
 /* Bas de page façon modèle : bannière pub + photo panoramique pleine largeur
-   qui plonge dans le footer. Photo : la Porte du Non-Retour à Ouidah,
-   Aurelefreddy (Wikimedia Commons, CC0, 2026) — bande 3840×1440 recadrée. */
+   qui plonge dans le footer. Visuel fourni par Josué (27/10/2026) : fresque
+   murale de la diaspora, image générée, bande 3840×1440. Pas de crédit requis. */
 function BottomPageBox() {
   return (
     <div className="relative">
@@ -231,16 +231,13 @@ function BottomPageBox() {
       </div>
       <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
         <Image
-          src="/images/porte-du-non-retour-ouidah.jpg"
-          alt="La Porte du Non-Retour à Ouidah, sous un ciel bleu"
+          src="/images/fresque-diaspora.jpg"
+          alt="Fresque murale : des femmes et des hommes de la diaspora, bras dessus bras dessous, devant un globe tenu par un poing aux couleurs de l'Afrique"
           fill
           sizes="100vw"
           quality={80}
-          className="object-cover object-[45%_35%]"
+          className="object-cover object-[50%_45%]"
         />
-        <p className="absolute bottom-1.5 right-2 z-10 text-[0.6rem] tracking-wide text-white/75">
-          Porte du Non-Retour, Ouidah — photo Aurelefreddy · CC0
-        </p>
       </div>
     </div>
   );

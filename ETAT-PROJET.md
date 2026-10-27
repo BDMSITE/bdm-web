@@ -171,7 +171,9 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   `/api/pub/vue/[id]` quand la carte est réellement montrée. Vérifié bureau + mobile (bandeaux 100 px de haut sur mobile).
   **27/10 (validé Josué : « le style des cases pub c'est nice »)** : logo Petit Train recoloré rouge brique sur fond
   transparent (badge blanc homogène). **Photo du bas de page remplacée** : la Porte du Non-Retour à Ouidah (Wikimedia
-  Commons, Aurelefreddy, **CC0**, 6016×3790 → bande 3840×1440, 176 Ko) ; l'ancienne photo de la Marina est retirée.
+  Commons, Aurelefreddy, CC0) **puis, le même jour, par le visuel fourni par Josué** : fresque murale de la diaspora
+  (image générée, 1600×672 agrandie et recadrée en bande 3840×1440, `public/images/fresque-diaspora.jpg`, 450 Ko, sans
+  crédit requis). Mention « Publicité · N partenaires » retirée sous les encarts (aria-label + rel=sponsored conservés).
   Suite prévue : libre-service annonceur (compte entreprise → « Ma publicité » → modération), devis/FedaPay, rapport mensuel
   automatique aux annonceurs, ciblage par pays du lecteur (champ prêt, détection à brancher), encart newsletter.
 

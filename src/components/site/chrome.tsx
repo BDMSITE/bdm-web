@@ -221,8 +221,8 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
 ];
 
 /* Bas de page façon modèle : bannière pub + photo panoramique pleine largeur
-   qui plonge dans le footer. Photo : Boulevard de la Marina à Cotonou,
-   Osia Zannou (Wikimedia Commons, CC BY-SA 4.0) — crédit obligatoire. */
+   qui plonge dans le footer. Photo : la Porte du Non-Retour à Ouidah,
+   Aurelefreddy (Wikimedia Commons, CC0, 2026) — bande 3840×1440 recadrée. */
 function BottomPageBox() {
   return (
     <div className="relative">
@@ -231,14 +231,15 @@ function BottomPageBox() {
       </div>
       <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
         <Image
-          src="/images/boulevard-marina-cotonou.jpg"
-          alt="Le boulevard de la Marina à Cotonou vu du ciel"
+          src="/images/porte-du-non-retour-ouidah.jpg"
+          alt="La Porte du Non-Retour à Ouidah, sous un ciel bleu"
           fill
           sizes="100vw"
-          className="object-cover object-[40%_55%]"
+          quality={80}
+          className="object-cover object-[45%_35%]"
         />
         <p className="absolute bottom-1.5 right-2 z-10 text-[0.6rem] tracking-wide text-white/75">
-          Boulevard de la Marina, Cotonou — photo Osia Zannou · CC BY-SA 4.0
+          Porte du Non-Retour, Ouidah — photo Aurelefreddy · CC0
         </p>
       </div>
     </div>

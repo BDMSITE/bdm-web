@@ -122,7 +122,7 @@ export default async function AssociationsPage({ searchParams }: Props) {
                 Publier un événement
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

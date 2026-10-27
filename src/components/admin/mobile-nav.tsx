@@ -6,12 +6,13 @@ import { ADMIN_NAV } from "./sidebar";
 
 /* Nav admin mobile : bandeau horizontal défilant sous la topbar (< lg). */
 
-export function AdminMobileNav() {
+export function AdminMobileNav({ only }: { only?: string[] }) {
   const pathname = usePathname();
+  const nav = only ? ADMIN_NAV.filter((n) => only.includes(n.href)) : ADMIN_NAV;
   return (
     <nav className="border-b border-line bg-primary-darker lg:hidden">
       <div className="flex gap-1 overflow-x-auto px-3 py-2">
-        {ADMIN_NAV.map((n) => {
+        {nav.map((n) => {
           const active = n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
           return (
             <Link

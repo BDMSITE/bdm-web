@@ -95,7 +95,7 @@ export default function CompetencesPage() {
                 Nous écrire →
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

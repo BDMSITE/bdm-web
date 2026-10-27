@@ -73,7 +73,7 @@ export default async function MemoirePage() {
                 Écrire à la rédaction
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="memoire" />
           </aside>
         </div>
       </main>

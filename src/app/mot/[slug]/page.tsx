@@ -97,7 +97,7 @@ export default async function MotClePage({ params }: Props) {
                 </div>
               </div>
             )}
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="mot" />
           </aside>
         </div>
       </main>

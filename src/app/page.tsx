@@ -57,7 +57,7 @@ export default async function Home() {
               </section>
             )}
 
-            <AdSlot label="pavé milieu" />
+            <AdSlot slot="MID" section="accueil" />
 
             <section>
               <SectionTitle pre="Bonnes" em="adresses" href="/adresses" />
@@ -109,7 +109,7 @@ export default async function Home() {
           </div>
 
           <aside className="space-y-8">
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="accueil" />
             <AlertsBox />
             <div className="border border-line bg-paper-2 p-4 text-sm">
               <p className="font-display text-lg font-bold">Le réseau aujourd&apos;hui</p>

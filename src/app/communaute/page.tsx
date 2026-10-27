@@ -105,7 +105,7 @@ export default async function CommunautePage() {
                 En savoir plus →
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

@@ -58,9 +58,12 @@ export type AdminSidebarProps = {
   badges?: Record<string, number>;
   /** Personne connectée (nom + libellé du rôle). */
   user?: { name: string; roleLabel: string };
+  /** Restreint la navigation à ces entrées (rôle Régie). */
+  only?: string[];
 };
 
-export function AdminSidebar({ badges = {}, user }: AdminSidebarProps) {
+export function AdminSidebar({ badges = {}, user, only }: AdminSidebarProps) {
+  const nav = only ? ADMIN_NAV.filter((n) => only.includes(n.href)) : ADMIN_NAV;
   const pathname = usePathname();
   const initial = (user?.name ?? "?").trim().charAt(0).toUpperCase() || "?";
   return (
@@ -75,7 +78,7 @@ export function AdminSidebar({ badges = {}, user }: AdminSidebarProps) {
       </Link>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {ADMIN_NAV.map((n) => {
+        {nav.map((n) => {
           const active =
             n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
           const badge = badges[n.href] ?? n.badge;

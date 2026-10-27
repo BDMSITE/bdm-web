@@ -123,7 +123,7 @@ export default async function EntreprisesPage({ searchParams }: Props) {
                 Espace recruteur →
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

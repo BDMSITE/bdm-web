@@ -73,7 +73,7 @@ export default async function RetourPage() {
                 Le HCBE →
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="retour-au-pays" />
           </aside>
         </div>
       </main>

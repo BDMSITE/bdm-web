@@ -8,6 +8,8 @@ import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
 import { MapBand } from "./map-band";
 import { LiveTicker } from "./live-ticker";
 import { LogoWord } from "./logo-word";
+import { AdSlot } from "./ad-slot";
+export { AdSlot } from "./ad-slot";
 import { memberCities, siteCounts } from "@/lib/content";
 import { slugify } from "@/lib/slug";
 import { keywordHref } from "@/lib/routes";
@@ -225,7 +227,7 @@ function BottomPageBox() {
   return (
     <div className="relative">
       <div className="relative z-10 mx-auto hidden max-w-3xl px-4 md:block">
-        <AdSlot label="bannière bas de page" />
+        <AdSlot slot="BOTTOM" />
       </div>
       <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
         <Image
@@ -385,14 +387,6 @@ export function SectionTitle({ pre, em, href }: { pre: string; em: string; href?
           Tout voir →
         </Link>
       )}
-    </div>
-  );
-}
-
-export function AdSlot({ label }: { label: string }) {
-  return (
-    <div className="flex h-24 items-center justify-center border border-dashed border-line bg-paper-2 text-xs uppercase tracking-widest text-muted">
-      Publicité — {label}
     </div>
   );
 }

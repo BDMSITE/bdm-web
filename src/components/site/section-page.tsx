@@ -78,6 +78,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
       </form>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
+        <AdSlot slot="TOP" section={config.section.replace(/^\//, "")} className="mb-8" />
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
             <p className="mb-5 text-sm text-muted">
@@ -93,7 +94,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
           </div>
           <aside className="space-y-8">
             <AlertsBox />
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section={config.section.replace(/^\//, "")} />
           </aside>
         </div>
       </main>
@@ -127,7 +128,7 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <ContentDetail item={item} related={related} viewer={viewer} />
           <aside className="space-y-8">
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section={SECTION[item.type].replace(/^\//, "")} />
             <AlertsBox />
             <Link href={SECTION[item.type]} className="block border border-line p-4 text-sm font-bold text-primary hover:underline">
               ← Tous les contenus « {CONTENT_LABEL[item.type]} »

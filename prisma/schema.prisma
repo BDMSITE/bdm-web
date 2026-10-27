@@ -13,6 +13,7 @@ enum Role {
   USER
   EDITOR
   MODERATOR
+  REGIE
   ADMIN
 }
 
@@ -154,6 +155,7 @@ model Profile {
   company     CompanyDetails?
   association AssociationDetails?
   artist      ArtistDetails?
+  banners     Banner[]
   contents    Content[]           @relation("OwnerProfile")
   keywords    ProfileKeyword[]
   messages    Message[]           @relation("MessageTo")
@@ -365,16 +367,71 @@ model Report {
   createdAt  DateTime @default(now())
 }
 
+/* Régie publicitaire. Une campagne = un emplacement (format fixe), un visuel
+   (image fournie) ou une carte générée (logo + accroche + couleur), un lien,
+   une période, un poids de rotation. Les campagnes « maison » (house) tournent
+   quand aucune campagne vendue n'est active : un emplacement n'est jamais vide. */
+enum BannerSlot {
+  TOP // bandeau haut de rubrique 970×90 (mobile 320×100)
+  SIDE // pavé latéral 300×250
+  MID // pavé milieu accueil 728×90
+  BOTTOM // bannière bas de page 970×90
+}
+
+enum BannerKind {
+  IMAGE // visuel fourni par l'annonceur
+  CARD // carte générée : logo + accroche + couleur
+}
+
+enum BannerStatus {
+  DRAFT
+  IN_MODERATION
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
 model Banner {
-  id          String    @id @default(cuid())
-  image       String
+  id          String       @id @default(cuid())
+  title       String // nom interne de la campagne
+  advertiser  String // nom affiché de l'annonceur
+  profileId   String? // annonceur membre (libre-service)
+  profile     Profile?     @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  slot        BannerSlot
+  kind        BannerKind   @default(CARD)
+  image       String? // IMAGE : visuel bureau ; CARD : logo
+  imageMobile String?
+  alt         String
+  headline    String? // CARD
+  tagline     String? // CARD
+  bg          String? // CARD : fond (hex)
+  fg          String? // CARD : texte (hex)
   link        String
-  slot        String // top | side1 | side2 | mid | bottom | promo
+  house       Boolean      @default(false)
+  status      BannerStatus @default(DRAFT)
   startsAt    DateTime
-  endsAt      DateTime
-  weight      Int       @default(1)
-  impressions Int       @default(0)
-  clicks      Int       @default(0)
+  endsAt      DateTime?
+  weight      Int          @default(1)
+  sections    String[]     @default([]) // rubriques ciblées (vide = toutes)
+  countries   String[]     @default([]) // pays du lecteur (vide = tous)
+  impressions Int          @default(0)
+  clicks      Int          @default(0)
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  stats       BannerStat[]
+
+  @@index([slot, status, startsAt, endsAt])
+}
+
+model BannerStat {
+  bannerId    String
+  banner      Banner   @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+  day         DateTime @db.Date
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+
+  @@id([bannerId, day])
 }
 
 model Partner {

@@ -134,7 +134,7 @@ export default async function RootsPage() {
                 Contact form
               </Link>
             </div>
-            <AdSlot label="sidebar" />
+            <AdSlot slot="SIDE" section="en" />
           </aside>
         </div>
       </main>

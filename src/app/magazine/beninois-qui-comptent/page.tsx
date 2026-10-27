@@ -98,7 +98,7 @@ export default async function CelebritesPage({ searchParams }: Props) {
                 Proposer
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="magazine" />
           </aside>
         </div>
       </main>

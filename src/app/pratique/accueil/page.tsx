@@ -55,7 +55,7 @@ export default function AccueilHebergementPage() {
               <p className="mt-2 text-sm text-ink-2">Créez votre compte pour être informé·e de l&apos;ouverture du service et publier votre recherche d&apos;accueil.</p>
               <Link href="/inscription" className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Créer mon compte</Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="pratique" />
           </aside>
         </div>
       </main>

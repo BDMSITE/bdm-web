@@ -151,13 +151,29 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   type, journal d'audit). ⚠️ `vercel blob`/`vercel env pull` écrivent un `.env.local` (Neon) qui prend le pas sur
   `.env` : le supprimer aussitôt. Catégories de lieux de mémoire (Site historique, Musée, Monument…) à valider HCBE.
 
+- **27/10 — RÉGIE PUBLICITAIRE (S6) livrée.** 4 emplacements à format fixe (`src/lib/pub-slots.ts`) : bandeau haut de
+  rubrique 970×90, pavé latéral 300×250, pavé milieu d'accueil 728×90, bannière bas de page 970×90 (mobile 320×100 / 300×250).
+  Modèle `Banner` réécrit (campagne : annonceur, emplacement, modèle **image** fournie ou **carte** générée logo + accroche +
+  couleur, lien, dates, poids, ciblage rubriques/pays, statut, maison) + `BannerStat` (stats par jour). Rotation pondérée,
+  **vendues d'abord, campagnes maison en repli** : un emplacement n'est jamais vide, et rien ne s'affiche s'il n'y a rien.
+  Clic compté par `/api/pub/clic/[id]` (redirection), affichage compté après envoi de la page. Mention « Publicité · annonceur »
+  et `rel=sponsored` partout. **16 campagnes maison** (4 sites × 4 emplacements : Wanilo Studio, Petit Train de Cotonou,
+  Dahomey Discovery, Bonne Arrivée ; logos dans `public/pub/`) créées en local et sur Neon par `pnpm pub:maison`.
+  Back-office `/admin/regie` : tableau de bord (en diffusion, à valider, affichages/clics 30 j), état des 4 emplacements,
+  création / édition (`/admin/regie/[id]`, dépôt du visuel dans le Blob public), Diffuser / Arrêter / Refuser, journal d'audit.
+  **Nouveau rôle `REGIE`** : accès au seul menu Régie (proxy + nav filtrée) — à attribuer depuis /admin/communauté quand le
+  HCBE nommera quelqu'un. Page /annonceurs : formats réels. Migration `regie_pub` appliquée en local et sur Neon.
+  Suite prévue : libre-service annonceur (compte entreprise → « Ma publicité » → modération), devis/FedaPay, rapport mensuel
+  automatique aux annonceurs, ciblage par pays du lecteur (champ prêt, détection à brancher), encart newsletter.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
-2. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
+2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
+3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
    d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
-3. Plus tard : 2FA admin, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
+4. Plus tard : 2FA admin, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

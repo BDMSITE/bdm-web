@@ -16,7 +16,9 @@
     "import:wordpress": "tsx scripts/import-wordpress.ts",
     "geocode": "tsx scripts/geocode.ts",
     "db:backup": "tsx scripts/backup.ts",
-    "sial:statut": "tsx scripts/sial-statut.ts"
+    "sial:statut": "tsx scripts/sial-statut.ts",
+    "db:etat": "tsx scripts/etat-base.ts",
+    "pub:maison": "tsx scripts/pub-maison.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

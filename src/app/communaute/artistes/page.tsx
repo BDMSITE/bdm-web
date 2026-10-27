@@ -121,7 +121,7 @@ export default async function ArtistesPage({ searchParams }: Props) {
                 Publier un événement
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

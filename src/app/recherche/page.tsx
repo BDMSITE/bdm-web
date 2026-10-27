@@ -110,7 +110,7 @@ export default async function RecherchePage({ searchParams }: Props) {
                 : "Recherche sur la base de données du site."}
             </p>
           </div>
-          <aside className="space-y-8"><AdSlot label="pavé latéral" /></aside>
+          <aside className="space-y-8"><AdSlot slot="SIDE" section="recherche" /></aside>
         </div>
       </main>
       <SiteFooter />

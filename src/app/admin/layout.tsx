@@ -17,6 +17,7 @@ const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Administrateur",
   MODERATOR: "Modération",
   EDITOR: "Rédaction",
+  REGIE: "Régie publicitaire",
   USER: "Membre",
 };
 
@@ -36,13 +37,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         roleLabel: ROLE_LABEL[session.user.role ?? ""] ?? "Membre",
       }
     : undefined;
+  const regieSeule = session?.user?.role === "REGIE";
 
   return (
     <div className="flex min-h-screen bg-paper-2">
-      <AdminSidebar badges={badges} user={user} />
+      <AdminSidebar badges={badges} user={user} only={regieSeule ? ["/admin/regie"] : undefined} />
       <div className="min-w-0 flex-1">
         <AdminTopbar />
-        <AdminMobileNav />
+        <AdminMobileNav only={regieSeule ? ["/admin/regie"] : undefined} />
         <main className="px-6 py-6">{children}</main>
       </div>
     </div>

@@ -182,7 +182,7 @@ export default async function ProfilPage({ params }: Props) {
                 </ul>
               </div>
             )}
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

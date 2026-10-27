@@ -96,7 +96,7 @@ export default async function PublierPage() {
                 Espace recruteur →
               </Link>
             </div>
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="publier" />
           </aside>
         </div>
       </main>

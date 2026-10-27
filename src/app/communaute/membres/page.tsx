@@ -186,7 +186,7 @@ export default async function MembresPage({ searchParams }: Props) {
               </Link>
             </div>
             <AlertsBox keywords={["Informatique", "Paris", "Santé", "Montréal"]} />
-            <AdSlot label="pavé latéral" />
+            <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>
       </main>

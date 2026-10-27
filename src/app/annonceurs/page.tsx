@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SLOTS } from "@/lib/pub-slots";
 import { SiteHeader, SiteFooter, SectionTitle, PageBanner } from "@/components/site/chrome";
 
 export const metadata: Metadata = { title: "Annonceurs & partenaires" };
@@ -8,7 +9,7 @@ export const metadata: Metadata = { title: "Annonceurs & partenaires" };
    d'audience ni tarifs inventés — « tarifs communiqués sur demande ». */
 
 const FORMATS = [
-  { t: "Bannière", d: "Emplacements publicitaires sur les pages du site (accueil, rubriques, pages de contenu), desktop et mobile." },
+  ...SLOTS.map((s) => ({ t: s.label, d: `${s.where} Format ${s.desktop.w}×${s.desktop.h} px (mobile ${s.mobile.w}×${s.mobile.h}). Visuel fourni ou carte générée à vos couleurs.` })),
   { t: "Contenu partenaire", d: "Article ou dossier publié dans le magazine, clairement signalé comme contenu partenaire." },
   { t: "Avantage membres", d: "Votre offre de réduction publiée dans la rubrique Avantages, réservée aux membres du site." },
 ];

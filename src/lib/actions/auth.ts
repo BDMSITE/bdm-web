@@ -2,13 +2,16 @@
 
 import { AuthError, CredentialsSignin } from "next-auth";
 import { redirect } from "next/navigation";
-import { hash } from "argon2";
+import { hash, verify } from "argon2";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { signIn, signOut } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { clientIp, rateLimit } from "@/lib/ratelimit";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { signToken, verifyToken } from "@/lib/signed-token";
+import { verifyTotp } from "@/lib/totp";
 
 /* Actions serveur : connexion, lien magique, inscription, déconnexion.
    Les erreurs reviennent par l'URL (?erreur=…) pour rester en composants
@@ -23,6 +26,16 @@ export async function loginAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const brut = String(formData.get("suite") ?? "");
   const suite = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/compte";
+
+  /* Double authentification : si le compte a un secret TOTP, le mot de passe est
+     vérifié ici, puis un jeton signé (5 min) ouvre la page du code. */
+  const u = await db.user.findUnique({ where: { email }, select: { id: true, passwordHash: true, twoFactorSecret: true, status: true } });
+  if (u?.twoFactorSecret && u.passwordHash && u.status === "ACTIVE") {
+    if (!(await verify(u.passwordHash, password))) redirect("/connexion?erreur=identifiants");
+    const jar = await cookies();
+    jar.set("bdm_2fa", signToken({ purpose: "2fa-pending", uid: u.id, suite }, 300), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
+    redirect("/connexion/code");
+  }
 
   try {
     await signIn("credentials", { email, password, redirectTo: suite });
@@ -139,4 +152,23 @@ export async function registerAction(_prev: RegisterState, formData: FormData): 
     if (!(e instanceof AuthError)) throw e;
   }
   redirect("/connexion?inscrit=1");
+}
+
+/* Étape 2 de la connexion : le code de l'application d'authentification. */
+export async function twoFactorLoginAction(formData: FormData) {
+  const jar = await cookies();
+  const pending = verifyToken<{ uid: string; suite: string }>(jar.get("bdm_2fa")?.value, "2fa-pending");
+  if (!pending) redirect("/connexion?erreur=2fa_expire");
+  if (!(await rateLimit(`2fa:${pending.uid}`, 5, 900))) redirect("/connexion?erreur=trop");
+  const u = await db.user.findUnique({ where: { id: pending.uid }, select: { twoFactorSecret: true } });
+  const code = String(formData.get("code") ?? "");
+  if (!u?.twoFactorSecret || !verifyTotp(u.twoFactorSecret, code)) redirect("/connexion/code?erreur=code");
+  jar.delete("bdm_2fa");
+  const suite = pending.suite?.startsWith("/") && !pending.suite.startsWith("//") ? pending.suite : "/compte";
+  try {
+    await signIn("two-factor", { token: signToken({ purpose: "2fa-ok", uid: pending.uid }, 60), redirectTo: suite });
+  } catch (e) {
+    if (e instanceof AuthError) redirect("/connexion?erreur=auth");
+    throw e;
+  }
 }

@@ -9,6 +9,7 @@ const MESSAGES: Record<string, { tone: "ok" | "err"; text: string }> = {
   "erreur=identifiants": { tone: "err", text: "E-mail ou mot de passe incorrect." },
   "erreur=email_non_confirme": { tone: "err", text: "Confirmez d'abord votre adresse : ouvrez le lien reçu par e-mail, ou demandez-en un nouveau ci-dessous." },
   "erreur=email": { tone: "err", text: "Adresse e-mail invalide." },
+  "erreur=2fa_expire": { tone: "err", text: "Délai dépassé pour le code de double authentification : reconnectez-vous." },
   "erreur=trop": { tone: "err", text: "Trop de tentatives : patientez un quart d'heure avant de réessayer." },
   "erreur=auth": { tone: "err", text: "Connexion impossible pour le moment. Réessayez dans quelques instants." },
   "envoye=1": { tone: "ok", text: "Lien envoyé ! Vérifiez votre boîte mail (dossier indésirables inclus)." },

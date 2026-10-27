@@ -179,6 +179,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   par `/admin/regie` (admin ou rôle Régie). Les annonceurs écrivent par le formulaire de contact, la régie crée la
   campagne pour eux. Reste côté régie : devis/FedaPay, rapport mensuel automatique, ciblage par pays, encart newsletter.
 
+- **27/10 — RESTAURATION + DOUBLE AUTHENTIFICATION.** `pnpm db:restore --file <json> --yes` (ou `--latest` pour
+  la dernière sauvegarde du Blob) remplace tout le contenu d'une base par une sauvegarde : ordre d'insertion déduit du
+  schéma Prisma, auto-références (fils de messages) en plusieurs passes, transaction unique ; testé en local (931 lignes,
+  état identique avant/après). **2FA TOTP** sans dépendance (RFC 6238, vecteurs de test vérifiés) pour les rôles de
+  l'équipe : activation dans Mon espace → Sécurité (QR code + clé manuelle + premier code), connexion en deux étapes
+  (mot de passe → jeton signé 5 min → page du code → fournisseur Auth.js « two-factor »), 5 essais/¼ h, désactivation
+  par mot de passe + code, audit user.2fa_on/off. Compatible Google Authenticator, Authy, Bitwarden, 1Password.
+  Optionnelle pour l'instant : à rendre obligatoire pour ADMIN quand Josué et la personne du HCBE l'auront activée.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication
@@ -186,7 +195,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
    d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
-4. Plus tard : 2FA admin, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
+4. Plus tard : 2FA obligatoire pour ADMIN, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

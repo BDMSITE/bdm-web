@@ -12,6 +12,9 @@ import { indexProfile } from "@/lib/search";
 import { CONTENT_LABEL } from "@/lib/routes";
 import { put, del } from "@vercel/blob";
 import { cvBlobPath, cvRoute, CV_MAX_BYTES } from "@/lib/cv";
+import { cookies } from "next/headers";
+import { signToken, verifyToken } from "@/lib/signed-token";
+import { generateTotpSecret, verifyTotp } from "@/lib/totp";
 
 /* Actions serveur de l'espace membre : alertes, CV, mot de passe, suppression
    du compte. Chaque action exige une session et n'écrit que sur les lignes
@@ -213,5 +216,45 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
   if (profile) await indexProfile(profile.id).catch(() => {});
 
   await signOut({ redirectTo: "/" });
+  return { ok: true };
+}
+
+/* --- Double authentification (TOTP) ---------------------------------------
+   Réservée aux rôles de l'équipe (accès /admin). Le secret ne touche la base
+   qu'une fois un premier code validé ; en attendant il voyage dans un cookie
+   signé de 10 minutes. */
+
+const STAFF_2FA = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
+
+export async function startTwoFactorAction() {
+  const session = await auth();
+  if (!session?.user || !STAFF_2FA.has(session.user.role ?? "")) redirect("/compte/securite");
+  const jar = await cookies();
+  jar.set("bdm_2fa_setup", signToken({ purpose: "2fa-setup", uid: session.user.id, secret: generateTotpSecret() }, 600), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 600 });
+  redirect("/compte/securite/2fa");
+}
+
+export async function confirmTwoFactorAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const userId = await requireUserId("/compte/securite");
+  const jar = await cookies();
+  const setup = verifyToken<{ uid: string; secret: string }>(jar.get("bdm_2fa_setup")?.value, "2fa-setup");
+  if (!setup || setup.uid !== userId) return { error: "Délai dépassé : relancez l'activation." };
+  if (!verifyTotp(setup.secret, String(formData.get("code") ?? ""))) return { error: "Code incorrect. Vérifiez l'heure de votre téléphone et réessayez." };
+  await db.user.update({ where: { id: userId }, data: { twoFactorSecret: setup.secret } });
+  await db.auditLog.create({ data: { userId, action: "user.2fa_on", entity: "User", entityId: userId } });
+  jar.delete("bdm_2fa_setup");
+  revalidatePath("/compte/securite");
+  return { ok: true };
+}
+
+export async function disableTwoFactorAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const userId = await requireUserId("/compte/securite");
+  const u = await db.user.findUnique({ where: { id: userId }, select: { passwordHash: true, twoFactorSecret: true } });
+  if (!u?.twoFactorSecret) return { error: "La double authentification n'est pas active." };
+  if (!u.passwordHash || !(await verify(u.passwordHash, String(formData.get("password") ?? "")))) return { error: "Mot de passe incorrect." };
+  if (!verifyTotp(u.twoFactorSecret, String(formData.get("code") ?? ""))) return { error: "Code incorrect." };
+  await db.user.update({ where: { id: userId }, data: { twoFactorSecret: null } });
+  await db.auditLog.create({ data: { userId, action: "user.2fa_off", entity: "User", entityId: userId } });
+  revalidatePath("/compte/securite");
   return { ok: true };
 }

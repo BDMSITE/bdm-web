@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { sendMagicLink, sendInvitation } from "./mail";
 import { authConfig } from "./auth.config";
+import { verifyToken } from "./signed-token";
 
 /* Auth.js : e-mail + mot de passe (Argon2) et lien magique (Resend).
    Sessions JWT (obligatoire avec le fournisseur Credentials) ; l'adaptateur
@@ -48,6 +49,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           accountType: user.accountType,
         };
+      },
+    }),
+    Credentials({
+      id: "two-factor",
+      credentials: { token: {} },
+      /* Deuxième étape : loginAction a déjà vérifié le mot de passe puis le code
+         TOTP ; le jeton signé (5 min) prouve ces deux vérifications. */
+      async authorize(raw) {
+        const p = verifyToken<{ uid: string }>(typeof raw?.token === "string" ? raw.token : undefined, "2fa-ok");
+        if (!p?.uid) return null;
+        const user = await db.user.findUnique({ where: { id: p.uid } });
+        if (!user || user.status !== "ACTIVE") return null;
+        return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role, accountType: user.accountType };
       },
     }),
     Resend({

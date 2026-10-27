@@ -2,15 +2,22 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PasswordForm } from "./form";
+import { startTwoFactorAction } from "@/lib/actions/compte";
+import { DisableTwoFactorForm } from "./2fa/form";
 
 export const metadata: Metadata = { title: "Sécurité" };
 
-/* Mot de passe du compte connecté (CDC §7.16). */
+/* Mot de passe du compte connecté (CDC §7.16) et double authentification
+   (réservée aux rôles de l'équipe, qui accèdent au back-office). */
+
+const STAFF = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
 
 export default async function SecuritePage() {
   const session = await auth();
-  const user = await db.user.findUnique({ where: { id: session!.user.id }, select: { passwordHash: true } });
+  const user = await db.user.findUnique({ where: { id: session!.user.id }, select: { passwordHash: true, twoFactorSecret: true } });
   const hasPassword = Boolean(user?.passwordHash);
+  const staff = STAFF.has(session!.user.role ?? "");
+  const twoFactor = Boolean(user?.twoFactorSecret);
 
   return (
     <div className="space-y-6">
@@ -31,14 +38,31 @@ export default async function SecuritePage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-4 border border-line p-5">
-        <div className="min-w-0 flex-1">
-          <p className="font-bold">Double authentification (2FA)</p>
-          <p className="text-sm text-ink-2">
-            Un code depuis votre application d&apos;authentification à chaque connexion. Fonction à venir.
-          </p>
+      <div className="space-y-4 border border-line p-5">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-bold">Double authentification (2FA)</p>
+            <p className="text-sm text-ink-2">
+              {staff
+                ? "Un code de votre application d'authentification est demandé à chaque connexion par mot de passe. Fortement recommandée pour les comptes qui accèdent au back-office."
+                : "Réservée aux comptes de l'équipe du site (rédaction, modération, régie, administration)."}
+            </p>
+          </div>
+          {staff ? (
+            twoFactor ? (
+              <span className="whitespace-nowrap rounded bg-primary-light px-3 py-1 text-xs font-bold text-primary-dark">Activée</span>
+            ) : hasPassword ? (
+              <form action={startTwoFactorAction}>
+                <button type="submit" className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Activer</button>
+              </form>
+            ) : (
+              <span className="whitespace-nowrap rounded border border-line px-3 py-1 text-xs font-semibold text-ink-2">Mot de passe requis</span>
+            )
+          ) : (
+            <span className="whitespace-nowrap rounded border border-line px-3 py-1 text-xs font-semibold text-ink-2">Non disponible</span>
+          )}
         </div>
-        <span className="whitespace-nowrap rounded border border-line px-3 py-1 text-xs font-semibold text-ink-2">À venir</span>
+        {staff && twoFactor && <DisableTwoFactorForm />}
       </div>
     </div>
   );

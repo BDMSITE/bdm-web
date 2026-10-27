@@ -200,3 +200,9 @@ body {
   z-index: 5;
 }
 
+
+/* Régie pub : barre de progression du carrousel. */
+@keyframes pub-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}

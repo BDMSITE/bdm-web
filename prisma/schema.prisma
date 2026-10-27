@@ -401,6 +401,7 @@ model Banner {
   kind        BannerKind   @default(CARD)
   image       String? // IMAGE : visuel bureau ; CARD : logo
   imageMobile String?
+  photo       String? // CARD : photo d'ambiance en fond
   alt         String
   headline    String? // CARD
   tagline     String? // CARD

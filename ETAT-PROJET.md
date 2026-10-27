@@ -163,6 +163,12 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   création / édition (`/admin/regie/[id]`, dépôt du visuel dans le Blob public), Diffuser / Arrêter / Refuser, journal d'audit.
   **Nouveau rôle `REGIE`** : accès au seul menu Régie (proxy + nav filtrée) — à attribuer depuis /admin/communauté quand le
   HCBE nommera quelqu'un. Page /annonceurs : formats réels. Migration `regie_pub` appliquée en local et sur Neon.
+  **27/10 soir — refonte du rendu (demande Josué)** : chaque emplacement est un **carrousel** qui fait défiler toutes les
+  campagnes actives (6 s, glissement, pause au survol, balayage tactile, points, barre de progression, `motion-reduce`) ;
+  cartes « affiche » : photo d'ambiance du site traitée (dégradé teinté + motif wax léger + zoom lent), logo en badge blanc,
+  titre display, accroche, bouton jaune « Découvrir », mention « Publicité · 4 partenaires ». Photos recadrées en 2 formats
+  dans `public/pub/photos/` ; champ `Banner.photo` (migration `banner_photo`, local + Neon). Affichages comptés par balise
+  `/api/pub/vue/[id]` quand la carte est réellement montrée. Vérifié bureau + mobile (bandeaux 100 px de haut sur mobile).
   Suite prévue : libre-service annonceur (compte entreprise → « Ma publicité » → modération), devis/FedaPay, rapport mensuel
   automatique aux annonceurs, ciblage par pays du lecteur (champ prêt, détection à brancher), encart newsletter.
 

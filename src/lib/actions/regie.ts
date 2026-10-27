@@ -41,6 +41,7 @@ const fields = z.object({
   fg: hex,
   image: optUrl,
   imageMobile: optUrl,
+  photo: optUrl,
   startsAt: z.string().min(1, "Date de début obligatoire"),
   endsAt: z.preprocess(vide, z.string().optional()),
   weight: z.coerce.number().int().min(1).max(10),
@@ -75,6 +76,8 @@ async function buildData(d: Fields, formData: FormData, id: string | undefined):
   if (up && typeof up === "object") return { ok: false, state: up };
   const upM = await uploadVisual(formData.get("imageMobileFile"), `${d.slot.toLowerCase()}-m-${id ?? "new"}`);
   if (upM && typeof upM === "object") return { ok: false, state: upM };
+  const upP = await uploadVisual(formData.get("photoFile"), `${d.slot.toLowerCase()}-photo-${id ?? "new"}`);
+  if (upP && typeof upP === "object") return { ok: false, state: upP };
   const image = up ?? d.image ?? null;
   if (d.kind === "IMAGE" && !image) return { ok: false, state: { error: "Un visuel est obligatoire pour une campagne « image ».", champ: "image" } };
   const startsAt = new Date(d.startsAt);
@@ -84,7 +87,7 @@ async function buildData(d: Fields, formData: FormData, id: string | undefined):
   return { ok: true, data: {
     title: d.title, advertiser: d.advertiser, slot: d.slot as Prisma.BannerUncheckedCreateInput["slot"], kind: d.kind, link: d.link, alt: d.alt,
     headline: d.headline ?? null, tagline: d.tagline ?? null, bg: d.bg ?? null, fg: d.fg ?? null,
-    image, imageMobile: upM ?? d.imageMobile ?? null,
+    image, imageMobile: upM ?? d.imageMobile ?? null, photo: upP ?? d.photo ?? null,
     startsAt, endsAt, weight: d.weight, sections: liste(d.sections), countries: liste(d.countries), house: d.house, status: d.status,
   } };
 }

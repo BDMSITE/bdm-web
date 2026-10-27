@@ -8,12 +8,21 @@ import { db } from "./db";
 
 export { SLOTS, SLOT_BY_CODE, type SlotSpec } from "./pub-slots";
 
-export type PubBanner = Pick<Banner, "id" | "kind" | "image" | "imageMobile" | "alt" | "headline" | "tagline" | "bg" | "fg" | "advertiser" | "house" | "slot">;
+export type PubBanner = Pick<Banner, "id" | "kind" | "image" | "imageMobile" | "photo" | "alt" | "headline" | "tagline" | "bg" | "fg" | "advertiser" | "house" | "slot">;
 
-const SELECT = { id: true, kind: true, image: true, imageMobile: true, alt: true, headline: true, tagline: true, bg: true, fg: true, advertiser: true, house: true, slot: true, weight: true, sections: true, countries: true } as const;
+const SELECT = { id: true, kind: true, image: true, imageMobile: true, photo: true, alt: true, headline: true, tagline: true, bg: true, fg: true, advertiser: true, house: true, slot: true, weight: true, sections: true, countries: true } as const;
 
-/** Campagnes diffusables maintenant pour un emplacement (vendues d'abord, maison en repli). */
-export async function pickBanner(slot: BannerSlot, ctx: { section?: string; country?: string } = {}): Promise<PubBanner | null> {
+/** Campagnes diffusables maintenant pour un emplacement : les vendues s'il y en a, sinon les
+    campagnes maison. Ordre mélangé, pondéré par le poids (les plus lourdes sortent plus tôt). */
+export async function listBanners(slot: BannerSlot, ctx: { section?: string; country?: string } = {}): Promise<PubBanner[]> {
+  const pool = await eligible(slot, ctx);
+  return pool
+    .map((b) => ({ b, k: Math.random() ** (1 / Math.max(1, b.weight)) }))
+    .sort((x, y) => y.k - x.k)
+    .map((x) => x.b);
+}
+
+async function eligible(slot: BannerSlot, ctx: { section?: string; country?: string }) {
   const now = new Date();
   const rows = await db.banner.findMany({
     where: { slot, status: "PUBLISHED", startsAt: { lte: now }, OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
@@ -23,7 +32,12 @@ export async function pickBanner(slot: BannerSlot, ctx: { section?: string; coun
     (b) => (b.sections.length === 0 || (ctx.section && b.sections.includes(ctx.section))) && (b.countries.length === 0 || (ctx.country && b.countries.includes(ctx.country))),
   );
   const vendues = cible.filter((b) => !b.house);
-  const pool = vendues.length ? vendues : cible.filter((b) => b.house);
+  return vendues.length ? vendues : cible.filter((b) => b.house);
+}
+
+/** Une seule campagne (tirage pondéré) — pour les usages sans carrousel. */
+export async function pickBanner(slot: BannerSlot, ctx: { section?: string; country?: string } = {}): Promise<PubBanner | null> {
+  const pool = await eligible(slot, ctx);
   if (!pool.length) return null;
   const total = pool.reduce((n, b) => n + Math.max(1, b.weight), 0);
   let r = Math.random() * total;
@@ -59,4 +73,4 @@ export function recordClick(bannerId: string) {
   return count(bannerId, "clicks");
 }
 
-export const clickHref = (id: string) => `/api/pub/clic/${id}`;
+export { clickHref } from "./pub-slots";

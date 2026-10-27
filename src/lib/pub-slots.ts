@@ -19,3 +19,5 @@ export const SLOTS: SlotSpec[] = [
 ];
 
 export const SLOT_BY_CODE = Object.fromEntries(SLOTS.map((s) => [s.code, s])) as Record<BannerSlot, SlotSpec>;
+
+export const clickHref = (id: string) => `/api/pub/clic/${id}`;

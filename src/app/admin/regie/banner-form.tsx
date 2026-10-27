@@ -79,6 +79,11 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                 <label htmlFor="tagline" className={LABEL}>Accroche</label>
                 <input id="tagline" name="tagline" defaultValue={banner?.tagline ?? ""} maxLength={160} className={INPUT} placeholder="Une phrase courte" />
               </div>
+              <div>
+                <label htmlFor="photoFile" className={LABEL}>Photo d&apos;ambiance (fond, facultative)</label>
+                <input id="photoFile" name="photoFile" type="file" accept="image/png,image/jpeg,image/webp" className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white" />
+                <input name="photo" type="url" defaultValue={banner?.photo ?? ""} className={`${INPUT} mt-2`} placeholder="…ou adresse d'une photo en ligne" />
+              </div>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm font-bold">Fond <input name="bg" type="color" defaultValue={banner?.bg ?? "#0b3d2e"} className="h-8 w-12 cursor-pointer border border-line" /></label>
                 <label className="flex items-center gap-2 text-sm font-bold">Texte <input name="fg" type="color" defaultValue={banner?.fg ?? "#ffffff"} className="h-8 w-12 cursor-pointer border border-line" /></label>

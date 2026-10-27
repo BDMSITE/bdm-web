@@ -174,13 +174,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   Commons, Aurelefreddy, CC0) **puis, le même jour, par le visuel fourni par Josué** : fresque murale de la diaspora
   (image générée, 1600×672 agrandie et recadrée en bande 3840×1440, `public/images/fresque-diaspora.jpg`, 450 Ko, sans
   crédit requis). Mention « Publicité · N partenaires » retirée sous les encarts (aria-label + rel=sponsored conservés).
-- **27/10 — LIBRE-SERVICE ANNONCEUR.** Tout membre activé a « Ma publicité » dans son espace (`/compte/publicite`) :
-  liste de ses campagnes (état, période, affichages/clics), dépôt d'une campagne (emplacement, modèle carte ou visuel,
-  logo/photo dans le Blob public, lien, période souhaitée), modification (→ revalidation), retrait. Tout part en
-  **IN_MODERATION** : la régie reçoit un e-mail (CONTACT_EMAIL), fixe le tarif hors site, clique Diffuser / Refuser dans
-  `/admin/regie` (annonceur membre affiché avec lien vers sa fiche), et l'annonceur reçoit la décision par e-mail. Quota
-  5 dépôts/h. Page /annonceurs : bouton « Déposer une campagne ». Audit : banner.submit / banner.withdraw.
-  Reste côté régie : devis/FedaPay, rapport mensuel automatique, ciblage par pays du lecteur (champ prêt), encart newsletter.
+- **27/10 — décision Josué : la publicité est réservée au propriétaire du site.** Le libre-service annonceur (dépôt
+  par les membres) a été construit puis **retiré le jour même** : les membres n'ont aucune entrée publicité, tout passe
+  par `/admin/regie` (admin ou rôle Régie). Les annonceurs écrivent par le formulaire de contact, la régie crée la
+  campagne pour eux. Reste côté régie : devis/FedaPay, rapport mensuel automatique, ciblage par pays, encart newsletter.
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +

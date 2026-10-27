@@ -309,8 +309,6 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "banner.create": "Campagne pub créée",
   "banner.update": "Campagne pub modifiée",
   "banner.status": "Campagne pub : statut",
-  "banner.submit": "Campagne pub déposée par un membre",
-  "banner.withdraw": "Campagne pub retirée par le membre",
   "user.suspend": "Suspension",
   "user.reactivate": "Réactivation",
   "keyword.create": "Mot-clé ajouté",

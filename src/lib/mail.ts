@@ -81,28 +81,3 @@ export function sendRelayNotification(to: string, fromName: string, subject: str
   );
 }
 
-/* Régie pub : la régie est prévenue d'une campagne déposée ; l'annonceur est
-   prévenu de la décision. Textes courts, lien vers la page concernée. */
-export function sendBannerSubmitted(title: string, advertiser: string, link: string) {
-  const to = process.env.CONTACT_EMAIL ?? parseFrom(FROM).email;
-  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
-  return send(
-    to,
-    `[Régie] Campagne à valider : ${title}`,
-    `${advertiser} a déposé une campagne publicitaire « ${title} » sur Béninois du Monde.\n\nÀ valider : ${link}`,
-    `<p><strong>${esc(advertiser)}</strong> a déposé une campagne publicitaire « ${esc(title)} » sur <strong>Béninois du Monde</strong>.</p><p><a href="${link}">Valider ou refuser dans la régie</a></p>`,
-  );
-}
-
-export function sendBannerDecision(to: string, title: string, accepted: boolean, link: string) {
-  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
-  const texte = accepted
-    ? `Bonne nouvelle : votre campagne « ${title} » est validée et en diffusion sur Béninois du Monde.`
-    : `Votre campagne « ${title} » n'a pas été retenue en l'état. Vous pouvez la modifier et la redéposer depuis votre espace.`;
-  return send(
-    to,
-    `${accepted ? "Campagne en diffusion" : "Campagne non retenue"} — Béninois du Monde`,
-    `${texte}\n\nVotre espace publicité : ${link}`,
-    `<p>${esc(texte)}</p><p><a href="${link}">Mon espace publicité</a></p>`,
-  );
-}

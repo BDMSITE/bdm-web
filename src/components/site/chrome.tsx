@@ -13,6 +13,7 @@ export { AdSlot } from "./ad-slot";
 import { memberCities, siteCounts } from "@/lib/content";
 import { slugify } from "@/lib/slug";
 import { keywordHref } from "@/lib/routes";
+import { SOCIALS } from "@/lib/social";
 
 /* Composants de structure partagés par toutes les pages publiques. */
 
@@ -52,14 +53,12 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
 
           <div className="flex items-center justify-end gap-4 lg:gap-5">
             <ul className="hidden items-center gap-2.5 lg:flex">
-              {[
-                { icon: Fb, label: "Facebook" },
-                { icon: Li, label: "LinkedIn" },
-                { icon: Ig, label: "Instagram" },
-              ].map((s) => (
+              {SOCIALS.map((s) => ({ ...s, icon: { facebook: Fb, linkedin: Li, instagram: Ig, x: Xx, youtube: Yt }[s.key]! })).filter((s) => ["facebook", "linkedin", "instagram"].includes(s.key)).map((s) => (
                 <li key={s.label}>
                   <a
-                    href="#"
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener"
                     aria-label={s.label}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-dark"
                   >
@@ -265,16 +264,12 @@ export function SiteFooter() {
             </Link>
 
             <ul className="mt-7 flex items-center gap-3">
-              {[
-                { icon: Fb, label: "Facebook" },
-                { icon: Li, label: "LinkedIn" },
-                { icon: Ig, label: "Instagram" },
-                { icon: Xx, label: "X (Twitter)" },
-                { icon: Yt, label: "YouTube" },
-              ].map((s) => (
+              {SOCIALS.map((s) => ({ ...s, icon: { facebook: Fb, linkedin: Li, instagram: Ig, x: Xx, youtube: Yt }[s.key]! })).map((s) => (
                 <li key={s.label}>
                   <a
-                    href="#"
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener"
                     aria-label={s.label}
                     className="flex h-10 w-10 items-center justify-center rounded-md bg-white/10 transition-colors hover:bg-accent hover:text-ink"
                   >

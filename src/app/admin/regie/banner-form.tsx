@@ -129,10 +129,6 @@ export function BannerForm({ banner }: { banner?: Banner }) {
             <label htmlFor="sections" className={LABEL}>Rubriques ciblées</label>
             <input id="sections" name="sections" defaultValue={banner?.sections.join(", ") ?? ""} className={INPUT} placeholder="emploi, agenda, adresses… (vide = toutes)" />
           </div>
-          <div>
-            <label htmlFor="countries" className={LABEL}>Pays du lecteur</label>
-            <input id="countries" name="countries" defaultValue={banner?.countries.join(", ") ?? ""} className={INPUT} placeholder="france, canada… (vide = tous) — bientôt" />
-          </div>
         </div>
         <label className="mt-3 flex items-start gap-2">
           <input type="checkbox" name="house" defaultChecked={banner?.house ?? false} className="mt-0.5 accent-primary" />

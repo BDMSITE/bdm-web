@@ -283,3 +283,96 @@ export function sendAlertDigest(to: string, items: { title: string; href: string
     }),
   );
 }
+
+/* Candidature : accusé de réception au candidat. */
+export function sendApplicationReceipt(to: string, offer: { title: string; url: string; recruiter: string }) {
+  return send(
+    to,
+    `Candidature envoyée : ${offer.title}`,
+    `Votre candidature à « ${offer.title} » (${offer.recruiter}) a bien été transmise via Béninois du Monde.\n\nLe recruteur vous répondra par la messagerie du site : ${SITE_URL}/compte/messages\n\nSuivre mes candidatures : ${SITE_URL}/compte/candidatures\nL'offre : ${offer.url}${SIGN}`,
+    layout({
+      preheader: `Votre candidature à ${offer.title} est partie.`,
+      eyebrow: "Candidature",
+      title: "C'est envoyé, bonne chance.",
+      paragraphs: [`Votre candidature à <strong>${esc(offer.title)}</strong> a été transmise à ${esc(offer.recruiter)}. La réponse arrivera dans votre messagerie sur le site : votre e-mail n'a pas été communiqué.`],
+      cta: { label: "Suivre mes candidatures", url: `${SITE_URL}/compte/candidatures` },
+      panel: `<p style="margin:0;font:15px/1.6 Helvetica,Arial,sans-serif;color:${INK}"><strong>En attendant :</strong> vérifiez que votre <a href="${SITE_URL}/compte/cv" style="color:${GREEN}">CV</a> est à jour et créez une <a href="${SITE_URL}/compte/alertes" style="color:${GREEN}">alerte</a> sur votre métier pour ne rater aucune offre.</p>`,
+      footnote: `Revoir l'offre : <a href="${offer.url}" style="color:${INK_2}">${esc(offer.title)}</a>.`,
+    }),
+  );
+}
+
+/* Rappel unique : profil sans ville ni bio une semaine après l'inscription. */
+export function sendProfileReminder(to: string, displayName: string, url: string) {
+  const prenom = displayName.trim();
+  return send(
+    to,
+    "Votre profil mérite mieux qu'une page blanche",
+    `Bonjour${prenom ? ` ${prenom}` : ""},\n\nVotre compte Béninois du Monde est ouvert, mais votre profil est encore vide : sans ville ni présentation, personne ne vous trouve dans l'annuaire. Deux minutes suffisent :\n${url}${SIGN}`,
+    layout({
+      preheader: "Deux minutes pour être trouvé par la communauté.",
+      eyebrow: "Votre profil",
+      title: prenom ? `${prenom}, on ne vous voit pas encore.` : "On ne vous voit pas encore.",
+      paragraphs: [
+        "Votre compte est ouvert, mais votre profil est encore vide. Sans ville ni présentation, vous n'apparaissez pas sur la carte ni dans l'annuaire des Béninois près de chez vous.",
+        "Deux minutes suffisent : votre ville, une phrase sur vous, trois mots-clés.",
+      ],
+      cta: { label: "Compléter mon profil", url },
+      footnote: "Vous recevez ce rappel une seule fois. Votre e-mail n'est jamais affiché sur le site.",
+    }),
+  );
+}
+
+/* Hebdo du lundi : les nouveautés du pays du membre (abonnés à la lettre seulement). */
+export function sendWeeklyDigest(to: string, country: string, items: { title: string; href: string; label: string; place: string }[], unsubscribeUrl: string) {
+  const list = items
+    .map(
+      (i) => `<tr><td style="padding:10px 0;border-bottom:1px solid ${LINE}">
+        <span style="display:inline-block;margin-bottom:4px;padding:2px 8px;background:#fdf4cd;font:700 11px/1.4 Helvetica,Arial,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:${INK}">${esc(i.label)}</span>${i.place ? `<span style="margin-left:8px;font:13px/1.4 Helvetica,Arial,sans-serif;color:${INK_2}">${esc(i.place)}</span>` : ""}<br>
+        <a href="${i.href}" style="font:600 17px/1.4 'Source Sans 3',Helvetica,Arial,sans-serif;color:${INK};text-decoration:none">${esc(i.title)}</a></td></tr>`,
+    )
+    .join("");
+  const n = items.length;
+  return send(
+    to,
+    `Cette semaine en ${country} : ${n} nouveauté${n > 1 ? "s" : ""}`,
+    `Ce qui s'est passé cette semaine près de chez vous (${country}) :\n\n${items.map((i) => `• [${i.label}] ${i.title}\n  ${i.href}`).join("\n")}\n\nSe désinscrire : ${unsubscribeUrl}${SIGN}`,
+    layout({
+      preheader: items[0] ? `${items[0].label} : ${items[0].title}` : "Les nouveautés près de chez vous.",
+      eyebrow: "Près de chez vous",
+      title: `Cette semaine en ${country}.`,
+      paragraphs: [`${n} nouveauté${n > 1 ? "s" : ""} publiée${n > 1 ? "s" : ""} par la communauté dans votre pays ces sept derniers jours.`],
+      panel: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${list}</table>`,
+      panelFirst: true,
+      cta: { label: "Voir tout près de chez moi", url: `${SITE_URL}/recherche?pays=${encodeURIComponent(country)}` },
+      footnote: `Vous recevez cet e-mail parce que vous êtes abonné à la lettre et que votre profil indique ${esc(country)}. <a href="${unsubscribeUrl}" style="color:${INK_2}">Se désinscrire</a>.`,
+    }),
+  );
+}
+
+/* Rapport mensuel de la régie à l'adresse de contact du HCBE. */
+export function sendRegieReport(to: string, mois: string, rows: { advertiser: string; title: string; slot: string; house: boolean; impressions: number; clicks: number }[], csvUrl: string) {
+  const fmt = (n: number) => n.toLocaleString("fr-FR");
+  const totalImp = rows.reduce((s, r) => s + r.impressions, 0);
+  const totalClics = rows.reduce((s, r) => s + r.clicks, 0);
+  const table = rows
+    .map(
+      (r) => `<tr><td style="padding:8px 0;border-bottom:1px solid ${LINE};font:14px/1.4 Helvetica,Arial,sans-serif;color:${INK}"><strong>${esc(r.advertiser)}</strong><br><span style="color:${INK_2}">${esc(r.title)} · ${esc(r.slot)}${r.house ? " · maison" : ""}</span></td><td align="right" style="padding:8px 0;border-bottom:1px solid ${LINE};font:14px/1.4 Helvetica,Arial,sans-serif;color:${INK};white-space:nowrap">${fmt(r.impressions)} aff.<br>${fmt(r.clicks)} clics (${r.impressions ? ((r.clicks / r.impressions) * 100).toFixed(2) : "0"} %)</td></tr>`,
+    )
+    .join("");
+  return send(
+    to,
+    `Régie : rapport de ${mois}`,
+    `Rapport de la régie publicitaire, ${mois}.\n\n${rows.map((r) => `${r.advertiser} — ${r.title} (${r.slot}) : ${r.impressions} affichages, ${r.clicks} clics`).join("\n")}\n\nTotal : ${totalImp} affichages, ${totalClics} clics.\nCSV détaillé (connexion admin) : ${csvUrl}${SIGN}`,
+    layout({
+      preheader: `${fmt(totalImp)} affichages, ${fmt(totalClics)} clics sur le mois.`,
+      eyebrow: "Régie publicitaire",
+      title: `Rapport de ${mois}.`,
+      paragraphs: [`<strong>${fmt(totalImp)}</strong> affichages et <strong>${fmt(totalClics)}</strong> clics sur ${rows.length} campagne${rows.length > 1 ? "s" : ""}. Chiffres à transmettre aux annonceurs.`],
+      panel: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${table}</table>`,
+      panelFirst: true,
+      cta: { label: "Télécharger le détail (CSV)", url: csvUrl },
+      footnote: "Lien réservé à l'équipe connectée au back-office.",
+    }),
+  );
+}

@@ -34,8 +34,6 @@ export default async function AdminParametresPage() {
     socialsManquants.length > 0 && { l: `Réseaux sociaux : ${socialsManquants.join(", ")}`, d: "Icônes visibles mais renvoyant vers Contact. Renseigner les liens ci-dessous." },
     !env.NEXT_PUBLIC_MAPTILER_KEY && { l: "Fond de carte (MapTiler)", d: "Facultatif : fond OpenStreetMap en attendant." },
     !env.FEDAPAY_SECRET_KEY && { l: "Paiements (FedaPay)", d: "Régie et adhésions payantes : à brancher quand le HCBE sera prêt." },
-    { l: "Validation des experts (Compétences)", d: "Modèle « expert » à définir avec le HCBE." },
-    { l: "Accueil & hébergement", d: "Service annoncé sur le site, pas encore ouvert." },
   ].filter(Boolean) as { l: string; d: string }[];
 
   let baseOk = false;

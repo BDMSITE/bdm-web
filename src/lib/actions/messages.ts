@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendRelayNotification } from "@/lib/mail";
+import { sendRelayNotification, sendApplicationReceipt } from "@/lib/mail";
 import { contentHref } from "@/lib/routes";
 import { SITE_URL as BASE_URL } from "@/lib/site-url";
 
@@ -104,6 +104,10 @@ export async function applyAction(_prev: RelayState, formData: FormData): Promis
   if (offre.ownerProfile?.user.status === "ACTIVE") {
     const texte = `${d.message}${cvUrl ? `\n\nCV : ${cvUrl.startsWith("/") ? BASE_URL + cvUrl : cvUrl}` : ""}`;
     await sendRelayNotification(offre.ownerProfile.user.email, me?.displayName ?? "Un membre", `Candidature : ${offre.title}`, texte, `${BASE_URL}/compte/candidatures-recues`).catch(() => {});
+  }
+
+  if (session.user.email) {
+    await sendApplicationReceipt(session.user.email, { title: offre.title, url: `${BASE_URL}${contentHref(offre.type, offre.slug)}`, recruiter: offre.ownerProfile?.displayName ?? "le recruteur" }).catch(() => {});
   }
 
   revalidatePath("/compte/candidatures");

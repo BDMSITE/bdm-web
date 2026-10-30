@@ -7,6 +7,7 @@ import { setContentStatusAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
 import { PageHead, Card, TableShell, Th, Td, EmptyState, ContentStatusBadge, EditLink, fmtDate } from "@/components/admin/ui";
 import { ServiceContentPanel } from "./form";
+import { AccueilAdminCard } from "./accueil";
 
 export const metadata: Metadata = { title: "Services" };
 
@@ -99,6 +100,7 @@ export default async function AdminServicesPage() {
             </Card>
           );
         })}
+        <AccueilAdminCard />
       </div>
     </>
   );

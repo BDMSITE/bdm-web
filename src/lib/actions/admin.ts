@@ -792,3 +792,40 @@ export async function sendNewsletterAction(_prev: AdminActionState, formData: Fo
       : `${r.sent} e-mails envoyés aujourd'hui (limite ${budget}). Le reste partira automatiquement demain matin.`,
   };
 }
+
+/* ---------- Compétences : valider / refuser une proposition d'expert ---------- */
+
+export async function setExpertStatusAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = z.object({ id: z.string().min(1), decision: z.enum(["approve", "reject"]) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const p = await db.profile.findUnique({ where: { id: parsed.data.id }, select: { id: true, slug: true, displayName: true, expertStatus: true } });
+  if (!p || p.expertStatus === "NONE") return { error: "Proposition introuvable." };
+  const status = parsed.data.decision === "approve" ? "APPROVED" : "REJECTED";
+  await db.profile.update({ where: { id: p.id }, data: { expertStatus: status, expertAt: new Date() } });
+  await audit(user.id, `expert.${parsed.data.decision}`, "Profile", p.id, { displayName: p.displayName });
+  revalidatePath("/admin/competences");
+  revalidatePath("/communaute/competences");
+  revalidatePath(`/communaute/membres/${p.slug}`);
+  revalidatePath("/compte/competences");
+  return { ok: true, message: status === "APPROVED" ? `${p.displayName} apparaît dans la rubrique Compétences.` : `Proposition de ${p.displayName} non retenue.` };
+}
+
+/* ---------- Accueil & hébergement : publier / refuser / retirer une fiche ---------- */
+
+export async function setHostingStatusAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = z.object({ id: z.string().min(1), decision: z.enum(["publish", "reject", "archive"]) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const f = await db.hostingOffer.findUnique({ where: { id: parsed.data.id }, include: { profile: { select: { slug: true, displayName: true } } } });
+  if (!f) return { error: "Fiche introuvable." };
+  const status = { publish: "PUBLISHED", reject: "REJECTED", archive: "ARCHIVED" }[parsed.data.decision] as "PUBLISHED" | "REJECTED" | "ARCHIVED";
+  await db.hostingOffer.update({ where: { id: f.id }, data: { status } });
+  await audit(user.id, `hosting.${parsed.data.decision}`, "HostingOffer", f.id, { host: f.profile.displayName, city: f.city });
+  revalidatePath("/admin/services");
+  revalidatePath("/pratique/accueil");
+  revalidatePath("/compte/accueil");
+  return { ok: true, message: { PUBLISHED: "Fiche publiée.", REJECTED: "Fiche refusée.", ARCHIVED: "Fiche retirée." }[status] };
+}

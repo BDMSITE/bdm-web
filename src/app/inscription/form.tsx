@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PasswordInput } from "@/components/site/password-input";
 import { useActionState } from "react";
 import { registerAction, type RegisterState } from "@/lib/actions/auth";
 import { Turnstile } from "@/components/site/turnstile";
@@ -60,11 +61,11 @@ export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: 
           </div>
           <div>
             <label htmlFor="mdp" className="mb-1 block text-sm font-bold">Mot de passe * <span className="font-normal text-muted">(8 caractères min.)</span></label>
-            <input id="mdp" name="password" type="password" required minLength={8} autoComplete="new-password" aria-invalid={invalid("password")} className={INPUT} />
+            <PasswordInput id="mdp" name="password" required minLength={8} autoComplete="new-password" aria-invalid={invalid("password")} className={INPUT} />
           </div>
           <div>
             <label htmlFor="mdp2" className="mb-1 block text-sm font-bold">Confirmer *</label>
-            <input id="mdp2" name="password2" type="password" required autoComplete="new-password" aria-invalid={invalid("password2")} className={INPUT} />
+            <PasswordInput id="mdp2" name="password2" required autoComplete="new-password" aria-invalid={invalid("password2")} className={INPUT} />
           </div>
         </div>
 

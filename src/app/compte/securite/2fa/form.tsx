@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PasswordInput } from "@/components/site/password-input";
 import { useActionState } from "react";
 import { confirmTwoFactorAction, disableTwoFactorAction, type ActionState } from "@/lib/actions/compte";
 
@@ -30,7 +31,7 @@ export function DisableTwoFactorForm() {
   if (state.ok) return <p role="status" className="text-sm font-bold text-primary-dark">Double authentification désactivée.</p>;
   return (
     <form action={action} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-      <input name="password" type="password" autoComplete="current-password" required placeholder="Mot de passe" className={INPUT} />
+      <PasswordInput name="password" autoComplete="current-password" required placeholder="Mot de passe" className={INPUT} />
       <input name="code" inputMode="numeric" autoComplete="one-time-code" required placeholder="Code à 6 chiffres" className={INPUT} />
       <button type="submit" disabled={pending} className="rounded border-2 border-line px-4 py-2 text-sm font-bold text-ink-2 hover:border-danger hover:text-danger disabled:opacity-60">Désactiver</button>
       {state.error && <p role="alert" className="text-sm text-danger sm:col-span-3">{state.error}</p>}

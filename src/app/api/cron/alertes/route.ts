@@ -6,6 +6,7 @@ import { contentHref, CONTENT_LABEL } from "@/lib/routes";
 import { SITE_URL as BASE } from "@/lib/site-url";
 import { numberSetting } from "@/lib/settings";
 import { pendingIssues, sendNewsletterBatch } from "@/lib/newsletter";
+import { weeklyDigest, profileReminders, monthlyRegieReport } from "@/lib/rappels";
 
 /* Alertes par mots-clés : chaque matin (cron Vercel), pour chaque alerte,
    les contenus publiés depuis le dernier envoi qui portent un de ses mots-clés
@@ -66,5 +67,15 @@ export async function GET(req: Request) {
     if (r.error || !r.done) break;
   }
   if (newsletter) console.info(`[newsletter] ${newsletter} e-mails envoyés par le cron`);
-  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter });
+
+  /* Lundi : hebdo « près de chez vous » puis rappels de profil ; 1er du mois : rapport régie. */
+  let hebdo = 0, rappels = 0, rapport = false;
+  if (now.getUTCDay() === 1) {
+    hebdo = await weeklyDigest(budget);
+    budget -= hebdo;
+    rappels = await profileReminders(Math.min(budget, 50));
+    budget -= rappels;
+  }
+  if (now.getUTCDate() === 1) rapport = await monthlyRegieReport().catch((e) => { console.error("[régie] rapport impossible", e); return false; });
+  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter, hebdo, rappels, rapport });
 }

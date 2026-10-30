@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, AdSlot, KeywordChips } from "@/components/site/chrome";
 import { db } from "@/lib/db";
 import { ogImageUrl } from "@/lib/og";
+import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
 import { RelayForm } from "@/components/site/relay-form";
@@ -77,6 +78,7 @@ export default async function ProfilPage({ params }: Props) {
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{TYPE_LABEL[profile.user.accountType]}</span>
                 {profile.cvPublished && <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">CV publié</span>}
+                {profile.expertStatus === "APPROVED" && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-dark">Expert validé par le HCBE</span>}
                 <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-ink">
                   Membre depuis {profile.user.createdAt.getFullYear()}
                 </span>
@@ -136,6 +138,17 @@ export default async function ProfilPage({ params }: Props) {
                 </ul>
               )}
             </section>
+
+            {profile.expertStatus === "APPROVED" && (
+              <section className="border border-line p-5">
+                <h2 className="section-title text-lg">Compétences pour <em>le Bénin</em></h2>
+                <p className="mt-2 text-sm">
+                  <span className="font-bold">{profile.expertDomain}</span>
+                  {expertModes(profile.expertModes).length > 0 && <span className="text-ink-2"> · {expertModes(profile.expertModes).map((m) => EXPERT_MODE_LABEL[m]).join(", ")}</span>}
+                </p>
+                {profile.expertPitch && <p className="mt-2 whitespace-pre-line text-sm text-ink-2">{profile.expertPitch}</p>}
+              </section>
+            )}
 
             {!isSelf && (
               <section id="ecrire" className="border-2 border-primary p-4">

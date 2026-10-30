@@ -40,7 +40,10 @@ export default async function AdminRegiePage() {
 
   return (
     <>
-      <PageHead title="Régie pub" desc="Campagnes par emplacement : vendues en priorité, campagnes maison en repli. Un emplacement n'est jamais vide.">
+      <PageHead title="Régie pub" desc="Campagnes par emplacement : vendues en priorité, campagnes maison en repli. Un emplacement n'est jamais vide. Rapport mensuel envoyé le 1er à l'adresse de contact.">
+        <a href="/api/admin/export/regie?jours=90" className="whitespace-nowrap rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
+          Rapport 90 j (CSV)
+        </a>
         <NewBannerPanel />
       </PageHead>
 

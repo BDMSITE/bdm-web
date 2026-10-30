@@ -2,13 +2,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader, SiteFooter, AdSlot, PageBanner, SectionTitle } from "@/components/site/chrome";
 import { EmptyState } from "@/components/site/content";
+import { db } from "@/lib/db";
+import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { Stethoscope, Scale, Cpu, GraduationCap } from "lucide-react";
 
 export const metadata: Metadata = { title: "Compétences de la diaspora" };
 
 /* Compétences de la diaspora : initiative du HCBE pour relier les expertises
-   de l'extérieur aux projets du Bénin. Pas encore de profils « expert » en base :
-   la page présente le principe et affiche un état vide honnête. */
+   de l'extérieur aux projets du Bénin. Les experts affichés ont proposé leurs
+   compétences depuis leur espace et ont été validés par le HCBE. */
 
 const DOMAINES = [
   { icon: Stethoscope, t: "Santé", d: "Médecins, soignants, chercheurs." },
@@ -17,7 +19,15 @@ const DOMAINES = [
   { icon: GraduationCap, t: "Enseignement & recherche", d: "Enseignants, formateurs, chercheurs." },
 ];
 
-export default function CompetencesPage() {
+export default async function CompetencesPage() {
+  const experts = await db.profile.findMany({
+    where: { expertStatus: "APPROVED", user: { status: "ACTIVE" } },
+    orderBy: { expertAt: "desc" },
+    take: 60,
+    select: { id: true, slug: true, displayName: true, city: true, country: true, headline: true, expertDomain: true, expertModes: true, expertPitch: true },
+  });
+  const parDomaine = new Map<string, number>();
+  for (const e of experts) parDomaine.set(e.expertDomain ?? "Autre", (parDomaine.get(e.expertDomain ?? "Autre") ?? 0) + 1);
   return (
     <>
       <SiteHeader />
@@ -26,7 +36,7 @@ export default function CompetencesPage() {
         em="diaspora"
         desc="La diaspora est une ressource pour le Bénin. Le HCBE souhaite mettre en relation les Béninois de l'extérieur avec les projets du pays : mentorat, missions courtes, conseil à distance."
       >
-        <Link href="/compte/profil" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
+        <Link href="/compte/competences" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
           Proposer mes compétences
         </Link>
       </PageBanner>
@@ -38,7 +48,7 @@ export default function CompetencesPage() {
               <SectionTitle pre="Le" em="principe" />
               <ol className="grid gap-4 sm:grid-cols-3">
                 {[
-                  { t: "Vous décrivez vos compétences", d: "Dans votre profil : métier, secteur, disponibilités (mentorat, mission courte, conseil à distance)." },
+                  { t: "Vous décrivez vos compétences", d: "Depuis votre espace : domaine, façon de contribuer (mentorat, mission courte, conseil à distance), ce que vous proposez." },
                   { t: "Le HCBE vérifie", d: "Chaque profil expert est relu avant d'apparaître dans cette rubrique." },
                   { t: "Les projets vous contactent", d: "Par le formulaire relais du site : votre e-mail n'est jamais exposé." },
                 ].map((s, i) => (
@@ -67,12 +77,38 @@ export default function CompetencesPage() {
 
             <section>
               <SectionTitle pre="Les" em="experts" />
-              <EmptyState
-                title="Les premiers profils experts arrivent"
-                text="Cette rubrique s'ouvre dès que les premiers profils auront été vérifiés par le HCBE. Vous exercez à l'étranger et voulez contribuer à un projet au Bénin ? Complétez votre profil."
-                href="/compte/profil"
-                cta="Compléter mon profil"
-              />
+              {experts.length === 0 ? (
+                <EmptyState
+                  title="Les premiers profils experts arrivent"
+                  text="Cette rubrique s'ouvre dès que les premiers profils auront été vérifiés par le HCBE. Vous exercez à l'étranger et voulez contribuer à un projet au Bénin ? Proposez vos compétences."
+                  href="/compte/competences"
+                  cta="Proposer mes compétences"
+                />
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-ink-2">
+                    <strong>{experts.length}</strong> expert{experts.length > 1 ? "s" : ""} validé{experts.length > 1 ? "s" : ""} par le HCBE ·{" "}
+                    {[...parDomaine.entries()].map(([d, n]) => `${d} (${n})`).join(" · ")}
+                  </p>
+                  <ul className="grid gap-4 sm:grid-cols-2">
+                    {experts.map((e) => (
+                      <li key={e.id} className="flex flex-col border border-line p-5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-primary">{e.expertDomain}</p>
+                        <h3 className="mt-1 font-display text-xl font-extrabold leading-tight">
+                          <Link href={`/communaute/membres/${e.slug}`} className="hover:underline">{e.displayName}</Link>
+                        </h3>
+                        <p className="card-location mt-1">{[e.city, e.country].filter(Boolean).join(", ") || "Lieu non renseigné"}{e.headline ? ` — ${e.headline}` : ""}</p>
+                        <p className="mt-2 text-xs font-semibold text-ink-2">{expertModes(e.expertModes).map((m) => EXPERT_MODE_LABEL[m]).join(" · ")}</p>
+                        <p className="mt-2 line-clamp-4 text-sm text-ink-2">{e.expertPitch}</p>
+                        <Link href={`/communaute/membres/${e.slug}#ecrire`} className="mt-4 inline-block self-start rounded border-2 border-primary px-3 py-1.5 text-xs font-bold uppercase text-primary hover:bg-primary hover:text-white">
+                          Contacter
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-muted">Contact par la messagerie du site : l&apos;e-mail de l&apos;expert n&apos;est jamais communiqué.</p>
+                </>
+              )}
             </section>
           </div>
 
@@ -82,10 +118,10 @@ export default function CompetencesPage() {
                 Partager son <em>expertise</em>
               </h3>
               <p className="mt-2 text-sm text-ink-2">
-                Décrivez vos compétences et vos disponibilités dans votre profil : le HCBE relit chaque profil avant de le publier ici.
+                Décrivez vos compétences et vos disponibilités depuis votre espace : le HCBE relit chaque proposition avant de la publier ici.
               </p>
-              <Link href="/compte/profil" className="mt-3 inline-block w-full rounded bg-primary py-2 text-center text-sm font-bold text-white hover:bg-primary-dark">
-                Compléter mon profil
+              <Link href="/compte/competences" className="mt-3 inline-block w-full rounded bg-primary py-2 text-center text-sm font-bold text-white hover:bg-primary-dark">
+                Proposer mes compétences
               </Link>
             </div>
             <div className="border border-line bg-paper-2 p-4 text-sm text-ink-2">

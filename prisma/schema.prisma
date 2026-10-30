@@ -60,6 +60,21 @@ enum KeywordFamily {
   THEME
 }
 
+/* Compétences de la diaspora : un membre propose son expertise, le HCBE valide. */
+enum ExpertStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/* Accueil & hébergement : type d'accueil proposé par un membre. */
+enum HostingKind {
+  ROOM
+  WHOLE
+  FAMILY
+}
+
 enum AlertFrequency {
   INSTANT
   DAILY
@@ -149,6 +164,11 @@ model Profile {
   cvUrl          String?
   cvPublished    Boolean  @default(false)
   publishedCount Int      @default(0)
+  expertStatus   ExpertStatus @default(NONE)
+  expertDomain   String?  // domaine principal (Santé, Numérique, Droit & finance…)
+  expertModes    Json?    // ["MENTORAT","MISSION","CONSEIL"]
+  expertPitch    String?  // ce que le membre propose, relu par le HCBE
+  expertAt       DateTime? // date de la demande ou de la décision
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -160,6 +180,28 @@ model Profile {
   keywords    ProfileKeyword[]
   messages    Message[]           @relation("MessageTo")
   partner     Partner?
+  hosting     HostingOffer?
+}
+
+/* Fiche d'accueil d'un membre (CDC §7.10) : relue par le HCBE avant publication,
+   jamais de coordonnées publiées, mise en relation par la messagerie relais. */
+model HostingOffer {
+  id         String        @id @default(cuid())
+  profileId  String        @unique
+  profile    Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  kind       HostingKind
+  audience   Json          // ["ETUDIANT","VISITEUR","AFRODESCENDANT"]
+  city       String
+  country    String
+  capacity   Int?
+  duration   String?       // « quelques nuits », « un semestre »…
+  conditions String        // participation, règles de la maison
+  status     ContentStatus @default(IN_MODERATION)
+  charterAt  DateTime
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status, country])
 }
 
 model CompanyDetails {

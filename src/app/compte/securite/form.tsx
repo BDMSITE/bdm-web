@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PasswordInput } from "@/components/site/password-input";
 import { changePasswordAction, setPasswordAction, type ActionState } from "@/lib/actions/compte";
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none";
@@ -22,15 +23,15 @@ export function PasswordForm() {
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div>
           <label htmlFor="current" className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted">Mot de passe actuel</label>
-          <input id="current" name="current" type="password" required autoComplete="current-password" className={INPUT} />
+          <PasswordInput id="current" name="current" required autoComplete="current-password" className={INPUT} />
         </div>
         <div>
           <label htmlFor="next" className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted">Nouveau mot de passe</label>
-          <input id="next" name="next" type="password" required minLength={8} autoComplete="new-password" className={INPUT} />
+          <PasswordInput id="next" name="next" required minLength={8} autoComplete="new-password" className={INPUT} />
         </div>
         <div>
           <label htmlFor="confirm" className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted">Confirmer</label>
-          <input id="confirm" name="confirm" type="password" required minLength={8} autoComplete="new-password" className={INPUT} />
+          <PasswordInput id="confirm" name="confirm" required minLength={8} autoComplete="new-password" className={INPUT} />
         </div>
       </div>
       <p className="mt-2 text-xs text-muted">8 caractères minimum.</p>
@@ -54,11 +55,11 @@ export function SetPasswordForm() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="set-next" className="mb-1 block text-sm font-bold">Mot de passe <span className="font-normal text-muted">(8 caractères min.)</span></label>
-            <input id="set-next" name="next" type="password" required minLength={8} autoComplete="new-password" className={INPUT} />
+            <PasswordInput id="set-next" name="next" required minLength={8} autoComplete="new-password" className={INPUT} />
           </div>
           <div>
             <label htmlFor="set-confirm" className="mb-1 block text-sm font-bold">Confirmer</label>
-            <input id="set-confirm" name="confirm" type="password" required autoComplete="new-password" className={INPUT} />
+            <PasswordInput id="set-confirm" name="confirm" required autoComplete="new-password" className={INPUT} />
           </div>
           <div className="sm:col-span-2">
             <button type="submit" disabled={pending} className="rounded bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60">{pending ? "Enregistrement…" : "Enregistrer"}</button>

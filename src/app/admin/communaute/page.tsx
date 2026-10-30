@@ -54,6 +54,9 @@ export default async function AdminCommunautePage() {
   return (
     <>
       <PageHead title="Communauté" desc="Tous les comptes du portail (membres, entreprises, associations, artistes), hors comptes supprimés.">
+        <a href="/api/admin/export/annuaire" className="whitespace-nowrap rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
+          Exporter l&apos;annuaire (CSV)
+        </a>
         <Link href="/admin/imports" className="whitespace-nowrap rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">
           Imports de membres
         </Link>

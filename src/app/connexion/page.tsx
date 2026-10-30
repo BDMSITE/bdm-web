@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PasswordInput } from "@/components/site/password-input";
 import type { Metadata } from "next";
 import { SiteHeader, SiteFooter } from "@/components/site/chrome";
 import { loginAction, magicLinkAction } from "@/lib/actions/auth";
@@ -56,7 +57,7 @@ export default async function ConnexionPage({
             </div>
             <div>
               <label htmlFor="pass" className="mb-1 block text-sm font-bold">Mot de passe</label>
-              <input id="pass" name="password" type="password" required autoComplete="current-password" className={INPUT} />
+              <PasswordInput id="pass" name="password" required autoComplete="current-password" className={INPUT} />
             </div>
             <button type="submit" className="w-full rounded bg-primary py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">
               Connexion

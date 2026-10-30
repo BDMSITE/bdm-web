@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { PasswordForm } from "./form";
+import { PasswordForm, SetPasswordForm } from "./form";
 import { startTwoFactorAction } from "@/lib/actions/compte";
 import { DisableTwoFactorForm } from "./2fa/form";
 
@@ -26,17 +26,7 @@ export default async function SecuritePage() {
         <p className="mt-1 text-sm text-ink-2">Mot de passe et protection de votre compte.</p>
       </div>
 
-      {hasPassword ? (
-        <PasswordForm />
-      ) : (
-        <div className="border border-line p-5">
-          <p className="font-bold">Mot de passe</p>
-          <p className="mt-2 text-sm text-ink-2">
-            Ce compte n&apos;a pas de mot de passe : vous vous connectez avec un lien envoyé par e-mail. La définition
-            d&apos;un mot de passe depuis cet espace arrivera prochainement.
-          </p>
-        </div>
-      )}
+      {hasPassword ? <PasswordForm /> : <SetPasswordForm />}
 
       <div className="space-y-4 border border-line p-5">
         <div className="flex flex-wrap items-center gap-4">

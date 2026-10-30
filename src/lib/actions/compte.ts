@@ -175,6 +175,24 @@ export async function changePasswordAction(_prev: ActionState, formData: FormDat
   return { ok: true };
 }
 
+/* Compte créé par lien magique ou importé : définir un premier mot de passe
+   (pas de mot de passe actuel à fournir ; la session connectée fait foi). */
+const setPasswordSchema = z
+  .object({ next: z.string().min(8, "Le mot de passe doit faire 8 caractères minimum").max(200), confirm: z.string() })
+  .refine((d) => d.next === d.confirm, { message: "Les deux mots de passe ne correspondent pas" });
+
+export async function setPasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const userId = await requireUserId("/compte/securite");
+  const parsed = setPasswordSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const user = await db.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  if (user?.passwordHash) return { error: "Ce compte a déjà un mot de passe : utilisez « Changer mon mot de passe »." };
+  await db.user.update({ where: { id: userId }, data: { passwordHash: await hash(parsed.data.next) } });
+  await db.auditLog.create({ data: { userId, action: "user.password_set", entity: "User", entityId: userId } });
+  revalidatePath("/compte/securite");
+  return { ok: true };
+}
+
 /* --- Suppression du compte --------------------------------------------- */
 
 export async function deleteAccountAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

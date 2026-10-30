@@ -5,14 +5,17 @@ import { geocode } from "../src/lib/geocode";
 
 /* Rattrapage : positionne les profils et contenus qui ont une ville mais pas
    de coordonnées. Une requête Nominatim par couple ville/pays distinct, 1/s.
-   Usage : pnpm geocode */
+   Usage : pnpm geocode            → profils/contenus avec ville
+           pnpm geocode --pays     → en plus, profils SANS ville mais avec pays : placés au centre du pays
+                                     (l'import Excel 2020 n'a souvent que le pays ; la carte regroupe par pays) */
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
+  const pays = process.argv.includes("--pays");
   const [profils, contenus] = await Promise.all([
-    db.profile.findMany({ where: { lat: null, city: { not: null } }, select: { id: true, city: true, country: true } }),
+    db.profile.findMany({ where: pays ? { lat: null, OR: [{ city: { not: null } }, { country: { not: null } }] } : { lat: null, city: { not: null } }, select: { id: true, city: true, country: true } }),
     db.content.findMany({ where: { lat: null, city: { not: null } }, select: { id: true, city: true, country: true } }),
   ]);
   const cache = new Map<string, { lat: number; lng: number } | null>();

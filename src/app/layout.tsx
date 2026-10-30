@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Public_Sans, Caveat } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 /* Typo « administrative » : Public Sans — la police officielle open source
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <div className="tricolor" aria-hidden />
         {children}
+        <Analytics />
       </body>
     </html>
   );

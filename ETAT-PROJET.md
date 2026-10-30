@@ -188,6 +188,14 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   par mot de passe + code, audit user.2fa_on/off. Compatible Google Authenticator, Authy, Bitwarden, 1Password.
   Optionnelle pour l'instant : à rendre obligatoire pour ADMIN quand Josué et la personne du HCBE l'auront activée.
 
+- **30/10 — FINALISATION.** **CSP** en production (next.config.ts : scripts du site + Turnstile + Vercel Analytics,
+  tuiles OSM, Blob Vercel, images https, cadres Turnstile seulement ; désactivée en dev). **Vercel Analytics** posé
+  dans le layout (gratuit ; à activer d'un clic dans le dashboard Vercel → Analytics). **Premier mot de passe** pour les
+  comptes sans mot de passe (lien magique / import) dans Mon espace → Sécurité (testé). **Géocodage au pays**
+  (`pnpm geocode --pays`) : les profils importés qui n'ont qu'un pays sont placés au centre du pays → **245 profils
+  géolocalisés sur 288 en prod** (43 sans pays ni ville restent hors carte). Back-office complété (rôles, signalements,
+  modification de personnalité, épinglage ticker) — voir commit.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication
@@ -195,7 +203,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
    d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
-4. Plus tard : 2FA obligatoire pour ADMIN, CSP, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
+4. Plus tard : 2FA obligatoire pour ADMIN, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

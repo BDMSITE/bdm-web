@@ -329,18 +329,12 @@ export function SiteFooter() {
         {/* Rangée 2 : partenaires | liens institutionnels */}
         <div className="grid items-start gap-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <div>
-            <ul className="flex flex-wrap items-center gap-2.5">
-              {["HCBE"].map((p) => (
-                <li
-                  key={p}
-                  className="flex h-11 w-[74px] items-center justify-center rounded-md border border-white/15 bg-white/5 px-1 text-center text-[0.58rem] font-bold leading-tight tracking-wide text-white/60"
-                >
-                  {p}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 max-w-[280px] text-xs leading-relaxed text-white/45">
-              Portail de la diaspora édité par le Haut Conseil des Béninois de l&apos;Extérieur.
+            <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.2em] text-accent">Partenaire officiel</p>
+            <Link href="/hcbe" className="mt-3 inline-block bg-white p-3 transition hover:bg-paper-2" aria-label="Le HCBE, partenaire officiel de Béninois du Monde">
+              <Image src="/images/logo-hcbe.png" alt="Haut Conseil des Béninois de l'Extérieur" width={240} height={85} className="h-auto w-[240px]" />
+            </Link>
+            <p className="mt-3 max-w-[280px] text-xs leading-relaxed text-white/55">
+              Le Haut Conseil des Béninois de l&apos;Extérieur, partenaire officiel de Béninois du Monde.
             </p>
           </div>
 

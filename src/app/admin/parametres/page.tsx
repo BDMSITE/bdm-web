@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
+import { RoleSelect, AddTeamMemberForm } from "./role-form";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
-/* Paramètres : état des services (sans exposer de secret), équipe d'administration, liens utiles.
+/* Paramètres : état des services (sans exposer de secret), équipe d'administration
+   (attribution des rôles réservée aux administrateurs), liens utiles.
    Les quotas et textes d'e-mails ne sont pas encore configurables depuis le back-office. */
 
 export const dynamic = "force-dynamic";
@@ -15,6 +18,9 @@ function Etat({ ok, oui, non }: { ok: boolean; oui: string; non: string }) {
 }
 
 export default async function AdminParametresPage() {
+  const session = await auth();
+  const me = session?.user;
+  const isAdmin = me?.role === "ADMIN";
   const env = process.env;
   const mail = env.BREVO_API_KEY ? "Brevo" : env.RESEND_API_KEY ? "Resend" : null;
 
@@ -27,7 +33,7 @@ export default async function AdminParametresPage() {
   }
 
   const equipe = await db.user.findMany({
-    where: { role: { in: ["EDITOR", "MODERATOR", "ADMIN"] }, status: { not: "DELETED" } },
+    where: { role: { in: ["EDITOR", "MODERATOR", "REGIE", "ADMIN"] }, status: { not: "DELETED" } },
     orderBy: [{ role: "desc" }, { createdAt: "asc" }],
     select: { id: true, name: true, email: true, role: true, status: true, twoFactorSecret: true },
   });
@@ -41,10 +47,12 @@ export default async function AdminParametresPage() {
     { l: "Authentification", etat: <Etat ok={!!env.AUTH_SECRET && env.AUTH_SECRET !== "change-me"} oui="Secret défini" non="Secret à définir" />, note: "Sessions JWT, mot de passe + lien magique." },
   ];
 
-  const ROLE: Record<string, { l: string; tone: "green" | "blue" | "gray" }> = {
+  const ROLE: Record<string, { l: string; tone: "green" | "blue" | "gray" | "yellow" }> = {
     ADMIN: { l: "Administrateur", tone: "green" },
     MODERATOR: { l: "Modération", tone: "blue" },
     EDITOR: { l: "Rédaction", tone: "blue" },
+    REGIE: { l: "Régie publicitaire", tone: "yellow" },
+    USER: { l: "Membre", tone: "gray" },
   };
 
   return (
@@ -88,19 +96,31 @@ export default async function AdminParametresPage() {
       </div>
 
       <Card className="mt-6" title={`Équipe d'administration (${equipe.length})`}>
-        <TableShell head={<><Th>Personne</Th><Th>E-mail</Th><Th>Rôle</Th><Th>Compte</Th><Th>2FA</Th></>}>
+        <TableShell head={<><Th>Personne</Th><Th>E-mail</Th><Th>Rôle</Th><Th>Compte</Th><Th>2FA</Th>{isAdmin && <Th>Changer le rôle</Th>}</>}>
           {equipe.map((u) => (
             <tr key={u.id} className="hover:bg-primary-faint">
-              <Td className="font-semibold">{u.name ?? "—"}</Td>
+              <Td className="font-semibold">{u.name ?? "—"}{me?.id === u.id && <span className="ml-1 text-xs font-normal text-muted">(vous)</span>}</Td>
               <Td className="text-ink-2">{u.email}</Td>
               <Td><Badge tone={ROLE[u.role]?.tone ?? "gray"}>{ROLE[u.role]?.l ?? u.role}</Badge></Td>
               <Td className="text-ink-2">{u.status === "ACTIVE" ? "Actif" : u.status === "SUSPENDED" ? "Suspendu" : "E-mail à confirmer"}</Td>
               <Td>{u.twoFactorSecret ? <Badge tone="green">Activée</Badge> : <Badge tone="gray">Non activée</Badge>}</Td>
+              {isAdmin && (
+                <Td><RoleSelect id={u.id} role={u.role} self={me?.id === u.id} /></Td>
+              )}
             </tr>
           ))}
         </TableShell>
+        {isAdmin && (
+          <div className="border-t border-line">
+            <p className="px-4 pt-3 text-sm font-bold">Ajouter à l&apos;équipe</p>
+            <AddTeamMemberForm />
+          </div>
+        )}
         <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-          L&apos;attribution des rôles et l&apos;activation de la 2FA (obligatoire pour l&apos;équipe, CDC §10.3) ne sont pas encore disponibles depuis cette page.
+          {isAdmin
+            ? "Choisir « Membre » retire la personne de l'équipe. Un nouveau rôle prend effet à sa prochaine connexion. "
+            : "Seul un administrateur peut attribuer les rôles. "}
+          La 2FA (obligatoire pour l&apos;équipe, CDC §10.3) s&apos;active par chaque personne dans Mon espace → Sécurité.
         </p>
       </Card>
     </>

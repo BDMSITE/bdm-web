@@ -193,8 +193,12 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   dans le layout (gratuit ; à activer d'un clic dans le dashboard Vercel → Analytics). **Premier mot de passe** pour les
   comptes sans mot de passe (lien magique / import) dans Mon espace → Sécurité (testé). **Géocodage au pays**
   (`pnpm geocode --pays`) : les profils importés qui n'ont qu'un pays sont placés au centre du pays → **245 profils
-  géolocalisés sur 288 en prod** (43 sans pays ni ville restent hors carte). Back-office complété (rôles, signalements,
-  modification de personnalité, épinglage ticker) — voir commit.
+  géolocalisés sur 288 en prod** (43 sans pays ni ville restent hors carte). **Back-office complété** : attribution des
+  rôles dans Paramètres (ADMIN seul ; garde-fous : pas d'auto-rétrogradation, dernier admin protégé ; prend effet à la
+  prochaine connexion) + « Ajouter à l'équipe » par e-mail ; traitement des signalements (Clôturer / Retirer le contenu) ;
+  modification d'une personnalité (`/admin/memoire/personnalites/[id]`) ; épinglage dans le ticker « En direct »
+  (`featured`, partagé avec « À la une » de l'accueil). Plus aucune fonction « pas encore disponible » dans l'admin,
+  sauf l'envoi de newsletter (Brevo) et le modèle « expert » (Compétences).
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +

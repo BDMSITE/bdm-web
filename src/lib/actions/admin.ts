@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { ContentType, Prisma } from "@prisma/client";
+import { Prisma, type ContentType } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
@@ -70,6 +70,56 @@ export async function moderateContentAction(_prev: AdminActionState, formData: F
   return { ok: true, message: decision === "publish" ? "Contenu publié." : "Contenu refusé." };
 }
 
+/* ---------- Modération : traiter un signalement ---------- */
+
+const reportSchema = z.object({
+  id: z.string().min(1),
+  decision: z.enum(["close", "remove"]),
+});
+
+export async function resolveReportAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+
+  const parsed = reportSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, decision } = parsed.data;
+
+  const report = await db.report.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      status: true,
+      reason: true,
+      content: { select: { id: true, type: true, slug: true, status: true, title: true } },
+    },
+  });
+  if (!report) return { error: "Signalement introuvable." };
+  if (report.status !== "open") return { error: "Ce signalement a déjà été traité." };
+
+  if (decision === "remove") {
+    const content = report.content;
+    if (!content) return { error: "Le contenu signalé n'existe plus : clôturez le signalement sans suite." };
+    // Le retrait du contenu règle aussi les autres signalements ouverts qui le visent.
+    await db.$transaction([
+      db.content.update({ where: { id: content.id }, data: { status: "ARCHIVED" } }),
+      db.report.updateMany({ where: { contentId: content.id, status: "open" }, data: { status: "closed" } }),
+    ]);
+    await audit(user.id, "report.remove", "Report", id, { contentId: content.id, title: content.title, type: content.type, from: content.status, reason: report.reason });
+    await indexContent(content.id).catch(() => {});
+    revalidatePath(SECTION[content.type]);
+    revalidatePath(contentHref(content.type, content.slug));
+    revalidatePath("/");
+  } else {
+    await db.report.update({ where: { id }, data: { status: "closed" } });
+    await audit(user.id, "report.close", "Report", id, { contentId: report.content?.id ?? null, title: report.content?.title ?? null, reason: report.reason });
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/moderation");
+  return { ok: true, message: decision === "remove" ? "Contenu retiré et signalement clôturé." : "Signalement clôturé sans suite." };
+}
+
 /* ---------- Publier / archiver un contenu (emploi, services) ---------- */
 
 const statusSchema = z.object({
@@ -107,6 +157,35 @@ export async function setContentStatusAction(_prev: AdminActionState, formData: 
   revalidatePath(SECTION[content.type]);
   revalidatePath(contentHref(content.type, content.slug));
   return { ok: true, message: status === "PUBLISHED" ? "Contenu publié." : "Contenu archivé." };
+}
+
+/* ---------- Bandeau « En direct » : épingler / désépingler un contenu ---------- */
+
+const featuredSchema = z.object({ id: z.string().min(1) });
+
+export async function toggleFeaturedAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+
+  const parsed = featuredSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id } = parsed.data;
+
+  const content = await db.content.findUnique({ where: { id }, select: { id: true, type: true, slug: true, status: true, title: true, featured: true } });
+  if (!content) return { error: "Contenu introuvable." };
+  const featured = !content.featured;
+  if (featured && content.status !== "PUBLISHED") return { error: "Seul un contenu en ligne peut être épinglé." };
+
+  await db.content.update({ where: { id }, data: { featured } });
+  await audit(user.id, "content.feature", "Content", id, { title: content.title, type: content.type, featured });
+  await indexContent(id).catch(() => {});
+
+  // Le bandeau est rendu dans l'en-tête de toutes les pages publiques.
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/direct");
+  revalidatePath("/admin/redaction");
+  revalidatePath(`/admin/contenus/${id}`);
+  return { ok: true, message: featured ? "Contenu épinglé dans le bandeau." : "Contenu retiré des épinglés." };
 }
 
 /* ---------- Rédaction : nouvel article ---------- */
@@ -427,15 +506,11 @@ const celebritySchema = z.object({
   link3Label: optText(60), link3Url: optUrl,
 });
 
-export async function createCelebrityAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
-  const user = await requireStaff();
-  if (!user) return REFUS;
+type CelebrityFields = z.infer<typeof celebritySchema>;
 
-  const parsed = celebritySchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return firstIssueWithField(parsed.error);
-  const d = parsed.data;
-
-  const links = (
+/* Liens (3 au plus) : seuls ceux qui ont une adresse sont conservés. */
+function celebrityLinks(d: CelebrityFields) {
+  return (
     [
       [d.link1Label, d.link1Url],
       [d.link2Label, d.link2Url],
@@ -444,6 +519,16 @@ export async function createCelebrityAction(_prev: AdminFormState, formData: For
   )
     .filter(([, url]) => url)
     .map(([label, url]) => ({ label: label ?? "Site", url: url! }));
+}
+
+export async function createCelebrityAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+
+  const parsed = celebritySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return firstIssueWithField(parsed.error);
+  const d = parsed.data;
+  const links = celebrityLinks(d);
 
   const root = slugify(d.name).slice(0, 80) || "personnalite";
   let slug = root;
@@ -458,6 +543,38 @@ export async function createCelebrityAction(_prev: AdminFormState, formData: For
   revalidatePath("/admin/memoire");
   revalidatePath("/magazine/beninois-qui-comptent");
   return { ok: true, message: `Fiche « ${d.name} » créée.` };
+}
+
+/* ---------- Mémoire : modifier une personnalité (adresse/slug inchangée) ---------- */
+
+const updateCelebritySchema = celebritySchema.extend({ id: z.string().trim().min(1).max(64) });
+
+export async function updateCelebrityAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+
+  const parsed = updateCelebritySchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return firstIssueWithField(parsed.error);
+  const d = parsed.data;
+
+  const existing = await db.celebrity.findUnique({ where: { id: d.id }, select: { id: true, name: true, domain: true } });
+  if (!existing) return { error: "Fiche introuvable." };
+  const links = celebrityLinks(d);
+
+  await db.celebrity.update({
+    where: { id: existing.id },
+    data: { name: d.name, domain: d.domain ?? null, bio: d.bio ?? null, photo: d.photo ?? null, links: links.length ? links : Prisma.DbNull },
+  });
+  await audit(user.id, "celebrity.update", "Celebrity", existing.id, {
+    name: d.name,
+    domain: d.domain ?? null,
+    ...(existing.name !== d.name && { from: existing.name }),
+  });
+
+  revalidatePath("/admin/memoire");
+  revalidatePath(`/admin/memoire/personnalites/${existing.id}`);
+  revalidatePath("/magazine/beninois-qui-comptent");
+  return { ok: true, message: "Modifications enregistrées." };
 }
 
 /* ---------- Communauté : suspendre / réactiver un compte ---------- */
@@ -489,6 +606,83 @@ export async function setUserStatusAction(_prev: AdminActionState, formData: For
   revalidatePath("/admin/communaute");
   revalidatePath("/communaute");
   return { ok: true, message: status === "SUSPENDED" ? "Compte suspendu." : "Compte réactivé." };
+}
+
+/* ---------- Équipe : attribution des rôles (administrateur uniquement) ---------- */
+
+const ROLES = ["USER", "EDITOR", "MODERATOR", "REGIE", "ADMIN"] as const;
+type RoleCode = (typeof ROLES)[number];
+const roleField = z.enum(ROLES, { error: "Rôle invalide" });
+
+const REFUS_ADMIN = { error: "Seul un administrateur peut attribuer les rôles." } as const;
+
+const ROLE_LABEL_ACTION: Record<RoleCode, string> = {
+  USER: "Membre",
+  EDITOR: "Rédaction",
+  MODERATOR: "Modération",
+  REGIE: "Régie publicitaire",
+  ADMIN: "Administrateur",
+};
+
+/* Cœur partagé : garde-fous (son propre rôle ADMIN, dernier ADMIN), écriture, audit. */
+async function applyRole(
+  actor: { id: string },
+  target: { id: string; email: string; role: RoleCode; status: string },
+  role: RoleCode,
+): Promise<AdminActionState> {
+  if (target.status === "DELETED") return { error: "Ce compte a été supprimé." };
+  if (target.role === role) return { error: "Ce compte a déjà ce rôle." };
+  if (target.id === actor.id && role !== "ADMIN") return { error: "Impossible de retirer votre propre rôle d'administrateur." };
+  if (target.role === "ADMIN" && role !== "ADMIN") {
+    const admins = await db.user.count({ where: { role: "ADMIN", status: { not: "DELETED" } } });
+    if (admins <= 1) return { error: "Impossible de rétrograder le dernier administrateur." };
+  }
+
+  await db.user.update({ where: { id: target.id }, data: { role } });
+  await audit(actor.id, "user.role", "User", target.id, { email: target.email, from: target.role, to: role });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/parametres");
+  revalidatePath("/admin/communaute");
+  return { ok: true, message: `Rôle « ${ROLE_LABEL_ACTION[role]} » appliqué. Il prend effet à la prochaine connexion de la personne.` };
+}
+
+const userRoleSchema = z.object({ id: z.string().min(1), role: roleField });
+
+export async function setUserRoleAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return REFUS_ADMIN;
+
+  const parsed = userRoleSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, role } = parsed.data;
+
+  const target = await db.user.findUnique({ where: { id }, select: { id: true, email: true, role: true, status: true } });
+  if (!target) return { error: "Compte introuvable." };
+  return applyRole(user, target, role);
+}
+
+/* Ajouter à l'équipe : par e-mail d'un compte ACTIVE existant, avec un rôle d'équipe. */
+const addTeamSchema = z.object({
+  email: z.email("Adresse e-mail invalide").trim().toLowerCase().max(200),
+  role: z.enum(["EDITOR", "MODERATOR", "REGIE", "ADMIN"], { error: "Rôle invalide" }),
+});
+
+export async function addTeamMemberAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return REFUS_ADMIN;
+
+  const parsed = addTeamSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { email, role } = parsed.data;
+
+  const target = await db.user.findUnique({ where: { email }, select: { id: true, email: true, role: true, status: true } });
+  if (!target) return { error: "Aucun compte avec cette adresse. La personne doit d'abord s'inscrire sur le site." };
+  if (target.status !== "ACTIVE") return { error: "Ce compte n'est pas actif (e-mail à confirmer ou compte suspendu)." };
+  if (target.role !== "USER") return { error: `Ce compte fait déjà partie de l'équipe (${ROLE_LABEL_ACTION[target.role]}) : modifiez son rôle dans la liste.` };
+  return applyRole(user, target, role);
 }
 
 /* ---------- Mots-clés : ajout ---------- */

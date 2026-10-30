@@ -71,20 +71,22 @@ export default async function AdminMemoirePage() {
               Utilisez « Nouvelle personnalité » ci-dessus (nom, domaine, biographie, photo, liens). Les fiches apparaissent sur /magazine/beninois-qui-comptent.
             </EmptyState>
           ) : (
-            <TableShell head={<><Th>Nom</Th><Th>Domaine</Th><Th>Adresse</Th></>}>
+            <TableShell head={<><Th>Nom</Th><Th>Domaine</Th><Th>Adresse</Th><Th>&nbsp;</Th></>}>
               {celebrites.map((c) => (
                 <tr key={c.id} className="hover:bg-primary-faint">
                   <Td className="font-semibold">{c.name}</Td>
                   <Td className="text-ink-2">{c.domain ?? "—"}</Td>
                   <Td className="text-muted">{c.slug}</Td>
+                  <Td>
+                    <div className="flex flex-nowrap justify-end gap-2">
+                      <Link href={`/admin/memoire/personnalites/${c.id}`} className="whitespace-nowrap rounded border border-line px-2.5 py-1 text-xs font-bold text-ink-2 hover:border-primary hover:text-primary">
+                        Modifier
+                      </Link>
+                    </div>
+                  </Td>
                 </tr>
               ))}
             </TableShell>
-          )}
-          {celebrites.length > 0 && (
-            <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-              La modification d&apos;une fiche existante n&apos;est pas encore disponible depuis cette page.
-            </p>
           )}
         </Card>
       </div>

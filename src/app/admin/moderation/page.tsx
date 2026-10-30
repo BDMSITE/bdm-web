@@ -2,14 +2,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
-import { moderateContentAction } from "@/lib/actions/admin";
+import { moderateContentAction, resolveReportAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
 import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, TypeBadge, EditLink, fmtDateTime } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Modération" };
 
 /* Modération : contenus en attente (IN_MODERATION) + signalements ouverts.
-   Valider = PUBLISHED (publishedAt = maintenant, indexation), Refuser = REJECTED. */
+   Valider = PUBLISHED (publishedAt = maintenant, indexation), Refuser = REJECTED.
+   Signalement : Clôturer (sans suite) ou Retirer le contenu (ARCHIVED + clôture). */
 
 export default async function ModerationPage() {
   const [enAttente, signalements] = await Promise.all([
@@ -37,7 +38,7 @@ export default async function ModerationPage() {
         id: true,
         reason: true,
         createdAt: true,
-        content: { select: { title: true, type: true, slug: true } },
+        content: { select: { id: true, title: true, type: true, slug: true } },
         reporter: { select: { name: true, email: true } },
       },
     }),
@@ -99,7 +100,7 @@ export default async function ModerationPage() {
               Les signalements envoyés par les membres depuis une fiche apparaîtront ici.
             </EmptyState>
           ) : (
-            <TableShell head={<><Th>Contenu signalé</Th><Th>Motif</Th><Th>Par</Th><Th>Quand</Th></>}>
+            <TableShell head={<><Th>Contenu signalé</Th><Th>Motif</Th><Th>Par</Th><Th>Quand</Th><Th>&nbsp;</Th></>}>
               {signalements.map((r) => (
                 <tr key={r.id} className="hover:bg-primary-faint">
                   <Td className="font-semibold">
@@ -112,12 +113,27 @@ export default async function ModerationPage() {
                   <Td className="max-w-[360px] text-ink-2">{r.reason}</Td>
                   <Td className="text-ink-2">{r.reporter.name ?? r.reporter.email}</Td>
                   <Td className="whitespace-nowrap text-muted">{fmtDateTime(r.createdAt)}</Td>
+                  <Td>
+                    <div className="flex flex-nowrap justify-end gap-2">
+                      {r.content && <EditLink id={r.content.id} />}
+                      <ActionButton action={resolveReportAction} fields={{ id: r.id, decision: "close" }} label="Clôturer" confirm="Clôturer ce signalement sans suite ?" />
+                      {r.content && (
+                        <ActionButton
+                          action={resolveReportAction}
+                          fields={{ id: r.id, decision: "remove" }}
+                          label="Retirer le contenu"
+                          tone="danger"
+                          confirm={`Retirer « ${r.content.title} » du site (archivage) et clôturer le signalement ?`}
+                        />
+                      )}
+                    </div>
+                  </Td>
                 </tr>
               ))}
             </TableShell>
           )}
           <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-            Le traitement d&apos;un signalement (clôture, retrait du contenu) n&apos;est pas encore disponible depuis cette page.
+            Clôturer = signalement classé sans suite, le contenu reste en ligne. Retirer = le contenu passe en statut Archivé (récupérable via Modifier) et tous ses signalements ouverts sont clôturés.
           </p>
         </Card>
       </div>

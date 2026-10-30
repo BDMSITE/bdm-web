@@ -2,19 +2,25 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { CONTENT_LABEL, contentHref } from "@/lib/routes";
 
-/* Bandeau « En direct » : les derniers contenus publiés, rien d'autre.
-   Masqué tant qu'il n'y a rien à annoncer. */
+/* Bandeau « En direct » : les contenus épinglés par l'équipe (Content.featured,
+   admin → En direct) en tête, complétés par les derniers contenus publiés
+   jusqu'à TICKER_SIZE. Masqué tant qu'il n'y a rien à annoncer. */
 
-async function latest() {
+export const TICKER_SIZE = 8;
+
+/* Liste exacte du bandeau (réutilisée par la page admin En direct). */
+export async function tickerItems() {
   return db.content.findMany({
     where: { status: "PUBLISHED" },
-    orderBy: { publishedAt: "desc" },
-    take: 8,
-    select: { id: true, type: true, title: true, slug: true, city: true },
+    orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+    take: TICKER_SIZE,
+    select: { id: true, type: true, title: true, slug: true, city: true, featured: true, publishedAt: true },
   });
 }
 
-function TickerItems({ items, hidden = false }: { items: Awaited<ReturnType<typeof latest>>; hidden?: boolean }) {
+type TickerItem = Awaited<ReturnType<typeof tickerItems>>[number];
+
+function TickerItems({ items, hidden = false }: { items: TickerItem[]; hidden?: boolean }) {
   return (
     <ul className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
       {items.map((it) => (
@@ -34,7 +40,7 @@ function TickerItems({ items, hidden = false }: { items: Awaited<ReturnType<type
 }
 
 export async function LiveTicker() {
-  const items = await latest();
+  const items = await tickerItems();
   if (items.length === 0) return null;
   return (
     <div className="bdm-ticker flex items-stretch overflow-hidden bg-primary-darker text-white">

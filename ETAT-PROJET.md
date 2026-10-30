@@ -230,6 +230,12 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   aligné) ; il reste admin + 5 membres de démo. CGU et confidentialité mises à jour (un seul type de compte).
   Bande « Nos partenaires » : logo + nom seulement, 5 tuiles. En attente : e-mail de Mam pour son compte administrateur.
 
+- **30/10 — TURNSTILE ACTIF.** Clés Cloudflare posées sur le projet bdmsite (prod + preview), widget « Vérifiez que vous
+  êtes humain » visible sur /inscription et /contact, refus serveur vérifié (envoi sans jeton → « Vérification anti-robot
+  échouée »). Domaines déclarés chez Cloudflare : bdm-web-psi.vercel.app et beninois-du-monde.com. Réseaux sociaux :
+  icônes masquées tant que NEXT_PUBLIC_SOCIAL_* ne sont pas renseignées. Base Notion « ✅ Vérification du site » :
+  60 pages du site en ligne à vérifier par Josué (anciennes maquettes à la corbeille).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication

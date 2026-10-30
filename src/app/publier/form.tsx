@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { PenLine, Briefcase, GraduationCap, CalendarDays, MapPin, Megaphone, HeartHandshake } from "lucide-react";
 import { publishAction, type PublishState } from "@/lib/actions/publier";
 import { TimezoneSelect } from "@/components/site/timezone-select";
+import { LieuFields } from "@/components/site/lieu-fields";
 
 /* Formulaire du guichet « Publier » : type, champs communs, champs selon le type.
    Tout contenu part en modération ; rien n'est mis en ligne directement. */
@@ -81,15 +82,7 @@ export function PublierForm() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="country" className="mb-1 block text-sm font-bold">Pays *</label>
-            <input id="country" name="country" required autoComplete="country-name" aria-invalid={invalid("country")} className={INPUT} />
-          </div>
-          <div>
-            <label htmlFor="city" className="mb-1 block text-sm font-bold">Ville *</label>
-            <input id="city" name="city" required autoComplete="address-level2" aria-invalid={invalid("city")} className={INPUT} />
-            <p className="mt-1 text-xs text-muted">La ville place votre contenu sur la carte et dans les alertes locales.</p>
-          </div>
+          <LieuFields required countryInvalid={invalid("country")} cityInvalid={invalid("city")} cityHint="La ville place votre contenu sur la carte et dans les alertes locales." inputClass={INPUT} />
         </div>
 
         <div>

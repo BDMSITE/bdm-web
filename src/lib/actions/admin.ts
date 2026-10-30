@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Prisma, type ContentType } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { zonedToUtc } from "@/lib/temps";
 import { sendModerationResult } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site-url";
@@ -250,8 +251,8 @@ export async function createArticleAction(_prev: AdminActionState, formData: For
       slug,
       excerpt: d.excerpt || null,
       body: d.body,
-      country: d.country || null,
-      city: d.city || null,
+      country: normalizeCountry(d.country) || null,
+      city: normalizeCity(d.city) || null,
       status: d.status,
       publishedAt: d.status === "PUBLISHED" ? new Date() : null,
       ownerProfileId: profile?.id ?? null,
@@ -428,8 +429,8 @@ export async function createContentAction(_prev: AdminFormState, formData: FormD
     excerpt: d.excerpt || null,
     body: d.body,
     cover: d.cover ?? null,
-    country: d.country || null,
-    city: d.city || null,
+    country: normalizeCountry(d.country) || null,
+    city: normalizeCity(d.city) || null,
     lat: coords.lat,
     lng: coords.lng,
     status: d.status,
@@ -483,8 +484,8 @@ export async function updateContentAdminAction(_prev: AdminFormState, formData: 
     excerpt: d.excerpt || null,
     body: d.body,
     cover: d.cover ?? null,
-    country: d.country || null,
-    city: d.city || null,
+    country: normalizeCountry(d.country) || null,
+    city: normalizeCity(d.city) || null,
     lat: coords.lat,
     lng: coords.lng,
     status: d.status,

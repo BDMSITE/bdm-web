@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { indexContent } from "@/lib/search";
 import { SECTION, contentHref } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
@@ -68,8 +69,8 @@ export async function updateContentAction(_prev: PublicationState, formData: For
     title: d.title,
     excerpt: d.excerpt || null,
     body: d.body,
-    country: d.country,
-    city: d.city,
+    country: normalizeCountry(d.country),
+    city: normalizeCity(d.city),
     ...(backToModeration && { status: "IN_MODERATION" }),
     keywords: { deleteMany: {}, create: keywordsCreate(parseKeywords(d.keywords)) },
   };

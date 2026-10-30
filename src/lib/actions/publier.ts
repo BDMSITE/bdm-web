@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { numberSetting } from "@/lib/settings";
 import { slugify } from "@/lib/slug";
 import { PUBLISH_TYPES, publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
@@ -61,8 +62,8 @@ export async function publishAction(_prev: PublishState, formData: FormData): Pr
     slug: await uniqueSlug(d.title),
     excerpt: d.excerpt || null,
     body: d.body,
-    country: d.country,
-    city: d.city,
+    country: normalizeCountry(d.country),
+    city: normalizeCity(d.city),
     status: "IN_MODERATION",
     ownerProfile: { connect: { id: profile.id } },
     keywords: { create: keywordsCreate(parseKeywords(d.keywords)) },

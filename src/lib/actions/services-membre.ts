@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { EXPERT_DOMAINS, EXPERT_MODES, HOSTING_KINDS, HOSTING_AUDIENCES } from "@/lib/competences";
 
 /* Espace membre : proposer ses compétences (relues par le HCBE) et sa fiche d'accueil
@@ -76,8 +77,8 @@ export async function saveHostingAction(_prev: MemberServiceState, formData: For
   const data = {
     kind: d.kind as "ROOM" | "WHOLE" | "FAMILY",
     audience,
-    city: d.city,
-    country: d.country,
+    city: normalizeCity(d.city),
+    country: normalizeCountry(d.country),
     capacity: d.capacity ?? null,
     duration: d.duration || null,
     conditions: d.conditions,

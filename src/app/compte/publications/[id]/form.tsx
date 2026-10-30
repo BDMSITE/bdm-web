@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { TimezoneSelect } from "@/components/site/timezone-select";
+import { LieuFields } from "@/components/site/lieu-fields";
 import type { ContentStatus, ContentType } from "@prisma/client";
 import { updateContentAction, withdrawContentAction, republishContentAction, type PublicationState } from "@/lib/actions/publications";
 
@@ -80,14 +81,7 @@ export function PublicationForm({ id, type, status, values }: { id: string; type
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="country" className="mb-1 block text-sm font-bold">Pays *</label>
-          <input id="country" name="country" required autoComplete="country-name" defaultValue={values.country} aria-invalid={invalid("country")} className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="city" className="mb-1 block text-sm font-bold">Ville *</label>
-          <input id="city" name="city" required autoComplete="address-level2" defaultValue={values.city} aria-invalid={invalid("city")} className={INPUT} />
-        </div>
+        <LieuFields required country={values.country} city={values.city} countryInvalid={invalid("country")} cityInvalid={invalid("city")} inputClass={INPUT} />
       </div>
 
       <div>

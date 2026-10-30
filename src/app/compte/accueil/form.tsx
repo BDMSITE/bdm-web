@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { saveHostingAction, withdrawHostingAction, type MemberServiceState } from "@/lib/actions/services-membre";
 import { HOSTING_KINDS, HOSTING_AUDIENCES } from "@/lib/competences";
+import { LieuFields } from "@/components/site/lieu-fields";
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none";
 
@@ -29,14 +30,7 @@ export function HostingForm({ values, exists }: { values: Values; exists: boolea
             <label htmlFor="capacity" className="mb-1 block text-sm font-bold">Nombre de personnes</label>
             <input id="capacity" name="capacity" type="number" min={1} max={20} defaultValue={values.capacity} className={INPUT} />
           </div>
-          <div>
-            <label htmlFor="city" className="mb-1 block text-sm font-bold">Ville *</label>
-            <input id="city" name="city" required defaultValue={values.city} autoComplete="address-level2" className={INPUT} />
-          </div>
-          <div>
-            <label htmlFor="country" className="mb-1 block text-sm font-bold">Pays *</label>
-            <input id="country" name="country" required defaultValue={values.country} autoComplete="country-name" className={INPUT} />
-          </div>
+          <LieuFields required country={values.country} city={values.city} inputClass={INPUT} />
         </div>
         <fieldset>
           <legend className="mb-2 text-sm font-bold">Qui j&apos;accueille *</legend>

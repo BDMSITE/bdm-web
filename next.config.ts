@@ -12,7 +12,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://tile.openstreetmap.org https://*.public.blob.vercel-storage.com https://challenges.cloudflare.com https://vitals.vercel-insights.com",
+  "connect-src 'self' https://tile.openstreetmap.org https://nominatim.openstreetmap.org https://*.public.blob.vercel-storage.com https://challenges.cloudflare.com https://vitals.vercel-insights.com",
   "worker-src 'self' blob:",
   "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'none'",

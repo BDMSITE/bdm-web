@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Avatar } from "@/components/site/avatar";
+import { LieuFields } from "@/components/site/lieu-fields";
 import { updateProfileAction, type ProfileState } from "@/lib/actions/profile";
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none";
@@ -124,14 +125,7 @@ export function ProfilForm({ values }: { values: ProfilFormValues }) {
             <label htmlFor="headline" className="mb-1 block text-sm font-bold">Fonction ou activité (affichée sous votre nom)</label>
             <input id="headline" name="headline" maxLength={120} defaultValue={values.headline} placeholder="Ingénieure logiciel · Sage-femme · Importatrice de cajou…" className={INPUT} />
           </div>
-          <div>
-            <label htmlFor="city" className="mb-1 block text-sm font-bold">Ville</label>
-            <input id="city" name="city" defaultValue={values.city} autoComplete="address-level2" className={INPUT} />
-          </div>
-          <div>
-            <label htmlFor="country" className="mb-1 block text-sm font-bold">Pays</label>
-            <input id="country" name="country" defaultValue={values.country} autoComplete="country-name" className={INPUT} />
-          </div>
+          <LieuFields country={values.country} city={values.city} inputClass={INPUT} />
           <div className="sm:col-span-2">
             <label htmlFor="website" className="mb-1 block text-sm font-bold">Site web ou LinkedIn</label>
             <input id="website" name="website" type="url" placeholder="https://" defaultValue={values.website} className={INPUT} />

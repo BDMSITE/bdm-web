@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { slugify } from "@/lib/slug";
 import { indexProfile } from "@/lib/search";
 import { geocode } from "@/lib/geocode";
@@ -97,8 +98,8 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
       displayName: d.displayName,
       headline: d.headline || null,
       ...(photo !== undefined && { photo }),
-      city: d.city || null,
-      country: d.country || null,
+      city: normalizeCity(d.city) || null,
+      country: normalizeCountry(d.country) || null,
       bio: d.bio || null,
       website: d.website || null,
       visibility: { directory: d.directory === "on" },

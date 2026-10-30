@@ -6,6 +6,7 @@ import { hash, verify } from "argon2";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { signIn, signOut } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
 import { clientIp, rateLimit } from "@/lib/ratelimit";
@@ -120,8 +121,8 @@ export async function registerAction(_prev: RegisterState, formData: FormData): 
         create: {
           displayName,
           slug,
-          country: d.pays,
-          city: d.ville,
+          country: normalizeCountry(d.pays),
+          city: normalizeCity(d.ville),
           visibility: { directory: d.annuaire === "on" },
           ...(d.secteur && {
             keywords: {

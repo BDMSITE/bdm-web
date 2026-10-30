@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { TimezoneSelect } from "@/components/site/timezone-select";
+import { LieuFields } from "@/components/site/lieu-fields";
 import type { ContentStatus, ContentType } from "@prisma/client";
 import { createContentAction, updateContentAdminAction, type AdminFormState } from "@/lib/actions/admin";
 import { ADMIN_STATUSES, CONTENT_STATUS_LABEL, type AdminContentType } from "@/components/admin/ui";
@@ -144,14 +145,7 @@ export function ContentForm(props: Props) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="country" className={LABEL}>Pays {isArticle ? "" : "*"}</label>
-          <input id="country" name="country" maxLength={80} autoComplete="country-name" defaultValue={values.country} aria-invalid={invalid("country")} className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="city" className={LABEL}>Ville {isArticle ? "" : "*"}</label>
-          <input id="city" name="city" maxLength={80} autoComplete="address-level2" defaultValue={values.city} aria-invalid={invalid("city")} className={INPUT} />
-        </div>
+        <LieuFields required={!isArticle} country={values.country} city={values.city} countryInvalid={invalid("country")} cityInvalid={invalid("city")} inputClass={INPUT} labelClass={LABEL} />
         <div>
           <label htmlFor="lat" className={LABEL}>Latitude <span className="font-normal text-muted">(facultatif)</span></label>
           <input id="lat" name="lat" type="number" step="any" min={-90} max={90} defaultValue={values.lat} aria-invalid={invalid("lat")} className={INPUT} />

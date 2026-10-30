@@ -3,13 +3,13 @@ import type { ContentType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { sendAlertDigest } from "@/lib/mail";
 import { contentHref, CONTENT_LABEL } from "@/lib/routes";
+import { SITE_URL as BASE } from "@/lib/site-url";
 
 /* Alertes par mots-clés : chaque matin (cron Vercel), pour chaque alerte,
    les contenus publiés depuis le dernier envoi qui portent un de ses mots-clés
    et sont d'un type suivi. Un e-mail par membre, rien s'il n'y a rien. */
 
 export const maxDuration = 300;
-const BASE = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://bdm-web-psi.vercel.app";
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;

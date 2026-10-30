@@ -7,13 +7,13 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendRelayNotification } from "@/lib/mail";
 import { contentHref } from "@/lib/routes";
+import { SITE_URL as BASE_URL } from "@/lib/site-url";
 
 /* Messagerie relais : jamais d'e-mail exposé. Un message vise un profil
    (fiche membre) ou l'auteur d'un contenu ; la réponse se fait sur le site.
    Candidature : enregistrement + notification au recruteur. */
 
 const MAX_PAR_HEURE = 20;
-const BASE_URL = process.env.AUTH_URL ?? "https://bdm-web-jojo-devs-projects.vercel.app";
 
 export type RelayState = { ok?: boolean; error?: string };
 

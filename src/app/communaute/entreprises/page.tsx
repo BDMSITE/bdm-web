@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader, SiteFooter, AdSlot, PageBanner } from "@/components/site/chrome";
+import { Avatar } from "@/components/site/avatar";
 import { EmptyState } from "@/components/site/content";
 import { db } from "@/lib/db";
 import { listProfiles, publicProfileWhere } from "@/lib/content";
@@ -85,9 +86,7 @@ export default async function EntreprisesPage({ searchParams }: Props) {
                   return (
                     <article key={e.id} className="flex h-full flex-col border border-line p-4 hover:border-primary hover:bg-primary-faint">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-light font-display font-bold text-primary-dark">
-                          {e.displayName[0]}
-                        </div>
+                        <Avatar name={e.displayName} photo={e.photo} />
                         <div className="min-w-0">
                           <h2 className="font-bold leading-tight">
                             <Link href={profileHref(e.slug)} className="hover:text-primary">{e.displayName}</Link>

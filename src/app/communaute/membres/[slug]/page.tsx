@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { ogImageUrl } from "@/lib/og";
 import { SITE_URL } from "@/lib/site-url";
 import { ShareButtons } from "@/components/site/share-buttons";
+import { Avatar } from "@/components/site/avatar";
 import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
@@ -69,9 +70,7 @@ export default async function ProfilPage({ params }: Props) {
       <div className="wax-bg bg-primary-darker py-8 text-white">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-wrap items-center gap-5">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-accent font-display text-4xl font-black text-ink">
-              {profile.displayName[0]}
-            </div>
+            <Avatar name={profile.displayName} photo={profile.photo} size="lg" tone="accent" />
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-3xl font-black leading-tight">{profile.displayName}</h1>
               <p className="mt-1 text-sm uppercase tracking-wider text-white/80">

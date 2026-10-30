@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot, AlertsBox } from "@/components/site/chrome";
+import { Avatar } from "@/components/site/avatar";
 import { db } from "@/lib/db";
 import { profileHref } from "@/lib/routes";
 
@@ -139,9 +140,7 @@ export default async function MembresPage({ searchParams }: Props) {
                 return (
                   <article key={m.id} className="border border-line p-4 hover:border-primary hover:bg-primary-faint">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-light font-display font-bold text-primary-dark">
-                        {m.displayName[0]}
-                      </div>
+                      <Avatar name={m.displayName} photo={m.photo} />
                       <div className="min-w-0">
                         <h2 className="font-bold leading-tight">
                           <Link href={profileHref(m.slug)} className="hover:text-primary">{m.displayName}</Link>

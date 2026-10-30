@@ -8,9 +8,18 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { indexProfile } from "@/lib/search";
 import { geocode } from "@/lib/geocode";
+import { put, del } from "@vercel/blob";
 
 const schema = z.object({
   displayName: z.string().trim().min(2, "Nom affiché trop court").max(80),
+  headline: z.string().trim().max(120, "Fonction limitée à 120 caractères"),
+  removePhoto: z.string().optional(),
+  companySize: z.string().trim().max(40).optional(),
+  companySector: z.string().trim().max(80).optional(),
+  assocPurpose: z.string().trim().max(400, "Objet limité à 400 caractères").optional(),
+  assocFoundedYear: z.preprocess((v) => (typeof v === "string" && v.trim() ? Number(v) : undefined), z.number().int().min(1800).max(2100).optional()),
+  assocMembersCount: z.preprocess((v) => (typeof v === "string" && v.trim() ? Number(v) : undefined), z.number().int().min(0).max(10000000).optional()),
+  artistDiscipline: z.string().trim().max(80).optional(),
   city: z.string().trim().max(80),
   country: z.string().trim().max(80),
   bio: z.string().trim().max(1500, "Bio limitée à 1 500 caractères"),
@@ -22,6 +31,24 @@ const schema = z.object({
 
 export type ProfileState = { error?: string; ok?: boolean };
 
+const PHOTO_MAX = 2 * 1024 * 1024;
+const PHOTO_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+/** Nouvelle photo (Blob public) ou null si rien n'est envoyé. Lève une erreur lisible sinon. */
+async function uploadPhoto(profileId: string, file: FormDataEntryValue | null): Promise<string | null> {
+  if (!(file instanceof File) || file.size === 0) return null;
+  const ext = PHOTO_TYPES[file.type];
+  if (!ext) throw new Error("Photo : format accepté JPG, PNG ou WebP.");
+  if (file.size > PHOTO_MAX) throw new Error("Photo : 2 Mo maximum.");
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error("Photo : stockage non configuré sur ce serveur.");
+  const r = await put(`profils/${profileId}-${Date.now()}.${ext}`, file, { access: "public", contentType: file.type, addRandomSuffix: true });
+  return r.url;
+}
+
+async function removePhotoBlob(url: string | null) {
+  if (url && url.includes(".public.blob.vercel-storage.com/") && process.env.BLOB_READ_WRITE_TOKEN) await del(url).catch(() => {});
+}
+
 export async function updateProfileAction(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/compte/profil");
@@ -32,23 +59,44 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
 
   const keywordNames = [...new Set(d.keywords.split(",").map((k) => k.trim()).filter(Boolean))].slice(0, 15);
 
-  const avant = await db.profile.findUnique({ where: { userId: session.user.id }, select: { city: true, country: true, lat: true } });
+  const avant = await db.profile.findUnique({ where: { userId: session.user.id }, select: { city: true, country: true, lat: true, photo: true } });
+  if (!avant) return { error: "Votre profil est introuvable : contactez l'équipe du site." };
+  const pid = (await db.profile.findUnique({ where: { userId: session.user.id }, select: { id: true } }))!.id;
+
+  let photo: string | null | undefined;
+  try {
+    const nouvelle = await uploadPhoto(pid, formData.get("photo"));
+    if (nouvelle) { photo = nouvelle; await removePhotoBlob(avant.photo); }
+    else if (d.removePhoto === "on") { photo = null; await removePhotoBlob(avant.photo); }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Photo impossible à enregistrer." };
+  }
   const lieuChange = !avant || avant.city !== (d.city || null) || avant.country !== (d.country || null) || avant.lat === null;
   const geo = lieuChange && d.city ? await geocode(d.city, d.country) : null;
 
   /* Ce que le membre représente : un attribut du compte, pas un compte à part.
      Les tables de détails (entreprise, association, artiste) sont créées à la demande. */
   await db.user.update({ where: { id: session.user.id }, data: { accountType: d.kind } });
-  const pid = (await db.profile.findUnique({ where: { userId: session.user.id }, select: { id: true } }))!.id;
-  if (d.kind === "COMPANY") await db.companyDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
-  if (d.kind === "ASSOCIATION") await db.associationDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
-  if (d.kind === "ARTIST") await db.artistDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
+  if (d.kind === "COMPANY") {
+    const v = { size: d.companySize || null, sector: d.companySector || null };
+    await db.companyDetails.upsert({ where: { profileId: pid }, update: v, create: { profileId: pid, ...v } });
+  }
+  if (d.kind === "ASSOCIATION") {
+    const v = { purpose: d.assocPurpose || null, foundedYear: d.assocFoundedYear ?? null, membersCount: d.assocMembersCount ?? null };
+    await db.associationDetails.upsert({ where: { profileId: pid }, update: v, create: { profileId: pid, ...v } });
+  }
+  if (d.kind === "ARTIST") {
+    const v = { discipline: d.artistDiscipline || null };
+    await db.artistDetails.upsert({ where: { profileId: pid }, update: v, create: { profileId: pid, ...v } });
+  }
 
   const profile = await db.profile.update({
     where: { userId: session.user.id },
     data: {
       ...(lieuChange && { lat: geo?.lat ?? null, lng: geo?.lng ?? null }),
       displayName: d.displayName,
+      headline: d.headline || null,
+      ...(photo !== undefined && { photo }),
       city: d.city || null,
       country: d.country || null,
       bio: d.bio || null,

@@ -12,7 +12,7 @@ export default async function ProfilComptePage() {
   const session = await auth();
   const profile = await db.profile.findUnique({
     where: { userId: session!.user.id },
-    include: { keywords: { include: { keyword: true } }, user: { select: { accountType: true } } },
+    include: { keywords: { include: { keyword: true } }, user: { select: { accountType: true } }, company: true, association: true, artist: true },
   });
   if (!profile) return <p className="text-sm text-muted">Profil introuvable.</p>;
 
@@ -36,6 +36,8 @@ export default async function ProfilComptePage() {
       <ProfilForm
         values={{
           displayName: profile.displayName,
+          headline: profile.headline ?? "",
+          photo: profile.photo ?? "",
           city: profile.city ?? "",
           country: profile.country ?? "",
           bio: profile.bio ?? "",
@@ -43,6 +45,12 @@ export default async function ProfilComptePage() {
           keywords: profile.keywords.map((k) => k.keyword.name).join(", "),
           directory: visibility.directory !== false,
           kind: profile.user.accountType,
+          companySize: profile.company?.size ?? "",
+          companySector: profile.company?.sector ?? "",
+          assocPurpose: profile.association?.purpose ?? "",
+          assocFoundedYear: profile.association?.foundedYear ? String(profile.association.foundedYear) : "",
+          assocMembersCount: profile.association?.membersCount ? String(profile.association.membersCount) : "",
+          artistDiscipline: profile.artist?.discipline ?? "",
         }}
       />
     </div>

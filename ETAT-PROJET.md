@@ -209,6 +209,18 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   réécrite** des 4 campagnes maison (titre, accroche, bouton : « Réserver le studio », « Embarquer », « Composer mon
   voyage », « Préparer mon séjour »). Photos recadrées 1940×500 et 600×1200.
 
+- **30/10 — TRANSFERT AU HCBE (compte BDMSITE).** Dépôt GitHub transféré : **github.com/BDMSITE/bdm-web** (l'ancienne URL
+  JOJODEVS-GIT redirige). Nouveau compte Vercel (connexion GitHub BDMSITE, équipe `bdmsite`), nouveau projet `bdm-web`
+  (id prj_YaqJgMNr53qslvdTWfclRcDQRCFV) importé du dépôt, Node 24. **Nouvelle base Neon** `bdm-db` (Marketplace, gratuite,
+  région us-east-1 par défaut) : migrations appliquées puis **restauration complète** de la sauvegarde de l'ancienne prod
+  (947 lignes : 288 comptes, 35 contenus, 16 campagnes…) → données identiques. Nouveau coffre Blob privé `bdm-fichiers`,
+  variables reposées (AUTH_SECRET et CRON_SECRET régénérés, AUTH_TRUST_HOST, EMAIL_FROM, CONTACT_EMAIL), cron de sauvegarde
+  vérifié. **Prod : https://bdm-web-psi.vercel.app** (pages, CSP, partenaires, panneaux OK). Le CLI local est désormais
+  connecté au compte BDMSITE (`--scope bdmsite`) ; le dossier est lié au nouveau projet. **L'ancien projet
+  (jojo-devs-projects / bdm-web-jojo-devs-projects.vercel.app) reste en ligne en secours** jusqu'à validation de Josué,
+  puis à supprimer (et ses ressources Neon/Blob). Reste à faire sur le nouveau compte : activer Web Analytics si pas déjà
+  fait, poser les clés Turnstile (Cloudflare), Brevo, domaine beninois-du-monde.com.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication

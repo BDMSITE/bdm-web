@@ -239,9 +239,16 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   affiche aussi une liste « À configurer » (Brevo, réseaux, MapTiler, FedaPay, newsletter, experts, accueil-hébergement). Base Notion « ✅ Vérification du site » :
   60 pages du site en ligne à vérifier par Josué (anciennes maquettes à la corbeille).
 
+- **30/10 — BREVO BRANCHÉ + PARCOURS COMPLET VALIDÉ.** Clé API Brevo (restreinte : e-mails transactionnels + contacts)
+  posée sur le projet bdmsite, expéditeur contact@beninois-du-monde.com, restriction IP désactivée côté Brevo par Josué,
+  envoi direct de test réussi. **Authentification du domaine (DKIM/DMARC) reportée** jusqu'à l'accès DNS : d'ici là les
+  e-mails partent mais risquent le dossier spam ; **pas d'envoi des 278 invitations avant** cette étape (décision Josué).
+  Parcours complet testé en local : inscription → lien d'activation → espace membre → guichet Publier (annonce) →
+  modération admin (Valider) → annonce visible dans la rubrique. Données de test supprimées.
+
 ## Ce qui RESTE (ordre)
-1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
-   Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication
+1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
+   site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure

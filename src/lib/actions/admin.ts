@@ -297,7 +297,7 @@ const adminFields = publishFields.extend({
   phone: optText(40),
   hours: optText(200),
   verified: bool,
-  // avantage
+  // bon plan
   promoCode: optText(60),
   conditions: optText(1000),
   validFrom: z.preprocess(vide, z.string().optional()),

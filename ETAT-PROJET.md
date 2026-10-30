@@ -200,6 +200,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   (`featured`, partagé avec « À la une » de l'accueil). Plus aucune fonction « pas encore disponible » dans l'admin,
   sauf l'envoi de newsletter (Brevo) et le modèle « expert » (Compétences).
 
+- **30/10 — corrections Josué.** « Avantages » devient **« Bons plans »** partout (nav, rubrique `/bons-plans` avec
+  redirection permanente depuis `/avantages`, libellé du type DEAL, admin). **Section « Nos partenaires »** sur l'accueil
+  (bande pleine largeur, 4 tuiles logo + accroche + lien compté, bouton « Devenir partenaire ») alimentée par les campagnes
+  maison de la régie : un partenaire = un annonceur maison en diffusion, géré depuis /admin/regie. **Panneaux publicitaires**
+  : formats agrandis façon affichage (haut/milieu/bas 970×250, latéral 300×600, mobile 360×200), angles droits, cadre
+  fin, typographie plus grande, bouton personnalisable (`Banner.cta`, migration `banner_cta` local + Neon). **Copie
+  réécrite** des 4 campagnes maison (titre, accroche, bouton : « Réserver le studio », « Embarquer », « Composer mon
+  voyage », « Préparer mon séjour »). Photos recadrées 1940×500 et 600×1200.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication

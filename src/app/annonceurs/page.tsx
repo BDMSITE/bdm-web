@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Annonceurs & partenaires" };
 const FORMATS = [
   ...SLOTS.map((s) => ({ t: s.label, d: `${s.where} Format ${s.desktop.w}×${s.desktop.h} px (mobile ${s.mobile.w}×${s.mobile.h}). Visuel fourni ou carte générée à vos couleurs.` })),
   { t: "Contenu partenaire", d: "Article ou dossier publié dans le magazine, clairement signalé comme contenu partenaire." },
-  { t: "Avantage membres", d: "Votre offre de réduction publiée dans la rubrique Avantages, réservée aux membres du site." },
+  { t: "Bon plan membres", d: "Votre offre de réduction publiée dans la rubrique Bons plans, réservée aux membres du site." },
 ];
 
 export default function AnnonceursPage() {

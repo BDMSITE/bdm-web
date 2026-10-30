@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader, SiteFooter, SectionTitle, AdSlot, AlertsBox } from "@/components/site/chrome";
+import { PartnersBand } from "@/components/site/partners-band";
 import { ContentCard, EmptyState } from "@/components/site/content";
 import { listContents, listProfiles, siteCounts } from "@/lib/content";
 import { profileHref } from "@/lib/routes";
@@ -7,7 +8,7 @@ import { profileHref } from "@/lib/routes";
 /* Accueil (CDC §7.2) — chaque section lit la base ; une section vide le dit. */
 
 export default async function Home() {
-  const [une, articles, offres, adresses, avantages, agenda, counts, experts] = await Promise.all([
+  const [une, articles, offres, adresses, bonsPlans, agenda, counts, experts] = await Promise.all([
     listContents({ types: ["ARTICLE", "MEMBER_ARTICLE"], featured: true, take: 3 }),
     listContents({ types: ["ARTICLE", "MEMBER_ARTICLE"], take: 4 }),
     listContents({ types: ["JOB", "INTERNSHIP"], take: 4 }),
@@ -70,11 +71,11 @@ export default async function Home() {
               )}
             </section>
 
-            {avantages.items.length > 0 && (
+            {bonsPlans.items.length > 0 && (
               <section>
-                <SectionTitle pre="Avantages &" em="réductions" href="/avantages" />
+                <SectionTitle pre="Bons plans &" em="réductions" href="/bons-plans" />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {avantages.items.map((a) => <ContentCard key={a.id} item={a} compact />)}
+                  {bonsPlans.items.map((a) => <ContentCard key={a.id} item={a} compact />)}
                 </div>
               </section>
             )}
@@ -124,6 +125,7 @@ export default async function Home() {
           </aside>
         </div>
       </main>
+      <PartnersBand />
 
       <SiteFooter />
     </>

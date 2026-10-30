@@ -73,7 +73,7 @@ const LABELS: Record<string, string> = {
   "adresse-exemple": "Chez Maman Bénin",
   agenda: "Agenda",
   "evenement-exemple": "Pique-nique des Béninois d'IDF",
-  avantages: "Avantages",
+  avantages: "Bons plans",
   annonces: "Petites annonces",
   pratique: "Pratique",
   "chercher-trouver": "Chercher / trouver",

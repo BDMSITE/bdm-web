@@ -405,6 +405,7 @@ model Banner {
   alt         String
   headline    String? // CARD
   tagline     String? // CARD
+  cta         String? // CARD : texte du bouton (défaut « Découvrir »)
   bg          String? // CARD : fond (hex)
   fg          String? // CARD : texte (hex)
   link        String

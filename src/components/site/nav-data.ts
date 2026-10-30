@@ -6,6 +6,6 @@ export const NAV = [
   { label: "Communauté", href: "/communaute" },
   { label: "Bonnes adresses", href: "/adresses" },
   { label: "Agenda", href: "/agenda" },
-  { label: "Avantages", href: "/avantages" },
+  { label: "Bons plans", href: "/bons-plans" },
   { label: "Annonces", href: "/annonces" },
 ];

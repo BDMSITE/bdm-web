@@ -14,7 +14,7 @@ export async function AdSlot({ slot, section, className = "" }: { slot: BannerSl
   if (pool.length === 0) return null;
   const spec = SLOT_BY_CODE[slot];
   const tall = slot === "SIDE";
-  const slides = pool.map((b) => ({ id: b.id, kind: b.kind, advertiser: b.advertiser, alt: b.alt, image: b.image, imageMobile: b.imageMobile, photo: b.photo, headline: b.headline, tagline: b.tagline, bg: b.bg, fg: b.fg }));
+  const slides = pool.map((b) => ({ id: b.id, kind: b.kind, advertiser: b.advertiser, alt: b.alt, image: b.image, imageMobile: b.imageMobile, photo: b.photo, headline: b.headline, tagline: b.tagline, cta: b.cta, bg: b.bg, fg: b.fg }));
 
   return (
     <div className={`pub ${className}`} data-slot={slot}>

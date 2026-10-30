@@ -8,9 +8,9 @@ import { db } from "./db";
 
 export { SLOTS, SLOT_BY_CODE, type SlotSpec } from "./pub-slots";
 
-export type PubBanner = Pick<Banner, "id" | "kind" | "image" | "imageMobile" | "photo" | "alt" | "headline" | "tagline" | "bg" | "fg" | "advertiser" | "house" | "slot">;
+export type PubBanner = Pick<Banner, "id" | "kind" | "image" | "imageMobile" | "photo" | "alt" | "headline" | "tagline" | "cta" | "bg" | "fg" | "advertiser" | "house" | "slot">;
 
-const SELECT = { id: true, kind: true, image: true, imageMobile: true, photo: true, alt: true, headline: true, tagline: true, bg: true, fg: true, advertiser: true, house: true, slot: true, weight: true, sections: true, countries: true } as const;
+const SELECT = { id: true, kind: true, image: true, imageMobile: true, photo: true, alt: true, headline: true, tagline: true, cta: true, bg: true, fg: true, advertiser: true, house: true, slot: true, weight: true, sections: true, countries: true } as const;
 
 /** Campagnes diffusables maintenant pour un emplacement : les vendues s'il y en a, sinon les
     campagnes maison. Ordre mélangé, pondéré par le poids (les plus lourdes sortent plus tôt). */

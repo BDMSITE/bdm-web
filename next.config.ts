@@ -34,6 +34,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: { serverActions: { bodySizeLimit: "4mb" } },
+  async redirects() {
+    return [
+      { source: "/avantages", destination: "/bons-plans", permanent: true },
+      { source: "/avantages/:slug", destination: "/bons-plans/:slug", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

@@ -10,7 +10,7 @@ export const CONTENT_LABEL: Record<ContentType, string> = {
   EVENT: "Événement",
   CLASSIFIED: "Annonce",
   PLACE: "Adresse",
-  DEAL: "Avantage",
+  DEAL: "Bon plan",
   HELP_REQUEST: "Mise en relation",
   MEMORY_PLACE: "Lieu de mémoire",
 };
@@ -23,7 +23,7 @@ export const SECTION: Record<ContentType, string> = {
   EVENT: "/agenda",
   CLASSIFIED: "/annonces",
   PLACE: "/adresses",
-  DEAL: "/avantages",
+  DEAL: "/bons-plans",
   HELP_REQUEST: "/pratique/chercher-trouver",
   MEMORY_PLACE: "/memoire",
 };

@@ -19,6 +19,7 @@ export type Slide = {
   photo: string | null;
   headline: string | null;
   tagline: string | null;
+  cta: string | null;
   bg: string | null;
   fg: string | null;
 };
@@ -53,7 +54,7 @@ export function PubCarousel({ slides, tall, width, height }: { slides: Slide[]; 
 
   return (
     <div
-      className={`pub-carousel group relative mx-auto w-full overflow-hidden rounded-xl bg-ink shadow-[0_8px_30px_-12px_rgba(0,0,0,.35)] ${tall ? "aspect-[300/250]" : "h-[100px] sm:h-auto sm:[aspect-ratio:var(--ar)]"}`}
+      className={`pub-carousel group relative mx-auto w-full overflow-hidden border border-ink/15 bg-ink shadow-[0_14px_40px_-16px_rgba(0,0,0,.45)] ${tall ? "aspect-[300/600]" : "h-[200px] sm:h-auto sm:[aspect-ratio:var(--ar)]"}`}
       style={{ maxWidth: width, "--ar": `${width} / ${height}` } as React.CSSProperties}
       onMouseEnter={() => setPause(true)}
       onMouseLeave={() => setPause(false)}
@@ -86,7 +87,7 @@ export function PubCarousel({ slides, tall, width, height }: { slides: Slide[]; 
               style={{ width: pause ? "100%" : undefined, animation: pause ? "none" : `pub-progress ${DUREE}ms linear forwards` }}
             />
           </div>
-          <div className={`absolute flex gap-1.5 ${tall ? "bottom-3 right-3" : "right-3 top-1/2 -translate-y-1/2 max-sm:hidden"}`} role="tablist">
+          <div className={`absolute flex gap-1.5 ${tall ? "bottom-4 right-4" : "bottom-4 right-4"}`} role="tablist">
             {slides.map((s, k) => (
               <button
                 key={s.id}
@@ -95,7 +96,7 @@ export function PubCarousel({ slides, tall, width, height }: { slides: Slide[]; 
                 aria-selected={k === i}
                 aria-label={`Voir ${s.advertiser}`}
                 onClick={() => setI(k)}
-                className={`h-1.5 rounded-full transition-all ${k === i ? "w-5 bg-accent" : "w-1.5 bg-white/60 hover:bg-white"}`}
+                className={`h-1.5 transition-all ${k === i ? "w-7 bg-accent" : "w-2.5 bg-white/60 hover:bg-white"}`}
               />
             ))}
           </div>
@@ -135,48 +136,48 @@ function SlideView({ s, tall, active }: { s: Slide; tall: boolean; active: boole
           src={s.photo}
           alt=""
           className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[8000ms] ease-linear ${active ? "scale-110" : "scale-100"}`}
-          style={{ objectPosition: tall ? "center 30%" : "center 40%" }}
+          style={{ objectPosition: tall ? "center 25%" : "center 45%" }}
         />
       )}
       <div
         className="absolute inset-0"
         style={{
           background: tall
-            ? `linear-gradient(180deg, ${tint}00 0%, ${tint}55 45%, ${tint}f2 100%)`
-            : `linear-gradient(90deg, ${tint}f7 0%, ${tint}e6 38%, ${tint}66 62%, ${tint}1a 100%)`,
+            ? `linear-gradient(180deg, ${tint}26 0%, ${tint}33 40%, ${tint}f5 78%, ${tint}ff 100%)`
+            : `linear-gradient(90deg, ${tint}f5 0%, ${tint}e0 42%, ${tint}66 66%, ${tint}14 100%)`,
         }}
       />
       <div className="wax-bg-soft absolute inset-0 mix-blend-soft-light" />
 
       {tall ? (
-        <div className="relative flex h-full flex-col justify-between p-4">
+        <div className="relative flex h-full flex-col justify-between p-6">
           {s.image && (
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/95 p-1.5 shadow-md">
-                    <img src={s.image} alt="" className="h-full w-full object-contain" />
+            <span className="inline-flex h-20 w-20 items-center justify-center bg-white p-2 shadow-md">
+              <img src={s.image} alt="" className="h-full w-full object-contain" />
             </span>
           )}
           <div>
-            <p className="font-display text-[1.45rem] font-extrabold leading-[1.05] tracking-tight drop-shadow-sm">{s.headline ?? s.advertiser}</p>
-            {s.tagline && <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug opacity-90">{s.tagline}</p>}
-            <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark">
-              Découvrir <span aria-hidden>→</span>
+            <p className="font-display text-[2rem] font-extrabold leading-[1.02] tracking-tight drop-shadow-md">{s.headline ?? s.advertiser}</p>
+            {s.tagline && <p className="mt-3 text-[15px] leading-snug opacity-95 drop-shadow">{s.tagline}</p>}
+            <span className="mt-5 inline-flex items-center gap-2 bg-accent px-5 py-3 text-sm font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark">
+              {s.cta ?? "Découvrir"} <span aria-hidden>→</span>
             </span>
           </div>
         </div>
       ) : (
-        <div className="relative flex h-full items-center gap-3 pl-3 pr-14 sm:gap-4 sm:pl-4 sm:pr-24">
+        <div className="relative flex h-full items-center gap-5 px-5 sm:gap-8 sm:px-10">
           {s.image && (
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/95 p-1.5 shadow-md sm:h-14 sm:w-14 sm:rounded-xl">
-                    <img src={s.image} alt="" className="h-full w-full object-contain" />
+            <span className="hidden h-24 w-24 shrink-0 items-center justify-center bg-white p-2.5 shadow-md sm:inline-flex">
+              <img src={s.image} alt="" className="h-full w-full object-contain" />
             </span>
           )}
-          <div className="min-w-0">
-            <p className="truncate font-display text-[15px] font-extrabold leading-tight tracking-tight sm:text-xl">{s.headline ?? s.advertiser}</p>
-            {s.tagline && <p className="line-clamp-2 text-[11px] leading-snug opacity-90 sm:line-clamp-1 sm:text-[13px]">{s.tagline}</p>}
+          <div className="min-w-0 max-w-[62%] sm:max-w-[55%]">
+            <p className="font-display text-[1.6rem] font-extrabold leading-[1.02] tracking-tight drop-shadow-md sm:text-[2.6rem]">{s.headline ?? s.advertiser}</p>
+            {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug opacity-95 drop-shadow sm:mt-3 sm:line-clamp-2 sm:text-base">{s.tagline}</p>}
+            <span className="mt-3 inline-flex items-center gap-2 bg-accent px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark sm:mt-5 sm:px-6 sm:py-3 sm:text-sm">
+              {s.cta ?? "Découvrir"} <span aria-hidden>→</span>
+            </span>
           </div>
-          <span className="ml-auto hidden shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-xs font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark sm:inline-flex">
-            Découvrir <span aria-hidden>→</span>
-          </span>
         </div>
       )}
     </a>

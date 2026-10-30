@@ -12,10 +12,10 @@ export type SlotSpec = {
 };
 
 export const SLOTS: SlotSpec[] = [
-  { code: "TOP", label: "Bandeau haut de rubrique", desktop: { w: 970, h: 90 }, mobile: { w: 320, h: 100 }, where: "Sous l'en-tête des pages de rubrique (emploi, agenda, adresses, magazine…)." },
-  { code: "SIDE", label: "Pavé latéral", desktop: { w: 300, h: 250 }, mobile: { w: 300, h: 250 }, where: "Colonne de droite de toutes les rubriques, fiches et annuaires ; en fin de page sur mobile." },
-  { code: "MID", label: "Pavé milieu d'accueil", desktop: { w: 728, h: 90 }, mobile: { w: 320, h: 100 }, where: "Page d'accueil, entre le magazine et les bonnes adresses." },
-  { code: "BOTTOM", label: "Bannière bas de page", desktop: { w: 970, h: 90 }, mobile: { w: 320, h: 100 }, where: "Au-dessus du pied de page, sur toutes les pages (bureau)." },
+  { code: "TOP", label: "Panneau haut de rubrique", desktop: { w: 970, h: 250 }, mobile: { w: 360, h: 200 }, where: "Sous l'en-tête des pages de rubrique (emploi, agenda, adresses, magazine…)." },
+  { code: "SIDE", label: "Panneau latéral", desktop: { w: 300, h: 600 }, mobile: { w: 300, h: 600 }, where: "Colonne de droite de toutes les rubriques, fiches et annuaires ; en fin de page sur mobile." },
+  { code: "MID", label: "Panneau milieu d'accueil", desktop: { w: 970, h: 250 }, mobile: { w: 360, h: 200 }, where: "Page d'accueil, entre le magazine et les bonnes adresses." },
+  { code: "BOTTOM", label: "Panneau bas de page", desktop: { w: 970, h: 250 }, mobile: { w: 360, h: 200 }, where: "Au-dessus du pied de page, sur toutes les pages (bureau)." },
 ];
 
 export const SLOT_BY_CODE = Object.fromEntries(SLOTS.map((s) => [s.code, s])) as Record<BannerSlot, SlotSpec>;

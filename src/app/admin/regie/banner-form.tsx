@@ -80,6 +80,10 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                 <input id="tagline" name="tagline" defaultValue={banner?.tagline ?? ""} maxLength={160} className={INPUT} placeholder="Une phrase courte" />
               </div>
               <div>
+                <label htmlFor="cta" className={LABEL}>Texte du bouton</label>
+                <input id="cta" name="cta" defaultValue={banner?.cta ?? ""} maxLength={30} className={INPUT} placeholder="Découvrir" />
+              </div>
+              <div>
                 <label htmlFor="photoFile" className={LABEL}>Photo d&apos;ambiance (fond, facultative)</label>
                 <input id="photoFile" name="photoFile" type="file" accept="image/png,image/jpeg,image/webp" className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white" />
                 <input name="photo" type="url" defaultValue={banner?.photo ?? ""} className={`${INPUT} mt-2`} placeholder="…ou adresse d'une photo en ligne" />

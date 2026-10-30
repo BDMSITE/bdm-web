@@ -207,7 +207,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
   },
   { title: "Bonnes adresses", href: "/adresses", links: [] },
   { title: "Agenda", href: "/agenda", links: [] },
-  { title: "Avantages", href: "/avantages", links: [] },
+  { title: "Bons plans", href: "/bons-plans", links: [] },
   {
     title: "Pratique",
     href: "/annonces",
@@ -226,10 +226,10 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
 function BottomPageBox() {
   return (
     <div className="relative">
-      <div className="relative z-10 mx-auto hidden max-w-3xl px-4 md:block">
+      <div className="relative z-10 mx-auto hidden max-w-[1002px] px-4 md:block">
         <AdSlot slot="BOTTOM" />
       </div>
-      <div className="relative h-[200px] w-full md:-mt-12 md:h-[320px]">
+      <div className="relative h-[200px] w-full md:-mt-24 md:h-[420px]">
         <Image
           src="/images/fresque-diaspora.jpg"
           alt="Fresque murale : des femmes et des hommes de la diaspora, bras dessus bras dessous, devant un globe tenu par un poing aux couleurs de l'Afrique"

@@ -5,7 +5,7 @@ type Props = { params: Promise<{ slug: string }> };
 const TYPES = ["DEAL"] as const;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return contentMetadata((await params).slug, "Avantages & réductions");
+  return contentMetadata((await params).slug, "Bons plans & réductions");
 }
 
 export default async function Page({ params }: Props) {

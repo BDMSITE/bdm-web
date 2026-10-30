@@ -37,6 +37,7 @@ const fields = z.object({
   alt: z.string().trim().min(3, "Texte alternatif obligatoire (accessibilité)").max(200),
   headline: optText(80),
   tagline: optText(160),
+  cta: optText(30),
   bg: hex,
   fg: hex,
   image: optUrl,
@@ -86,7 +87,7 @@ async function buildData(d: Fields, formData: FormData, id: string | undefined):
   if (endsAt && endsAt < startsAt) return { ok: false, state: { error: "La fin doit suivre le début.", champ: "endsAt" } };
   return { ok: true, data: {
     title: d.title, advertiser: d.advertiser, slot: d.slot as Prisma.BannerUncheckedCreateInput["slot"], kind: d.kind, link: d.link, alt: d.alt,
-    headline: d.headline ?? null, tagline: d.tagline ?? null, bg: d.bg ?? null, fg: d.fg ?? null,
+    headline: d.headline ?? null, tagline: d.tagline ?? null, cta: d.cta ?? null, bg: d.bg ?? null, fg: d.fg ?? null,
     image, imageMobile: upM ?? d.imageMobile ?? null, photo: upP ?? d.photo ?? null,
     startsAt, endsAt, weight: d.weight, sections: liste(d.sections), countries: liste(d.countries), house: d.house, status: d.status,
   } };

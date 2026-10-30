@@ -10,13 +10,13 @@ import { ServiceContentPanel } from "./form";
 
 export const metadata: Metadata = { title: "Services" };
 
-/* Services : adresses, événements, avantages, annonces, mises en relation — listes par
+/* Services : adresses, événements, bons plans, annonces, mises en relation — listes par
    rubrique avec statut, création par l'équipe, Modifier / Archiver. */
 
 const RUBRIQUES: { type: ContentType; titre: string; vide: string }[] = [
   { type: "PLACE", titre: "Bonnes adresses", vide: "Aucune adresse déposée pour l'instant." },
   { type: "EVENT", titre: "Agenda (événements)", vide: "Aucun événement déposé pour l'instant." },
-  { type: "DEAL", titre: "Avantages membres", vide: "Aucun avantage enregistré pour l'instant." },
+  { type: "DEAL", titre: "Bons plans membres", vide: "Aucun bon plan enregistré pour l'instant." },
   { type: "CLASSIFIED", titre: "Petites annonces", vide: "Aucune annonce déposée pour l'instant." },
   { type: "HELP_REQUEST", titre: "Chercher / trouver (mises en relation)", vide: "Aucune demande de mise en relation pour l'instant." },
 ];
@@ -50,7 +50,7 @@ export default async function AdminServicesPage() {
 
   return (
     <>
-      <PageHead title="Services" desc="Adresses, agenda, avantages, petites annonces et mises en relation : 30 derniers contenus par rubrique, tous statuts.">
+      <PageHead title="Services" desc="Adresses, agenda, bons plans, petites annonces et mises en relation : 30 derniers contenus par rubrique, tous statuts.">
         <ServiceContentPanel />
       </PageHead>
 

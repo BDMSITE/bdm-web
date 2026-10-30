@@ -83,7 +83,7 @@ export default async function ConnexionPage({
           <h2 className="section-title text-xl">Pas encore <em>membre ?</em></h2>
           <p className="mt-3 text-sm text-ink-2">L&apos;inscription est gratuite et ouverte à tous : particuliers, entreprises, associations, artistes.</p>
           <ul className="mt-4 space-y-2 text-sm">
-            {["Profil dans l'annuaire mondial", "Publication directe : articles, offres, événements, annonces", "Alertes e-mail sur vos mots-clés", "CV visible des recruteurs si vous le souhaitez", "Avantages et réductions partenaires"].map((b) => (
+            {["Profil dans l'annuaire mondial", "Publication directe : articles, offres, événements, annonces", "Alertes e-mail sur vos mots-clés", "CV visible des recruteurs si vous le souhaitez", "Bons plans et réductions partenaires"].map((b) => (
               <li key={b} className="flex gap-2"><span className="font-bold text-primary">✓</span>{b}</li>
             ))}
           </ul>

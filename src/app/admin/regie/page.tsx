@@ -21,7 +21,7 @@ const STATUT: Record<string, { l: string; tone: "green" | "gray" | "blue" | "yel
   ARCHIVED: { l: "Archivée", tone: "gray" },
 };
 
-const PARTNER_LABEL: Record<string, string> = { rh: "Partenaire RH", annonceur: "Annonceur", avantages: "Avantages membres" };
+const PARTNER_LABEL: Record<string, string> = { rh: "Partenaire RH", annonceur: "Annonceur", avantages: "Bons plans membres" };
 
 export default async function AdminRegiePage() {
   const now = new Date();
@@ -99,7 +99,7 @@ export default async function AdminRegiePage() {
 
         <Card title="Partenaires">
           {partenaires.length === 0 ? (
-            <EmptyState title="Aucun partenaire enregistré.">Un partenaire est un compte entreprise ou association lié à une formule (RH, annonceur, avantages). Arrive avec le libre-service annonceur et FedaPay.</EmptyState>
+            <EmptyState title="Aucun partenaire enregistré.">Un partenaire est un compte entreprise ou association lié à une formule (RH, annonceur, bons plans). Arrive avec le libre-service annonceur et FedaPay.</EmptyState>
           ) : (
             <TableShell head={<><Th>Partenaire</Th><Th>Type</Th><Th>Formule</Th><Th>Début</Th><Th>Fin</Th></>}>
               {partenaires.map((p) => (

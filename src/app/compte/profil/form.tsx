@@ -13,7 +13,15 @@ export type ProfilFormValues = {
   website: string;
   keywords: string;
   directory: boolean;
+  kind: "MEMBER" | "COMPANY" | "ASSOCIATION" | "ARTIST";
 };
+
+const KINDS = [
+  { value: "MEMBER", label: "Moi-même (particulier)" },
+  { value: "COMPANY", label: "Une entreprise" },
+  { value: "ASSOCIATION", label: "Une association" },
+  { value: "ARTIST", label: "Un artiste ou un groupe" },
+] as const;
 
 export function ProfilForm({ values }: { values: ProfilFormValues }) {
   const [state, action, pending] = useActionState<ProfileState, FormData>(updateProfileAction, {});
@@ -26,6 +34,14 @@ export function ProfilForm({ values }: { values: ProfilFormValues }) {
       {state.ok && (
         <p role="status" className="rounded border border-primary bg-primary-faint px-3 py-2.5 text-sm text-primary-dark">Profil enregistré.</p>
       )}
+
+      <div className="space-y-2 border border-line p-5">
+        <label htmlFor="kind" className="block text-sm font-bold">Je représente</label>
+        <select id="kind" name="kind" defaultValue={values.kind} className={INPUT}>
+          {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
+        </select>
+        <p className="text-xs text-muted">Ce choix décide de l&apos;annuaire où votre fiche apparaît : membres, entreprises, associations ou artistes. Modifiable à tout moment.</p>
+      </div>
 
       <div className="border border-line">
         <div className="flex items-center justify-between border-b border-line bg-paper-2 px-4 py-3">

@@ -17,6 +17,7 @@ const schema = z.object({
   website: z.union([z.literal(""), z.url("Adresse du site invalide")]),
   keywords: z.string().max(500),
   directory: z.string().optional(),
+  kind: z.enum(["MEMBER", "COMPANY", "ASSOCIATION", "ARTIST"]).default("MEMBER"),
 });
 
 export type ProfileState = { error?: string; ok?: boolean };
@@ -34,6 +35,14 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
   const avant = await db.profile.findUnique({ where: { userId: session.user.id }, select: { city: true, country: true, lat: true } });
   const lieuChange = !avant || avant.city !== (d.city || null) || avant.country !== (d.country || null) || avant.lat === null;
   const geo = lieuChange && d.city ? await geocode(d.city, d.country) : null;
+
+  /* Ce que le membre représente : un attribut du compte, pas un compte à part.
+     Les tables de détails (entreprise, association, artiste) sont créées à la demande. */
+  await db.user.update({ where: { id: session.user.id }, data: { accountType: d.kind } });
+  const pid = (await db.profile.findUnique({ where: { userId: session.user.id }, select: { id: true } }))!.id;
+  if (d.kind === "COMPANY") await db.companyDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
+  if (d.kind === "ASSOCIATION") await db.associationDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
+  if (d.kind === "ARTIST") await db.artistDetails.upsert({ where: { profileId: pid }, update: {}, create: { profileId: pid } });
 
   const profile = await db.profile.update({
     where: { userId: session.user.id },
@@ -64,5 +73,6 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
   revalidatePath("/compte");
   revalidatePath("/compte/profil");
   revalidatePath(`/communaute/membres/${profile.slug}`);
+  revalidatePath("/communaute", "layout");
   return { ok: true };
 }

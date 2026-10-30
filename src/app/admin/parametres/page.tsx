@@ -112,7 +112,7 @@ export default async function AdminParametresPage() {
         </TableShell>
         {isAdmin && (
           <div className="border-t border-line">
-            <p className="px-4 pt-3 text-sm font-bold">Ajouter à l&apos;équipe</p>
+            <p className="px-4 pt-3 text-sm font-bold">Nommer un administrateur</p>
             <AddTeamMemberForm />
           </div>
         )}

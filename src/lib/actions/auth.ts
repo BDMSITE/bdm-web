@@ -67,7 +67,7 @@ export async function logoutAction() {
 
 const registerSchema = z
   .object({
-    accountType: z.enum(["MEMBER", "COMPANY", "ASSOCIATION", "ARTIST"]),
+    accountType: z.enum(["MEMBER", "COMPANY", "ASSOCIATION", "ARTIST"]).default("MEMBER"),
     prenom: z.string().trim().min(1, "Prénom obligatoire").max(80),
     nom: z.string().trim().min(1, "Nom obligatoire").max(80),
     email: z.email("Adresse e-mail invalide"),

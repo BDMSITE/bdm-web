@@ -221,6 +221,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   puis à supprimer (et ses ressources Neon/Blob). Reste à faire sur le nouveau compte : activer Web Analytics si pas déjà
   fait, poser les clés Turnstile (Cloudflare), Brevo, domaine beninois-du-monde.com.
 
+- **30/10 — MODÈLE DE COMPTES SIMPLIFIÉ (décision Josué).** Deux sortes de personnes : **membre** et **administrateur**.
+  L'inscription ne propose plus de type de compte ; « ce que je représente » (moi-même / entreprise / association /
+  artiste ou groupe) est un **choix du profil**, modifiable, qui décide seulement de l'annuaire d'affichage
+  (`User.accountType` conservé en base, tables de détails créées à la demande). Rôles visibles dans Paramètres :
+  Membre, Administrateur (« Nommer un administrateur ») ; EDITOR/MODERATOR/REGIE restent dans l'enum mais ne sont plus
+  proposés. Comptes de test rédaction / entreprise / association / artiste **supprimés** en prod et en local (seed
+  aligné) ; il reste admin + 5 membres de démo. CGU et confidentialité mises à jour (un seul type de compte).
+  Bande « Nos partenaires » : logo + nom seulement, 5 tuiles. En attente : e-mail de Mam pour son compte administrateur.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : clé Brevo (puis invitations des 278 comptes importés depuis /admin/imports), e-mail projet +
    Bitwarden, organisation GitHub, accès registrar beninois-du-monde.com, confirmation du nom du directeur de publication

@@ -666,7 +666,7 @@ export async function setUserRoleAction(_prev: AdminActionState, formData: FormD
 /* Ajouter à l'équipe : par e-mail d'un compte ACTIVE existant, avec un rôle d'équipe. */
 const addTeamSchema = z.object({
   email: z.email("Adresse e-mail invalide").trim().toLowerCase().max(200),
-  role: z.enum(["EDITOR", "MODERATOR", "REGIE", "ADMIN"], { error: "Rôle invalide" }),
+  role: z.enum(["ADMIN"], { error: "Rôle invalide" }),
 });
 
 export async function addTeamMemberAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {

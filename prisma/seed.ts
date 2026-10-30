@@ -39,15 +39,11 @@ const USERS: {
   cvPublished?: boolean;
 }[] = [
   { email: "admin@beninoisdumonde.test", name: "Admin BDM", role: "ADMIN", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, bio: "Administration du portail.", keywords: ["Cotonou"] },
-  { email: "redaction@beninoisdumonde.test", name: "La Rédaction", role: "EDITOR", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, bio: "Portraits et parcours de la diaspora.", keywords: ["Portrait", "Cotonou"] },
   { email: "aichatou@beninoisdumonde.test", name: "Aïchatou S.", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, bio: "Ingénieure BTP revenue de Montréal, bureau d'études à Cotonou.", keywords: ["BTP", "Entrepreneuriat", "Retour au pays", "Cotonou"] },
   { email: "jeaneudes@beninoisdumonde.test", name: "Jean-Eudes K.", city: "Paris", country: "France", lat: 48.85, lng: 2.35, bio: "Architecte logiciel, mentorat des jeunes devs béninois.", keywords: ["Informatique", "Paris"], cvPublished: true },
   { email: "mariam@beninoisdumonde.test", name: "Mariam A.", city: "Montréal", country: "Canada", lat: 45.5, lng: -73.57, bio: "Médecin de santé publique, afrodescendante en quête de racines.", keywords: ["Santé", "Afrodescendants", "Montréal"], cvPublished: true },
   { email: "rodrigue@beninoisdumonde.test", name: "Rodrigue H.", city: "Bruxelles", country: "Belgique", lat: 50.85, lng: 4.35, bio: "Analyste financier senior.", keywords: ["Finance", "Bruxelles"] },
   { email: "nadege@beninoisdumonde.test", name: "Nadège G.", city: "New York", country: "USA", lat: 40.71, lng: -74.01, bio: "Avocate d'affaires.", keywords: ["Droit", "Afrodescendants", "New York"], cvPublished: true },
-  { email: "contact@pme-fintech.test", name: "PME Fintech", accountType: "COMPANY", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, bio: "Fintech cotonoise, 40 salariés, recrute des profils tech.", keywords: ["Informatique", "Finance", "Cotonou"] },
-  { email: "contact@benin-diaspora-idf.test", name: "Bénin Diaspora IDF", accountType: "ASSOCIATION", city: "Paris", country: "France", lat: 48.85, lng: 2.35, bio: "Association des Béninois d'Île-de-France depuis 1998.", keywords: ["Communauté", "Paris"] },
-  { email: "contact@gangbe-brass.test", name: "Gangbé Brass Band", accountType: "ARTIST", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, bio: "Fanfare béninoise en tournée mondiale.", keywords: ["Art & spectacle", "Culture", "Cotonou"] },
 ];
 
 type ContentSeed = {
@@ -71,20 +67,9 @@ type ContentSeed = {
 
 const CONTENTS: ContentSeed[] = [
   // Magazine
-  { type: "ARTICLE", title: "Retour à Cotonou : le parcours d'Aïchatou, ingénieure revenue de Montréal", excerpt: "Après neuf ans au Canada, Aïchatou a monté son bureau d'études à Cotonou. Démarches, surprises et conseils pour réussir son retour.", body: "« On ne rentre pas au pays, on le réapprend. » Quand Aïchatou pose ses valises à Cotonou en janvier 2025, elle croit tout connaître de sa ville natale…", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, owner: "redaction@beninoisdumonde.test", featured: true, keywords: ["Portrait", "Retour au pays", "BTP", "Cotonou"] },
-  { type: "ARTICLE", title: "Les secteurs qui recrutent au Bénin en 2026 : le grand dossier", excerpt: "Numérique, agro-industrie, BTP, santé : où sont les postes et quels profils la diaspora peut-elle viser.", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, owner: "redaction@beninoisdumonde.test", keywords: ["Emploi", "Bénin"] },
-  { type: "ARTICLE", title: "Angélique Kidjo au Zénith : la diaspora en chœur", excerpt: "Retour sur une soirée où Paris a chanté en fon.", city: "Paris", country: "France", lat: 48.85, lng: 2.35, owner: "redaction@beninoisdumonde.test", keywords: ["Culture", "Paris"] },
-  { type: "ARTICLE", title: "Les Agudas : ces Afro-Brésiliens revenus au Bénin il y a deux siècles", excerpt: "Bien avant la loi sur la nationalité, d'anciens captifs sont revenus du Brésil s'installer à Ouidah et Porto-Novo.", city: "Ouidah", country: "Bénin", lat: 6.36, lng: 2.09, owner: "redaction@beninoisdumonde.test", keywords: ["Mémoire", "Afrodescendants", "Ouidah"] },
   { type: "MEMBER_ARTICLE", title: "Le vodun expliqué à mes enfants nés en France", excerpt: "Comment transmettre une spiritualité quand on vit à Lyon.", city: "Lyon", country: "France", lat: 45.76, lng: 4.84, owner: "jeaneudes@beninoisdumonde.test", keywords: ["Mémoire", "Culture", "France"] },
   // Emploi
-  { type: "JOB", title: "Développeur full-stack h/f — fintech", excerpt: "CDI à Cotonou, stack TypeScript/Next.js, équipe de 8.", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, owner: "contact@pme-fintech.test", keywords: ["Informatique", "Cotonou"], job: { contractType: "CDI", salary: "Selon profil" } },
-  { type: "JOB", title: "Chargé(e) de programme santé", excerpt: "CDD 12 mois pour une ONG à Parakou.", city: "Parakou", country: "Bénin", lat: 9.34, lng: 2.63, owner: "redaction@beninoisdumonde.test", keywords: ["Santé", "Parakou"], job: { contractType: "CDD" } },
-  { type: "JOB", title: "Comptable senior h/f", excerpt: "Cabinet d'expertise comptable à Abidjan.", city: "Abidjan", country: "Côte d'Ivoire", lat: 5.35, lng: -4.02, owner: "redaction@beninoisdumonde.test", keywords: ["Finance", "Abidjan"], job: { contractType: "CDI" } },
-  { type: "INTERNSHIP", title: "Stage marketing digital (6 mois)", excerpt: "Startup cotonoise, gratification + logement possible.", city: "Cotonou", country: "Bénin", lat: 6.37, lng: 2.39, owner: "contact@pme-fintech.test", keywords: ["Commerce", "Étudiants", "Cotonou"], job: { contractType: "Stage" } },
   // Agenda
-  { type: "EVENT", title: "Pique-nique des Béninois d'Île-de-France", excerpt: "Le grand rendez-vous annuel au bois de Vincennes.", city: "Paris", country: "France", lat: 48.83, lng: 2.43, owner: "contact@benin-diaspora-idf.test", keywords: ["Communauté", "Paris"], event: { startsAt: "2026-10-25T12:00:00+02:00", venue: "Bois de Vincennes", category: "Sortie" } },
-  { type: "EVENT", title: "Conférence : investir au Bénin en 2027", excerpt: "Experts et retours d'expérience, en présentiel et en visio.", city: "Bruxelles", country: "Belgique", lat: 50.85, lng: 4.35, owner: "redaction@beninoisdumonde.test", keywords: ["Entrepreneuriat", "Retour au pays", "Bruxelles"], event: { startsAt: "2026-11-04T18:30:00+01:00", venue: "Maison des associations", category: "Conférence", isOnline: true } },
-  { type: "EVENT", title: "Soirée culturelle Bénin Canada", excerpt: "Musique, cuisine et danses du Bénin.", city: "Montréal", country: "Canada", lat: 45.5, lng: -73.57, owner: "contact@gangbe-brass.test", keywords: ["Culture", "Montréal"], event: { startsAt: "2026-11-11T20:00:00-05:00", venue: "Centre culturel", category: "Concert" } },
   // Bonnes adresses
   { type: "PLACE", title: "Chez Maman Bénin", excerpt: "Restaurant béninois, le meilleur amiwo de Paris.", city: "Paris", country: "France", lat: 48.89, lng: 2.35, keywords: ["Paris"], place: { category: "Restaurant", address: "Paris 18e", verified: true } },
   { type: "PLACE", title: "Épicerie Dantokpa", excerpt: "Produits du pays, gari et huile rouge.", city: "Bruxelles", country: "Belgique", lat: 50.85, lng: 4.35, keywords: ["Bruxelles"], place: { category: "Épicerie", address: "Matongé" } },

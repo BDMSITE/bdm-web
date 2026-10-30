@@ -12,7 +12,7 @@ export default async function ProfilComptePage() {
   const session = await auth();
   const profile = await db.profile.findUnique({
     where: { userId: session!.user.id },
-    include: { keywords: { include: { keyword: true } } },
+    include: { keywords: { include: { keyword: true } }, user: { select: { accountType: true } } },
   });
   if (!profile) return <p className="text-sm text-muted">Profil introuvable.</p>;
 
@@ -42,6 +42,7 @@ export default async function ProfilComptePage() {
           website: profile.website ?? "",
           keywords: profile.keywords.map((k) => k.keyword.name).join(", "),
           directory: visibility.directory !== false,
+          kind: profile.user.accountType,
         }}
       />
     </div>

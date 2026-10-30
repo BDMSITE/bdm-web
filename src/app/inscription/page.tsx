@@ -6,8 +6,10 @@ import { turnstileSiteKey } from "@/lib/turnstile";
 
 export const metadata: Metadata = { title: "Créer un compte" };
 
-/* Inscription gratuite, 4 types de comptes (CDC §7.5). Le compte est créé
-   PENDING_EMAIL ; le lien reçu par e-mail l'active. */
+/* Inscription gratuite, un seul type de compte : Membre (décision Josué 30/10).
+   Ce que le membre représente (lui-même, une entreprise, une association, un
+   artiste) se choisit ensuite dans le profil. Le compte est créé PENDING_EMAIL ;
+   le lien reçu par e-mail l'active. */
 
 export default function InscriptionPage() {
   return (
@@ -16,7 +18,7 @@ export default function InscriptionPage() {
       <PageBanner
         pre="Créer un"
         em="compte gratuit"
-        desc="Membres, entreprises, associations et artistes : l'inscription est gratuite et le reste. Vous publiez directement, la modération valide."
+        desc="Particuliers, entreprises, associations, artistes : un seul compte membre, gratuit. Vous publiez directement, la modération valide."
       />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">

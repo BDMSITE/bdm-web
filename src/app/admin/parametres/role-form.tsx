@@ -5,13 +5,11 @@ import { setUserRoleAction, addTeamMemberAction, type AdminActionState } from "@
 
 /* Paramètres : attribution des rôles (administrateur uniquement).
    RoleSelect = select + Appliquer sur une ligne de l'équipe ;
-   AddTeamMemberForm = ajouter un compte ACTIVE existant à l'équipe par e-mail. */
+   AddTeamMemberForm = nommer administrateur un compte ACTIVE existant, par e-mail.
+   Deux rôles visibles : Membre et Administrateur (décision Josué 30/10). */
 
 export const ROLE_OPTIONS = [
   { value: "USER", label: "Membre" },
-  { value: "EDITOR", label: "Rédaction" },
-  { value: "MODERATOR", label: "Modération" },
-  { value: "REGIE", label: "Régie publicitaire" },
   { value: "ADMIN", label: "Administrateur" },
 ] as const;
 
@@ -60,7 +58,7 @@ export function AddTeamMemberForm() {
       </div>
       <div>
         <label htmlFor="team-role" className="mb-1 block text-xs font-bold">Rôle</label>
-        <select id="team-role" name="role" defaultValue="EDITOR" className="rounded border border-line bg-paper px-3 py-1.5 text-sm focus:border-primary focus:outline-none">
+        <select id="team-role" name="role" defaultValue="ADMIN" className="rounded border border-line bg-paper px-3 py-1.5 text-sm focus:border-primary focus:outline-none">
           {ROLE_OPTIONS.filter((o) => o.value !== "USER").map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
@@ -71,7 +69,7 @@ export function AddTeamMemberForm() {
         disabled={pending}
         className="whitespace-nowrap rounded bg-primary px-4 py-1.5 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-50"
       >
-        {pending ? "…" : "Ajouter à l'équipe"}
+        {pending ? "…" : "Nommer administrateur"}
       </button>
       <div className="basis-full"><Retour state={state} /></div>
     </form>

@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { UserRound, Building2, HeartHandshake, Music4 } from "lucide-react";
 import { registerAction, type RegisterState } from "@/lib/actions/auth";
 import { Turnstile } from "@/components/site/turnstile";
-
-const TYPES = [
-  { value: "MEMBER", icon: UserRound, t: "Membre", d: "Particulier de la diaspora ou du Bénin : profil, alertes, CV, publications." },
-  { value: "COMPANY", icon: Building2, t: "Entreprise", d: "Fiche entreprise, actualités, recrutement (3 offres tests gratuites)." },
-  { value: "ASSOCIATION", icon: HeartHandshake, t: "Association", d: "Fiche association, événements, appels à bénévoles." },
-  { value: "ARTIST", icon: Music4, t: "Artiste / groupe", d: "Fiche artiste, agenda de dates, actualités." },
-] as const;
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none aria-[invalid=true]:border-danger";
 
@@ -21,24 +13,9 @@ export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: 
 
   return (
     <form action={action} noValidate>
+      <input type="hidden" name="accountType" value="MEMBER" />
       <h2 className="section-title mb-4 border-b-2 border-line pb-2 text-lg">
-        1. Je suis <em>…</em>
-      </h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {TYPES.map((t) => (
-          <label key={t.value} className="cursor-pointer">
-            <input type="radio" name="accountType" value={t.value} defaultChecked={t.value === "MEMBER"} className="peer sr-only" />
-            <span className="flex h-full flex-col border border-line p-4 text-left hover:border-primary peer-checked:border-2 peer-checked:border-primary peer-checked:bg-primary-faint peer-focus-visible:outline-2 peer-focus-visible:outline-primary">
-              <t.icon aria-hidden className="h-7 w-7 text-primary" strokeWidth={2.2} />
-              <span className="mt-2 block font-bold">{t.t}</span>
-              <span className="mt-1 block text-sm text-ink-2">{t.d}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-
-      <h2 className="section-title mb-4 mt-10 border-b-2 border-line pb-2 text-lg">
-        2. Mes <em>informations</em>
+        Mes <em>informations</em>
       </h2>
       <div className="space-y-5 border border-line p-5">
         {state.error && (
@@ -119,7 +96,7 @@ export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: 
             Déjà inscrit·e ? <Link href="/connexion" className="font-bold text-primary hover:underline">Se connecter</Link>
           </span>
         </div>
-        <p className="text-xs text-muted">Comptes pro (entreprise, association, artiste) : validation par la modération avant mise en ligne de la fiche.</p>
+        <p className="text-xs text-muted">Vous représentez une entreprise, une association ou un groupe artistique ? Vous l&apos;indiquerez dans votre profil, après l&apos;inscription.</p>
       </div>
     </form>
   );

@@ -488,3 +488,11 @@ model RateLimit {
   windowStart DateTime
   count       Int      @default(1)
 }
+
+/* Réglages du site modifiables depuis Paramètres (réseaux sociaux, coordonnées…),
+   sans redéploiement. Clé = identifiant stable, valeur = texte. */
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

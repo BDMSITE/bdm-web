@@ -233,7 +233,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 - **30/10 — TURNSTILE ACTIF.** Clés Cloudflare posées sur le projet bdmsite (prod + preview), widget « Vérifiez que vous
   êtes humain » visible sur /inscription et /contact, refus serveur vérifié (envoi sans jeton → « Vérification anti-robot
   échouée »). Domaines déclarés chez Cloudflare : bdm-web-psi.vercel.app et beninois-du-monde.com. Réseaux sociaux :
-  icônes masquées tant que NEXT_PUBLIC_SOCIAL_* ne sont pas renseignées. Base Notion « ✅ Vérification du site » :
+  **réglages du site en base** (`SiteSetting`, migration `site_settings` local + Neon) modifiables dans Admin → Paramètres →
+  « Réseaux sociaux » (Facebook, LinkedIn, Instagram, X, YouTube, TikTok, WhatsApp) sans redéploiement ; tant qu'un lien est
+  vide, l'icône reste visible et renvoie vers /contact (règle Josué : rien ne se retire, tout se configure). Paramètres
+  affiche aussi une liste « À configurer » (Brevo, réseaux, MapTiler, FedaPay, newsletter, experts, accueil-hébergement). Base Notion « ✅ Vérification du site » :
   60 pages du site en ligne à vérifier par Josué (anciennes maquettes à la corbeille).
 
 ## Ce qui RESTE (ordre)

@@ -318,6 +318,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "user.2fa_off": "Double authentification désactivée",
   "user.suspend": "Suspension",
   "user.reactivate": "Réactivation",
+  "settings.update": "Réglages du site modifiés",
   "user.role": "Rôle modifié",
   "keyword.create": "Mot-clé ajouté",
 };

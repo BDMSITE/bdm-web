@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, BriefcaseBusiness, CircleUserRound, LogOut, ShieldCheck } from "lucide-react";
+import { Bell, BriefcaseBusiness, CircleUserRound, LogOut, ShieldCheck, Music2, MessageCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions/auth";
 import { NAV } from "./nav-data";
@@ -13,7 +13,7 @@ export { AdSlot } from "./ad-slot";
 import { memberCities, siteCounts } from "@/lib/content";
 import { slugify } from "@/lib/slug";
 import { keywordHref } from "@/lib/routes";
-import { SOCIALS } from "@/lib/social";
+import { socialLinks } from "@/lib/settings";
 
 /* Composants de structure partagés par toutes les pages publiques. */
 
@@ -22,6 +22,7 @@ export { NAV };
 const STAFF = new Set(["EDITOR", "MODERATOR", "ADMIN"]);
 
 export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolean }) {
+  const socials = await socialLinks();
   const [session, villes, counts] = await Promise.all([auth(), memberCities(), siteCounts()]);
   const user = session?.user ?? null;
   const isStaff = STAFF.has(user?.role ?? "");
@@ -53,16 +54,17 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
 
           <div className="flex items-center justify-end gap-4 lg:gap-5">
             <ul className="hidden items-center gap-2.5 lg:flex">
-              {SOCIALS.map((s) => ({ ...s, icon: { facebook: Fb, linkedin: Li, instagram: Ig, x: Xx, youtube: Yt }[s.key]! })).filter((s) => ["facebook", "linkedin", "instagram"].includes(s.key)).map((s) => (
+              {socials.filter((s) => ["facebook", "linkedin", "instagram"].includes(s.key)).map((s) => (
                 <li key={s.label}>
                   <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener"
+                    href={s.url || "/contact"}
+                    target={s.url ? "_blank" : undefined}
+                    rel={s.url ? "noopener" : undefined}
+                    title={s.url ? s.label : `${s.label} : page en cours d'ouverture, écrivez-nous`}
                     aria-label={s.label}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-dark"
                   >
-                    <s.icon />
+                    {ICONS[s.key]?.({})}
                   </a>
                 </li>
               ))}
@@ -146,6 +148,12 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
 
 /* Icônes de marques (retirées de Lucide) — SVG inline, chemins simple-icons. */
 type BrandProps = React.SVGProps<SVGSVGElement>;
+const ICONS: Record<string, (p: BrandProps) => React.JSX.Element> = {
+  get facebook() { return Fb; }, get linkedin() { return Li; }, get instagram() { return Ig; }, get x() { return Xx; }, get youtube() { return Yt; },
+  tiktok: (p: BrandProps) => <Music2 aria-hidden className={p.className ?? "h-4 w-4"} />,
+  whatsapp: (p: BrandProps) => <MessageCircle aria-hidden className={p.className ?? "h-4 w-4"} />,
+};
+
 const Fb = (p: BrandProps) => (
   <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17" aria-hidden {...p}>
     <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07Z" />
@@ -242,7 +250,8 @@ function BottomPageBox() {
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const socials = await socialLinks();
   return (
     <footer className="mt-16">
       <BottomPageBox />
@@ -264,16 +273,17 @@ export function SiteFooter() {
             </Link>
 
             <ul className="mt-7 flex items-center gap-3">
-              {SOCIALS.map((s) => ({ ...s, icon: { facebook: Fb, linkedin: Li, instagram: Ig, x: Xx, youtube: Yt }[s.key]! })).map((s) => (
+              {socials.filter((s) => !["tiktok", "whatsapp"].includes(s.key) || s.url).map((s) => (
                 <li key={s.label}>
                   <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener"
+                    href={s.url || "/contact"}
+                    target={s.url ? "_blank" : undefined}
+                    rel={s.url ? "noopener" : undefined}
+                    title={s.url ? s.label : `${s.label} : page en cours d'ouverture, écrivez-nous`}
                     aria-label={s.label}
                     className="flex h-10 w-10 items-center justify-center rounded-md bg-white/10 transition-colors hover:bg-accent hover:text-ink"
                   >
-                    <s.icon />
+                    {ICONS[s.key]?.({})}
                   </a>
                 </li>
               ))}

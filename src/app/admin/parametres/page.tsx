@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
+import { SettingsForm } from "./settings-form";
+import { getSettings, SOCIAL_NETWORKS } from "@/lib/settings";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 
 export const metadata: Metadata = { title: "Paramètres" };
@@ -23,6 +25,19 @@ export default async function AdminParametresPage() {
   const isAdmin = me?.role === "ADMIN";
   const env = process.env;
   const mail = env.BREVO_API_KEY ? "Brevo" : env.RESEND_API_KEY ? "Resend" : null;
+  const settings = await getSettings();
+  const socialsManquants = SOCIAL_NETWORKS.filter((n) => !settings[n.key]).map((n) => n.label);
+  /* Tout ce qui existe sur le site mais n'est pas encore configuré : à traiter avant l'ouverture. */
+  const aConfigurer = [
+    !mail && { l: "Envoi d'e-mails (Brevo)", d: "Sans clé, aucun e-mail ne part : activation des comptes, invitations, alertes, relais. Clé à poser dans Vercel (BREVO_API_KEY)." },
+    !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && { l: "Anti-robot (Turnstile)", d: "Inscription et contact sans protection anti-robot." },
+    socialsManquants.length > 0 && { l: `Réseaux sociaux : ${socialsManquants.join(", ")}`, d: "Icônes visibles mais renvoyant vers Contact. Renseigner les liens ci-dessous." },
+    !env.NEXT_PUBLIC_MAPTILER_KEY && { l: "Fond de carte (MapTiler)", d: "Facultatif : fond OpenStreetMap en attendant." },
+    !env.FEDAPAY_SECRET_KEY && { l: "Paiements (FedaPay)", d: "Régie et adhésions payantes : à brancher quand le HCBE sera prêt." },
+    { l: "Newsletter", d: "Composition et envoi : arrivent avec Brevo." },
+    { l: "Validation des experts (Compétences)", d: "Modèle « expert » à définir avec le HCBE." },
+    { l: "Accueil & hébergement", d: "Service annoncé sur le site, pas encore ouvert." },
+  ].filter(Boolean) as { l: string; d: string }[];
 
   let baseOk = false;
   try {
@@ -92,6 +107,22 @@ export default async function AdminParametresPage() {
           <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
             Les variables d&apos;environnement se gèrent dans Vercel (Settings → Environment Variables) ou dans le fichier <code className="rounded bg-paper-2 px-1">.env</code> en local.
           </p>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card title={`À configurer (${aConfigurer.length})`}>
+          <ul className="divide-y divide-line text-sm">
+            {aConfigurer.map((x) => (
+              <li key={x.l} className="px-4 py-3">
+                <span className="block font-semibold">{x.l}</span>
+                <span className="block text-xs text-muted">{x.d}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+        <Card title="Réseaux sociaux (en-tête et pied de page)">
+          <SettingsForm fields={SOCIAL_NETWORKS.map((n) => ({ key: n.key, label: n.label }))} values={settings} canEdit={isAdmin} />
         </Card>
       </div>
 

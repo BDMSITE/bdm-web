@@ -12,7 +12,7 @@ export async function PartnersBand() {
   const rows = await db.banner.findMany({
     where: { house: true, status: "PUBLISHED", startsAt: { lte: now }, OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
     orderBy: [{ advertiser: "asc" }, { slot: "asc" }],
-    select: { id: true, advertiser: true, image: true, tagline: true, headline: true, link: true, bg: true },
+    select: { id: true, advertiser: true, image: true },
   });
   const partners = [...new Map(rows.map((r) => [r.advertiser, r])).values()];
   if (partners.length === 0) return null;
@@ -32,27 +32,23 @@ export async function PartnersBand() {
           </Link>
         </div>
 
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {partners.map((p) => (
             <li key={p.id}>
               <a
                 href={clickHref(p.id)}
                 target="_blank"
                 rel="noopener sponsored"
-                className="group flex h-full flex-col border border-line bg-paper p-5 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_14px_30px_-18px_rgba(0,0,0,.4)]"
+                className="group flex h-full flex-col items-center justify-center gap-4 border border-line bg-paper px-6 py-8 text-center transition hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_14px_30px_-18px_rgba(0,0,0,.4)]"
               >
-                <span className="flex h-24 items-center justify-center" style={{ background: "transparent" }}>
+                <span className="flex h-24 w-full items-center justify-center">
                   {p.image ? (
-                    <Image src={p.image} alt={p.advertiser} width={160} height={96} unoptimized className="max-h-24 w-auto object-contain" />
+                    <Image src={p.image} alt="" width={200} height={96} unoptimized className="max-h-24 w-auto max-w-[170px] object-contain" />
                   ) : (
                     <span className="font-display text-xl font-extrabold">{p.advertiser}</span>
                   )}
                 </span>
-                <span className="mt-4 border-t border-line pt-4">
-                  <span className="block font-display text-lg font-extrabold leading-tight text-ink group-hover:text-primary">{p.advertiser}</span>
-                  {p.tagline && <span className="mt-1 line-clamp-2 block text-sm text-ink-2">{p.tagline}</span>}
-                </span>
-                <span className="mt-auto pt-4 text-xs font-extrabold uppercase tracking-wide text-primary">Visiter le site →</span>
+                <span className="font-display text-base font-extrabold leading-tight text-ink group-hover:text-primary">{p.advertiser}</span>
               </a>
             </li>
           ))}

@@ -246,6 +246,14 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   Parcours complet testé en local : inscription → lien d'activation → espace membre → guichet Publier (annonce) →
   modération admin (Valider) → annonce visible dans la rubrique. Données de test supprimées.
 
+- **30/10 — RÉFÉRENCEMENT, FLUX, ALERTES.** `/robots.txt` (admin, compte, api exclus), `/sitemap.xml` (pages fixes + contenus
+  publiés + fiches annuaire), `/flux.xml` (RSS des 30 derniers contenus, utilisable par n8n/agrégateurs). **Alertes par
+  mots-clés enfin envoyées** : cron Vercel `/api/cron/alertes` chaque jour 06:00 UTC → pour chaque alerte, les contenus
+  publiés depuis le dernier envoi portant un mot-clé suivi et d'un type suivi, un e-mail par membre via Brevo
+  (`sendAlertDigest`), `Alert.lastSentAt` mis à jour, rien envoyé s'il n'y a rien. Barre admin : bouton « Retour au site »
+  visible à toute taille d'écran. Comptes : l'administrateur a aussi son espace membre (normal), les membres n'ont jamais
+  accès au back-office (proxy).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
    site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

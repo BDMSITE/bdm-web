@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, ExternalLink } from "lucide-react";
 import type { ContentStatus, UserStatus, ContentType } from "@prisma/client";
 import { CONTENT_LABEL } from "@/lib/routes";
 
@@ -23,9 +23,9 @@ export function AdminTopbar() {
       </form>
       <Link
         href="/"
-        className="ml-auto rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-primary-dark lg:hidden"
+        className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-primary-dark"
       >
-        Site
+        <ExternalLink aria-hidden className="h-3.5 w-3.5" /> Retour au site
       </Link>
     </div>
   );

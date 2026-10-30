@@ -81,3 +81,15 @@ export function sendRelayNotification(to: string, fromName: string, subject: str
   );
 }
 
+
+/* Alertes par mots-clés : la sélection du jour, un e-mail par membre. */
+export function sendAlertDigest(to: string, items: { title: string; href: string; label: string }[], manageLink: string) {
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+  const n = items.length;
+  return send(
+    to,
+    `${n} nouveau${n > 1 ? "x" : ""} contenu${n > 1 ? "s" : ""} pour vos alertes — Béninois du Monde`,
+    `Voici les nouveautés qui correspondent à vos mots-clés :\n\n${items.map((i) => `• [${i.label}] ${i.title}\n  ${i.href}`).join("\n")}\n\nGérer mes alertes : ${manageLink}`,
+    `<p>Voici les nouveautés qui correspondent à vos mots-clés :</p><ul>${items.map((i) => `<li><strong>[${esc(i.label)}]</strong> <a href="${i.href}">${esc(i.title)}</a></li>`).join("")}</ul><p><a href="${manageLink}">Gérer mes alertes</a></p>`,
+  );
+}

@@ -243,6 +243,7 @@ model Content {
   featured       Boolean       @default(false)
   sponsored      Boolean       @default(false)
   views          Int           @default(0)
+  moderationNote String?       // motif de refus, transmis à l'auteur
   ownerProfileId String?
   ownerProfile   Profile?      @relation("OwnerProfile", fields: [ownerProfileId], references: [id])
   createdAt      DateTime      @default(now())

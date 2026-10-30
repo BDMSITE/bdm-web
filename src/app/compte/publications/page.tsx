@@ -20,7 +20,7 @@ export default async function PublicationsPage({ searchParams }: { searchParams:
   const contents = await db.content.findMany({
     where: { ownerProfile: { userId: session.user.id } },
     orderBy: { updatedAt: "desc" },
-    select: { id: true, title: true, slug: true, type: true, status: true, publishedAt: true, createdAt: true, expiresAt: true },
+    select: { id: true, title: true, slug: true, type: true, status: true, publishedAt: true, createdAt: true, expiresAt: true, moderationNote: true },
   });
 
   return (
@@ -75,6 +75,9 @@ export default async function PublicationsPage({ searchParams }: { searchParams:
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={c.status} />
+                      {c.status === "REJECTED" && c.moderationNote && (
+                        <span className="block w-full text-xs text-danger">Motif : {c.moderationNote}</span>
+                      )}
                       {c.status === "PUBLISHED" && c.expiresAt && (
                         <span className="ml-2 whitespace-nowrap text-xs text-muted">jusqu&apos;au {fmtDate(c.expiresAt, { day: "numeric", month: "short" })}</span>
                       )}

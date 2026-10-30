@@ -5,6 +5,8 @@ import { z } from "zod";
 import { Prisma, type ContentType } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendModerationResult } from "@/lib/mail";
+import { SITE_URL } from "@/lib/site-url";
 import { slugify } from "@/lib/slug";
 import { indexContent } from "@/lib/search";
 import { geocode } from "@/lib/geocode";
@@ -42,6 +44,7 @@ function firstIssue(e: z.ZodError) {
 const moderationSchema = z.object({
   id: z.string().min(1),
   decision: z.enum(["publish", "reject"]),
+  reason: z.preprocess((s) => (typeof s === "string" && s.trim() ? s.trim() : undefined), z.string().max(600, "Motif limité à 600 caractères").optional()),
 });
 
 export async function moderateContentAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
@@ -52,18 +55,34 @@ export async function moderateContentAction(_prev: AdminActionState, formData: F
   if (!parsed.success) return { error: firstIssue(parsed.error) };
   const { id, decision } = parsed.data;
 
-  const content = await db.content.findUnique({ where: { id }, select: { id: true, type: true, slug: true, status: true, title: true } });
+  const content = await db.content.findUnique({
+    where: { id },
+    select: { id: true, type: true, slug: true, status: true, title: true, ownerProfile: { select: { displayName: true, user: { select: { email: true, status: true } } } } },
+  });
   if (!content) return { error: "Contenu introuvable." };
   if (content.status !== "IN_MODERATION") return { error: "Ce contenu n'est plus en modération." };
+  const reason = parsed.data.reason ?? null;
 
   if (decision === "publish") {
-    await db.content.update({ where: { id }, data: { status: "PUBLISHED", publishedAt: new Date() } });
+    await db.content.update({ where: { id }, data: { status: "PUBLISHED", publishedAt: new Date(), moderationNote: null } });
     await audit(user.id, "content.publish", "Content", id, { title: content.title, type: content.type });
   } else {
-    await db.content.update({ where: { id }, data: { status: "REJECTED" } });
-    await audit(user.id, "content.reject", "Content", id, { title: content.title, type: content.type });
+    await db.content.update({ where: { id }, data: { status: "REJECTED", moderationNote: reason } });
+    await audit(user.id, "content.reject", "Content", id, { title: content.title, type: content.type, reason });
   }
   await indexContent(id).catch(() => {});
+
+  /* L'auteur membre est prévenu par e-mail (pas pour les contenus de la rédaction). */
+  const auteur = content.ownerProfile?.user;
+  if (auteur && auteur.status === "ACTIVE") {
+    await sendModerationResult(auteur.email, {
+      title: content.title,
+      published: decision === "publish",
+      href: `${SITE_URL}${contentHref(content.type, content.slug)}`,
+      reason,
+      displayName: content.ownerProfile?.displayName ?? "",
+    }).catch((e) => console.error("[modération] e-mail impossible", e));
+  }
 
   revalidatePath("/admin");
   revalidatePath("/admin/moderation");

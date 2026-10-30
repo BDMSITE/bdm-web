@@ -376,3 +376,40 @@ export function sendRegieReport(to: string, mois: string, rows: { advertiser: st
     }),
   );
 }
+
+/* Modération : l'auteur est prévenu de la publication ou du refus (avec le motif). */
+export function sendModerationResult(to: string, r: { title: string; published: boolean; href: string; reason: string | null; displayName: string }) {
+  const prenom = r.displayName.trim().split(" ")[0] ?? "";
+  if (r.published) {
+    return send(
+      to,
+      `En ligne : ${r.title}`,
+      `Bonne nouvelle${prenom ? ` ${prenom}` : ""} : « ${r.title} » est publié sur Béninois du Monde.\n${r.href}\n\nPartagez-le autour de vous : chaque lecture compte.${SIGN}`,
+      layout({
+        preheader: `« ${r.title} » est en ligne.`,
+        eyebrow: "Publication",
+        title: "C'est en ligne.",
+        paragraphs: [`<strong>${esc(r.title)}</strong> a été relu par l'équipe et vient d'être publié. Merci de faire vivre la communauté.`],
+        cta: { label: "Voir ma publication", url: r.href },
+        panel: `<p style="margin:0;font:15px/1.6 Helvetica,Arial,sans-serif;color:${INK}"><strong>Faites-le savoir :</strong> partagez le lien sur WhatsApp ou vos réseaux. Vous pouvez modifier ou retirer la publication à tout moment depuis <a href="${SITE_URL}/compte/publications" style="color:${GREEN}">Mes publications</a>.</p>`,
+      }),
+    );
+  }
+  return send(
+    to,
+    `Votre publication n'a pas été retenue : ${r.title}`,
+    `Bonjour${prenom ? ` ${prenom}` : ""},\n\n« ${r.title} » n'a pas été publié en l'état.${r.reason ? `\n\nMotif de l'équipe : ${r.reason}` : ""}\n\nVous pouvez corriger et soumettre de nouveau depuis Mes publications : ${SITE_URL}/compte/publications${SIGN}`,
+    layout({
+      preheader: `« ${r.title} » n'a pas été publié en l'état.`,
+      eyebrow: "Modération",
+      title: "Pas publié en l'état.",
+      paragraphs: [`<strong>${esc(r.title)}</strong> n'a pas été retenu par l'équipe de modération. Rien de définitif : corrigez et soumettez de nouveau.`],
+      panel: r.reason
+        ? `<p style="margin:0 0 6px;font:600 13px/1.4 Helvetica,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:${INK_2}">Motif de l'équipe</p><p style="margin:0;font:16px/1.6 Helvetica,Arial,sans-serif;color:${INK};white-space:pre-line">${esc(r.reason)}</p>`
+        : `<p style="margin:0;font:15px/1.6 Helvetica,Arial,sans-serif;color:${INK}">Les motifs les plus fréquents : lieu manquant, texte trop court, coordonnées dans le texte (elles passent par la messagerie du site), contenu hors sujet.</p>`,
+      panelFirst: true,
+      cta: { label: "Corriger ma publication", url: `${SITE_URL}/compte/publications` },
+      footnote: "Une question ? Répondez via le formulaire de contact du site.",
+    }),
+  );
+}

@@ -99,6 +99,13 @@ export default async function CommunautePage() {
               </Link>
             </div>
             <div className="border border-line bg-paper-2 p-4">
+              <h3 className="section-title text-sm">La diaspora <em>par pays</em></h3>
+              <p className="mt-2 text-sm text-ink-2">Membres, événements, adresses et offres de chaque pays, avec les contacts utiles.</p>
+              <Link href="/pays" className="mt-3 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+                Choisir mon pays →
+              </Link>
+            </div>
+            <div className="border border-line bg-paper-2 p-4">
               <h3 className="section-title text-sm">Compétences de la <em>diaspora</em></h3>
               <p className="mt-2 text-sm text-ink-2">L&apos;initiative du HCBE pour mobiliser les expertises de l&apos;extérieur au service de projets au Bénin.</p>
               <Link href="/communaute/competences" className="mt-3 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">

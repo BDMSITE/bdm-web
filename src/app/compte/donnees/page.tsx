@@ -45,7 +45,7 @@ export default async function DonneesPage() {
       <div className="flex flex-wrap items-center gap-4 border border-line p-5">
         <div className="min-w-0 flex-1">
           <p className="font-bold">Télécharger mes données</p>
-          <p className="text-sm text-ink-2">Compte, profil, publications, alertes et candidatures dans un fichier JSON, généré immédiatement.</p>
+          <p className="text-sm text-ink-2">Compte, profil, publications, alertes, candidatures, messages, favoris, fiche d&apos;accueil, signalements et blocages dans un fichier JSON, généré immédiatement.</p>
         </div>
         <a
           href="/api/compte/export"

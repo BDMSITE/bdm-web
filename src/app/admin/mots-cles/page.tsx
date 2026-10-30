@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { keywordHref } from "@/lib/routes";
 import { PageHead, StatCard, Card, TableShell, Th, Td, EmptyState, fmtNumber } from "@/components/admin/ui";
 import { KeywordForm } from "./keyword-form";
+import { KeywordActions } from "./keyword-actions";
 
 export const metadata: Metadata = { title: "Mots-clés" };
 
@@ -44,7 +45,7 @@ export default async function AdminMotsClesPage() {
               {rows.length === 0 ? (
                 <EmptyState title={`Aucun mot-clé dans la famille « ${f.titre} ».`}>Ajoutez-en un avec le formulaire ci-dessus.</EmptyState>
               ) : (
-                <TableShell head={<><Th>Mot-clé</Th><Th>Adresse</Th><Th>Contenus</Th><Th>Profils</Th></>}>
+                <TableShell head={<><Th>Mot-clé</Th><Th>Adresse</Th><Th>Contenus</Th><Th>Profils</Th><Th>Actions</Th></>}>
                   {rows.map((k) => (
                     <tr key={k.id} className="hover:bg-primary-faint">
                       <Td className="font-semibold">
@@ -53,6 +54,7 @@ export default async function AdminMotsClesPage() {
                       <Td className="text-muted">{keywordHref(k.slug)}</Td>
                       <Td className="tabular-nums text-ink-2">{fmtNumber(k._count.contents)}</Td>
                       <Td className="tabular-nums text-ink-2">{fmtNumber(k._count.profiles)}</Td>
+                      <Td><KeywordActions id={k.id} name={k.name} others={keywords.filter((o) => o.id !== k.id).map((o) => ({ id: o.id, name: o.name, family: FAMILLES.find((f) => f.family === o.family)?.titre ?? o.family }))} /></Td>
                     </tr>
                   ))}
                 </TableShell>
@@ -62,7 +64,7 @@ export default async function AdminMotsClesPage() {
         })}
       </div>
       <p className="mt-4 text-xs text-muted">
-        Les mots-clés saisis par les membres sur leur profil sont créés automatiquement dans la famille « Thèmes ». Renommer, fusionner ou supprimer un mot-clé n&apos;est pas encore possible depuis cette page.
+        Les mots-clés saisis par les membres sur leur profil sont créés automatiquement dans la famille « Thèmes ». « Gérer » permet de renommer, de fusionner deux doublons (contenus, profils et alertes déplacés) ou de supprimer.
       </p>
     </>
   );

@@ -58,6 +58,9 @@ export async function sendMessageAction(_prev: RelayState, formData: FormData): 
   const to = await db.profile.findUnique({ where: { id: toProfileId }, include: { user: { select: { id: true, email: true, status: true } } } });
   if (!to || to.user.status !== "ACTIVE") return { error: "Ce membre ne peut pas être contacté." };
   if (to.user.id === session.user.id) return { error: "Vous ne pouvez pas vous écrire à vous-même." };
+  if (await db.userBlock.findUnique({ where: { blockerId_blockedId: { blockerId: to.user.id, blockedId: session.user.id } } })) {
+    return { error: "Ce membre ne souhaite pas recevoir vos messages." };
+  }
 
   const fromProfile = await db.profile.findUnique({ where: { userId: session.user.id }, select: { displayName: true } });
   const content = contentId ? await db.content.findUnique({ where: { id: contentId }, select: { title: true } }) : null;
@@ -131,5 +134,27 @@ export async function setApplicationStatusAction(_prev: RelayState, formData: Fo
   await db.application.update({ where: { id: app.id }, data: { status: parsed.data.status } });
   revalidatePath("/compte/candidatures-recues");
   revalidatePath("/compte/candidatures");
+  return { ok: true };
+}
+
+/* Bloquer / débloquer un membre. */
+export async function blockUserAction(_prev: RelayState, formData: FormData): Promise<RelayState> {
+  const session = await auth();
+  if (!session?.user) redirect("/connexion");
+  const blockedId = String(formData.get("userId") ?? "");
+  if (!blockedId || blockedId === session.user.id) return { error: "Membre invalide." };
+  const cible = await db.user.findUnique({ where: { id: blockedId }, select: { id: true } });
+  if (!cible) return { error: "Membre introuvable." };
+  await db.userBlock.upsert({ where: { blockerId_blockedId: { blockerId: session.user.id, blockedId } }, update: {}, create: { blockerId: session.user.id, blockedId } });
+  revalidatePath("/compte/messages");
+  return { ok: true };
+}
+
+export async function unblockUserAction(_prev: RelayState, formData: FormData): Promise<RelayState> {
+  const session = await auth();
+  if (!session?.user) redirect("/connexion");
+  const blockedId = String(formData.get("userId") ?? "");
+  await db.userBlock.deleteMany({ where: { blockerId: session.user.id, blockedId } });
+  revalidatePath("/compte/messages");
   return { ok: true };
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, BriefcaseBusiness, CircleUserRound, LogOut, ShieldCheck, Music2, MessageCircle } from "lucide-react";
+import { Bell, BriefcaseBusiness, CircleUserRound, LogOut, ShieldCheck, Music2, MessageCircle, MessageSquare } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { logoutAction } from "@/lib/actions/auth";
 import { NAV } from "./nav-data";
 import { StickyBar, Crumbs, MobileMenu } from "./header-extras";
@@ -25,6 +26,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
   const socials = await socialLinks();
   const [session, villes, counts] = await Promise.all([auth(), memberCities(), siteCounts()]);
   const user = session?.user ?? null;
+  const nonLus = user ? await db.message.count({ where: { toUserId: user.id, readAt: null } }).catch(() => 0) : 0;
   const isStaff = STAFF.has(user?.role ?? "");
 
   return (
@@ -82,6 +84,12 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
                   </span>
                   <span className="max-w-[9rem] truncate">{user.name ?? "Mon espace"}</span>
                 </Link>
+                {nonLus > 0 && (
+                  <Link href="/compte/messages" aria-label={`${nonLus} message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}`} title="Messages non lus" className="relative text-muted hover:text-primary">
+                    <MessageSquare aria-hidden className="h-5 w-5" />
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{nonLus > 9 ? "9+" : nonLus}</span>
+                  </Link>
+                )}
                 {isStaff && (
                   <Link href="/admin" aria-label="Administration" title="Administration" className="text-muted hover:text-primary">
                     <ShieldCheck aria-hidden className="h-5 w-5" />

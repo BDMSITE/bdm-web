@@ -866,3 +866,74 @@ export async function resetTwoFactorAction(_prev: AdminActionState, formData: Fo
   revalidatePath("/admin/parametres");
   return { ok: true, message: "Double authentification désactivée : la personne pourra la réactiver depuis Sécurité." };
 }
+
+/* ---------- Mots-clés : renommer, fusionner, supprimer ---------- */
+
+/** Retire ou remplace un identifiant de mot-clé dans toutes les alertes. */
+async function rewriteAlerts(fromId: string, toId: string | null) {
+  const alerts = await db.alert.findMany({ select: { id: true, keywordIds: true } });
+  for (const a of alerts) {
+    const ids = Array.isArray(a.keywordIds) ? (a.keywordIds as unknown[]).filter((x): x is string => typeof x === "string") : [];
+    if (!ids.includes(fromId)) continue;
+    const next = [...new Set(ids.map((x) => (x === fromId ? toId : x)).filter((x): x is string => Boolean(x)))];
+    await db.alert.update({ where: { id: a.id }, data: { keywordIds: next } });
+  }
+}
+
+export async function renameKeywordAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = z.object({ id: z.string().min(1), name: z.string().trim().min(2, "Nom trop court").max(60, "Nom limité à 60 caractères") }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, name } = parsed.data;
+  const k = await db.keyword.findUnique({ where: { id }, select: { name: true } });
+  if (!k) return { error: "Mot-clé introuvable." };
+  const slug = slugify(name);
+  const clash = await db.keyword.findFirst({ where: { slug, id: { not: id } }, select: { name: true } });
+  if (clash) return { error: `« ${clash.name} » existe déjà : utilisez Fusionner.` };
+  await db.keyword.update({ where: { id }, data: { name, slug } });
+  await audit(user.id, "keyword.rename", "Keyword", id, { from: k.name, to: name });
+  revalidatePath("/admin/mots-cles");
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Renommé en « ${name} ».` };
+}
+
+export async function mergeKeywordAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = z.object({ id: z.string().min(1), targetId: z.string().min(1, "Choisissez le mot-clé de destination.") }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, targetId } = parsed.data;
+  if (id === targetId) return { error: "Choisissez un autre mot-clé que lui-même." };
+  const [src, dst] = await Promise.all([db.keyword.findUnique({ where: { id }, select: { name: true } }), db.keyword.findUnique({ where: { id: targetId }, select: { name: true } })]);
+  if (!src || !dst) return { error: "Mot-clé introuvable." };
+  const [contents, profiles] = await Promise.all([
+    db.contentKeyword.findMany({ where: { keywordId: id }, select: { contentId: true } }),
+    db.profileKeyword.findMany({ where: { keywordId: id }, select: { profileId: true } }),
+  ]);
+  await db.$transaction([
+    ...contents.map((c) => db.contentKeyword.upsert({ where: { contentId_keywordId: { contentId: c.contentId, keywordId: targetId } }, update: {}, create: { contentId: c.contentId, keywordId: targetId } })),
+    ...profiles.map((p) => db.profileKeyword.upsert({ where: { profileId_keywordId: { profileId: p.profileId, keywordId: targetId } }, update: {}, create: { profileId: p.profileId, keywordId: targetId } })),
+    db.keyword.updateMany({ where: { parentId: id }, data: { parentId: targetId } }),
+    db.keyword.delete({ where: { id } }),
+  ]);
+  await rewriteAlerts(id, targetId);
+  await audit(user.id, "keyword.merge", "Keyword", targetId, { from: src.name, to: dst.name, contents: contents.length, profiles: profiles.length });
+  revalidatePath("/admin/mots-cles");
+  revalidatePath("/", "layout");
+  return { ok: true, message: `« ${src.name} » fusionné dans « ${dst.name} » (${contents.length} contenu${contents.length > 1 ? "s" : ""}, ${profiles.length} profil${profiles.length > 1 ? "s" : ""}).` };
+}
+
+export async function deleteKeywordAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const id = String(formData.get("id") ?? "");
+  const k = await db.keyword.findUnique({ where: { id }, select: { name: true, _count: { select: { contents: true, profiles: true } } } });
+  if (!k) return { error: "Mot-clé introuvable." };
+  await db.$transaction([db.keyword.updateMany({ where: { parentId: id }, data: { parentId: null } }), db.keyword.delete({ where: { id } })]);
+  await rewriteAlerts(id, null);
+  await audit(user.id, "keyword.delete", "Keyword", id, { name: k.name, contents: k._count.contents, profiles: k._count.profiles });
+  revalidatePath("/admin/mots-cles");
+  revalidatePath("/", "layout");
+  return { ok: true, message: `« ${k.name} » supprimé.` };
+}

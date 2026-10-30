@@ -8,7 +8,7 @@ export async function GET() {
   if (!session?.user) return new Response("Connexion requise", { status: 401 });
   const userId = session.user.id;
 
-  const [user, profile, contents, alerts, applications] = await Promise.all([
+  const [user, profile, contents, alerts, applications, messages, favorites, hosting, reports, blocks] = await Promise.all([
     db.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true, emailVerified: true, name: true, image: true, role: true, accountType: true, status: true, createdAt: true, updatedAt: true },
@@ -33,6 +33,15 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: { content: { select: { title: true, slug: true, type: true } } },
     }),
+    db.message.findMany({
+      where: { OR: [{ fromUserId: userId }, { toUserId: userId }] },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, body: true, createdAt: true, readAt: true, parentId: true, fromUserId: true, to: { select: { displayName: true } }, from: { select: { profile: { select: { displayName: true } } } }, content: { select: { title: true } } },
+    }),
+    db.favorite.findMany({ where: { userId }, include: { content: { select: { title: true, slug: true, type: true } } } }),
+    db.hostingOffer.findFirst({ where: { profile: { userId } } }),
+    db.report.findMany({ where: { reporterId: userId }, select: { reason: true, status: true, createdAt: true, content: { select: { title: true } } } }),
+    db.userBlock.findMany({ where: { blockerId: userId }, select: { createdAt: true, blocked: { select: { profile: { select: { displayName: true } } } } } }),
   ]);
   if (!user) return new Response("Compte introuvable", { status: 404 });
 
@@ -47,6 +56,11 @@ export async function GET() {
     contents: contents.map((c) => ({ ...c, keywords: c.keywords.map((k) => k.keyword) })),
     alerts: alerts.map((a) => ({ ...a, keywords: (a.keywordIds as string[]).map((id) => keywordName.get(id) ?? id) })),
     applications,
+    messages: messages.map((m) => ({ id: m.id, envoye: m.fromUserId === userId, de: m.fromUserId === userId ? "moi" : (m.from.profile?.displayName ?? "membre"), a: m.fromUserId === userId ? m.to.displayName : "moi", sujet: m.content?.title ?? null, body: m.body, createdAt: m.createdAt, readAt: m.readAt, parentId: m.parentId })),
+    favorites: favorites.map((f) => ({ ...f.content, addedAt: f.createdAt })),
+    hosting,
+    reports,
+    blocks: blocks.map((b) => ({ membre: b.blocked.profile?.displayName ?? "membre", depuis: b.createdAt })),
   };
 
   const date = new Date().toISOString().slice(0, 10);

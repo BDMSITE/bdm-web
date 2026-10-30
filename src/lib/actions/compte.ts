@@ -12,6 +12,7 @@ import { indexProfile } from "@/lib/search";
 import { CONTENT_LABEL } from "@/lib/routes";
 import { put, del } from "@vercel/blob";
 import { cvBlobPath, cvRoute, CV_MAX_BYTES } from "@/lib/cv";
+import { removePhotoBlob } from "@/lib/photo";
 import { cookies } from "next/headers";
 import { signToken, verifyToken } from "@/lib/signed-token";
 import { generateTotpSecret, verifyTotp } from "@/lib/totp";
@@ -207,8 +208,11 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
     if (!mdp || !(await verify(compte.passwordHash, mdp))) return { error: "Mot de passe incorrect : il est demandé pour confirmer la suppression." };
   }
 
-  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, visibility: true, cvUrl: true } });
-  if (profile) await removeHostedCv(profile.id, profile.cvUrl);
+  const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, visibility: true, cvUrl: true, photo: true } });
+  if (profile) {
+    await removeHostedCv(profile.id, profile.cvUrl);
+    await removePhotoBlob(profile.photo);
+  }
   const visibility = ((profile?.visibility as Record<string, unknown> | null) ?? {}) as Record<string, unknown>;
 
   await db.$transaction([
@@ -226,11 +230,24 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
     }),
     db.session.deleteMany({ where: { userId } }),
     db.alert.deleteMany({ where: { userId } }),
+    db.favorite.deleteMany({ where: { userId } }),
+    db.application.deleteMany({ where: { userId } }),
+    db.message.deleteMany({ where: { OR: [{ fromUserId: userId }, { toUserId: userId }] } }),
+    db.report.deleteMany({ where: { reporterId: userId } }),
+    db.userBlock.deleteMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } }),
     ...(profile
       ? [
+          db.hostingOffer.deleteMany({ where: { profileId: profile.id } }),
+          db.profileKeyword.deleteMany({ where: { profileId: profile.id } }),
+          db.content.updateMany({ where: { ownerProfileId: profile.id, status: { in: ["PUBLISHED", "IN_MODERATION", "DRAFT", "SCHEDULED"] } }, data: { status: "ARCHIVED" } }),
           db.profile.update({
             where: { id: profile.id },
-            data: { visibility: { ...visibility, directory: false }, cvUrl: null, cvPublished: false, phone: null },
+            data: {
+              visibility: { ...visibility, directory: false },
+              cvUrl: null, cvPublished: false, phone: null, photo: null, bio: null, headline: null, website: null, socials: undefined,
+              city: null, country: null, lat: null, lng: null,
+              expertStatus: "NONE", expertDomain: null, expertPitch: null, expertModes: undefined,
+            },
           }),
         ]
       : []),

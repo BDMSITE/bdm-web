@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EmptyState, fmtDate } from "@/components/site/content";
 import { RelayForm } from "@/components/site/relay-form";
+import { BlockButton } from "./block-button";
 import { contentHref, profileHref } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Mes messages" };
@@ -31,8 +32,10 @@ export default async function MessagesPage({ searchParams }: Props) {
   });
   const nonLus = await db.message.count({ where: { toUserId: me, readAt: null } });
 
+  const blocked = new Set((await db.userBlock.findMany({ where: { blockerId: me }, select: { blockedId: true } })).map((b) => b.blockedId));
   const current = roots.find((r) => r.id === sp.fil) ?? roots[0] ?? null;
-  if (current) {
+  /* Lu seulement quand le fil est ouvert explicitement (clic), pas à la simple arrivée sur la page. */
+  if (current && sp.fil === current.id) {
     await db.message.updateMany({
       where: { toUserId: me, readAt: null, OR: [{ id: current.id }, { parentId: current.id }] },
       data: { readAt: new Date() },
@@ -40,7 +43,9 @@ export default async function MessagesPage({ searchParams }: Props) {
   }
 
   const autre = (r: (typeof roots)[number]) =>
-    r.fromUserId === me ? { name: r.to.displayName, slug: r.to.slug } : { name: r.from.profile?.displayName ?? "Membre", slug: r.from.profile?.slug ?? null };
+    r.fromUserId === me
+      ? { name: r.to.displayName, slug: r.to.slug, userId: r.to.userId }
+      : { name: r.from.profile?.displayName ?? "Membre", slug: r.from.profile?.slug ?? null, userId: r.from.id };
 
   return (
     <div className="space-y-6">
@@ -83,6 +88,7 @@ export default async function MessagesPage({ searchParams }: Props) {
                     Au sujet de <Link href={contentHref(current.content.type, current.content.slug)} className="font-semibold text-primary hover:underline">{current.content.title}</Link>
                   </p>
                 )}
+                <div className="mt-1"><BlockButton userId={autre(current).userId} name={autre(current).name} blocked={blocked.has(autre(current).userId)} /></div>
               </div>
               <ol className="space-y-3 p-4">
                 {[current, ...current.replies].map((m) => {

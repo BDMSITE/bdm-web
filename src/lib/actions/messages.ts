@@ -114,3 +114,22 @@ export async function applyAction(_prev: RelayState, formData: FormData): Promis
   revalidatePath(contentHref(offre.type, offre.slug));
   return { ok: true };
 }
+
+/* Statut d'une candidature, mis à jour par le recruteur (propriétaire de l'offre). */
+const APPLICATION_STATUSES = ["sent", "viewed", "interview", "declined"] as const;
+
+export async function setApplicationStatusAction(_prev: RelayState, formData: FormData): Promise<RelayState> {
+  const session = await auth();
+  if (!session?.user) redirect("/connexion");
+  const parsed = z.object({ applicationId: z.string().min(1), status: z.enum(APPLICATION_STATUSES) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Statut invalide." };
+  const app = await db.application.findFirst({
+    where: { id: parsed.data.applicationId, content: { ownerProfile: { userId: session.user.id } } },
+    select: { id: true },
+  });
+  if (!app) return { error: "Candidature introuvable." };
+  await db.application.update({ where: { id: app.id }, data: { status: parsed.data.status } });
+  revalidatePath("/compte/candidatures-recues");
+  revalidatePath("/compte/candidatures");
+  return { ok: true };
+}

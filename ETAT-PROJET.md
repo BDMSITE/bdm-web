@@ -272,6 +272,23 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   passe** sur les 9 champs. Migrations `newsletter_intro` et `experts_accueil` appliquées en local et sur Neon.
   **Adhésion payante : en attente de la réponse du HCBE** (obligatoire ou optionnelle ?) — page Notion « 💳 Adhésion & accès ».
 
+- **30/10 (soir) — RELECTURE INDÉPENDANTE DE TOUT LE SITE, 25 CORRECTIONS.** Un agent relecteur a passé le projet
+  (bugs, manques, sécurité, accessibilité). Corrigé et déployé : images de couverture externes (plus de 500),
+  liens de recherche et de fiche membre vers la bonne fiche, carte avec les profils géolocalisés au pays, lien magique
+  d'une adresse inconnue → « créez votre compte » (plus de compte fantôme sans profil), inscription : secteur
+  facultatif et pays libre avec suggestions (fini « Informatique » et « Bénin » par défaut), offres de la rédaction
+  avec lien de candidature externe, **signalement de contenu** (bouton sous chaque fiche → file Modération),
+  **statut de candidature** mis à jour par le recruteur, compteur de vues, alerte « immédiate » retirée, bouton
+  « Créer une alerte » relié, accueil : experts validés, « Voir sur la carte » → ancre, collision de slug à
+  l'inscription, libellés d'audit, coquilles. Sécurité : **rôle et statut relus en base toutes les 5 min**
+  (suspension immédiate), session 7 jours, **remise à zéro de la 2FA par un admin** (Paramètres), CV « visibles des
+  recruteurs » réservés aux comptes entreprise + équipe, **mot de passe exigé pour supprimer son compte**,
+  « afficher / masquer le mot de passe ». Accessibilité : contraste du gris (AA), focus clavier visible, lien
+  « Aller au contenu », étiquettes des champs de recherche.
+  **Reste à décider (voir les suggestions du 30/10 dans Notion / message à Josué)** : pagination, recherche dans
+  l'admin Communauté, e-mail au membre après modération, photo de profil, fuseaux horaires des événements,
+  partage WhatsApp, pages pays, guides de démarches, Gitleaks en CI.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
    site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

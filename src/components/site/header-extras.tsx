@@ -197,6 +197,7 @@ export function MobileMenu({ user }: { user: { name: string | null; staff: boole
               <input
                 type="search"
                 name="q"
+                aria-label="Rechercher sur le site"
                 placeholder="Rechercher sur le site…"
                 className="w-full rounded-md border border-white/25 bg-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/50 focus:border-accent focus:outline-none"
               />

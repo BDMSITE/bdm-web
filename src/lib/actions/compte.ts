@@ -201,6 +201,11 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
   if (String(formData.get("confirm") ?? "").trim() !== "SUPPRIMER") {
     return { error: "Tapez SUPPRIMER en majuscules pour confirmer" };
   }
+  const compte = await db.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  if (compte?.passwordHash) {
+    const mdp = String(formData.get("password") ?? "");
+    if (!mdp || !(await verify(compte.passwordHash, mdp))) return { error: "Mot de passe incorrect : il est demandé pour confirmer la suppression." };
+  }
 
   const profile = await db.profile.findUnique({ where: { userId }, select: { id: true, visibility: true, cvUrl: true } });
   if (profile) await removeHostedCv(profile.id, profile.cvUrl);

@@ -79,13 +79,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  session: { strategy: "jwt", maxAge: 7 * 24 * 3600 },
   callbacks: {
     ...authConfig.callbacks,
+    /* Le jeton relit rôle et statut en base toutes les 5 minutes : une suspension
+       ou un changement de rôle prend effet sans attendre l'expiration de la session. */
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.accountType = user.accountType;
+        token.checkedAt = Date.now();
+        return token;
+      }
+      const checkedAt = typeof token.checkedAt === "number" ? token.checkedAt : 0;
+      if (token.sub && Date.now() - checkedAt > 5 * 60 * 1000) {
+        const u = await db.user.findUnique({ where: { id: token.sub }, select: { role: true, accountType: true, status: true } });
+        if (!u || u.status === "SUSPENDED" || u.status === "DELETED") return null;
+        token.role = u.role;
+        token.accountType = u.accountType;
+        token.checkedAt = Date.now();
+      }
+      return token;
+    },
     // Lien magique : un compte suspendu ou supprimé ne rentre pas
     async signIn({ user, account }) {
       if (account?.provider !== "resend" || !user.email) return true;
       const u = await db.user.findUnique({ where: { email: user.email }, select: { status: true } });
-      return !u || (u.status !== "SUSPENDED" && u.status !== "DELETED");
+      if (!u) return "/connexion?erreur=inconnu";
+      return u.status !== "SUSPENDED" && u.status !== "DELETED";
     },
   },
   events: {

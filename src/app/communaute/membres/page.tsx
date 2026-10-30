@@ -78,6 +78,7 @@ export default async function MembresPage({ searchParams }: Props) {
           <input
             type="search"
             name="q"
+            aria-label="Rechercher un membre"
             defaultValue={q}
             placeholder="Nom, profession, ville…"
             className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-64"
@@ -97,7 +98,7 @@ export default async function MembresPage({ searchParams }: Props) {
           <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
             Rechercher
           </button>
-          <Link href="/" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+          <Link href="/#carte" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
             Voir sur la carte
           </Link>
         </div>
@@ -185,7 +186,7 @@ export default async function MembresPage({ searchParams }: Props) {
                 Je m&apos;inscris
               </Link>
             </div>
-            <AlertsBox keywords={["Informatique", "Paris", "Santé", "Montréal"]} />
+            <AlertsBox keywords={[]} />
             <AdSlot slot="SIDE" section="communaute" />
           </aside>
         </div>

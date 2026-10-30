@@ -70,7 +70,7 @@ export default async function AlertesPage() {
       )}
 
       <p className="text-xs text-muted">
-        {alerts.length} alerte{alerts.length > 1 ? "s" : ""}. L&apos;envoi des e-mails d&apos;alerte sera activé avec la mise en production du service d&apos;e-mail.
+        {alerts.length} alerte{alerts.length > 1 ? "s" : ""}. Chaque matin, vous recevez un e-mail s&apos;il y a du nouveau sur vos mots-clés. Rien n&apos;est envoyé sinon.
       </p>
     </div>
   );

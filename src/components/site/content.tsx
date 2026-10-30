@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { ContentFull } from "@/lib/content";
 import { CONTENT_LABEL, contentHref, keywordHref, profileHref } from "@/lib/routes";
 import { RelayForm, ApplyForm } from "@/components/site/relay-form";
+import { ReportButton } from "@/components/site/report-button";
 import { FavoriteButton } from "@/components/site/favorite-button";
 
 export type Viewer = { id: string; cvUrl: string | null; favori: boolean } | null;
@@ -45,7 +46,7 @@ export function ContentCard({ item, compact = false }: { item: ContentFull; comp
     <article className={`card-soft flex flex-col border border-line bg-paper ${compact ? "p-4" : ""}`}>
       {!compact && item.cover && (
         <Link href={href} className="relative block aspect-[16/10] bg-paper-2">
-          <Image src={item.cover} alt="" fill sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover" />
+          <Image src={item.cover} alt="" fill unoptimized sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover" />
         </Link>
       )}
       <div className={compact ? "" : "p-4"}>
@@ -134,7 +135,7 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
 
       {item.cover && (
         <figure className="relative mt-6 aspect-video overflow-hidden border border-line bg-paper-2">
-          <Image src={item.cover} alt="" fill sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover" />
+          <Image src={item.cover} alt="" fill unoptimized sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover" />
         </figure>
       )}
 
@@ -151,8 +152,13 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
                 Se connecter pour continuer
               </Link>
             </>
+          ) : !owner && isJob && item.job?.applyMode === "link" && item.job.applyTarget ? (
+            <>
+              <p className="mt-1 text-sm text-ink-2">La candidature se fait sur le site du recruteur.</p>
+              <a href={item.job.applyTarget} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block whitespace-nowrap rounded bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark">Postuler sur le site du recruteur →</a>
+            </>
           ) : !owner ? (
-            <p className="mt-1 text-sm text-ink-2">Ce contenu a été publié par la rédaction : utilisez le <Link href="/contact" className="font-bold text-primary hover:underline">formulaire de contact</Link>.</p>
+            <p className="mt-1 text-sm text-ink-2">Ce contenu a été publié par la rédaction : utilisez le <Link href={`/contact?sujet=${encodeURIComponent(isJob ? "Recruteur" : "Question générale")}`} className="font-bold text-primary hover:underline">formulaire de contact</Link> en indiquant « {item.title} ».</p>
           ) : isJob ? (
             <div className="mt-3"><ApplyForm contentId={item.id} cvUrl={viewer.cvUrl} /></div>
           ) : (
@@ -173,6 +179,10 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
           </div>
         </div>
       )}
+
+      <div className="mt-6">
+        <ReportButton contentId={item.id} connected={Boolean(viewer)} loginHref={`/connexion?callbackUrl=${encodeURIComponent(contentHref(item.type, item.slug))}`} />
+      </div>
 
       {related.length > 0 && (
         <section className="mt-10">

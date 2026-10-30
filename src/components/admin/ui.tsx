@@ -321,4 +321,13 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "settings.update": "Réglages du site modifiés",
   "user.role": "Rôle modifié",
   "keyword.create": "Mot-clé ajouté",
+  "user.2fa_reset": "Double authentification remise à zéro",
+  "expert.approve": "Expert validé",
+  "expert.reject": "Expert non retenu",
+  "hosting.publish": "Fiche d'accueil publiée",
+  "hosting.reject": "Fiche d'accueil refusée",
+  "hosting.archive": "Fiche d'accueil retirée",
+  "newsletter.compose": "Newsletter composée",
+  "newsletter.send": "Newsletter envoyée",
+  "export.annuaire": "Export de l'annuaire",
 };

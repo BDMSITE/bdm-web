@@ -32,7 +32,7 @@
   /* Neutres chauds */
   --ink: #1c1b17;
   --ink-2: #4c4a42;
-  --muted: #807d72;
+  --muted: #6b6860; /* 5,3:1 sur blanc, 4,7:1 sur paper-2 (WCAG AA) */
   --line: #e6e3da;
   --paper: #ffffff;
   --paper-2: #f7f6f1;
@@ -84,6 +84,27 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Focus clavier visible partout (les champs gardent leur bordure verte en plus). */
+:focus-visible {
+  outline: 3px solid var(--yellow-500);
+  outline-offset: 2px;
+}
+
+/* Lien d'évitement : invisible jusqu'au focus clavier. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--green-700);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+}
+.skip-link:focus {
+  top: 1rem;
 }
 
 /* Titre de section façon modèle : "ÉVÉNEMENTS à venir" — capitales

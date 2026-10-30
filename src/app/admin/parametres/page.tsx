@@ -6,6 +6,8 @@ import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui
 import { SettingsForm } from "./settings-form";
 import { getSettings, SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
+import { resetTwoFactorAction } from "@/lib/actions/admin";
+import { ActionButton } from "@/components/admin/action-button";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -139,7 +141,12 @@ export default async function AdminParametresPage() {
               <Td className="text-ink-2">{u.email}</Td>
               <Td><Badge tone={ROLE[u.role]?.tone ?? "gray"}>{ROLE[u.role]?.l ?? u.role}</Badge></Td>
               <Td className="text-ink-2">{u.status === "ACTIVE" ? "Actif" : u.status === "SUSPENDED" ? "Suspendu" : "E-mail à confirmer"}</Td>
-              <Td>{u.twoFactorSecret ? <Badge tone="green">Activée</Badge> : <Badge tone="gray">Non activée</Badge>}</Td>
+              <Td>
+                {u.twoFactorSecret ? <Badge tone="green">Activée</Badge> : <Badge tone="gray">Non activée</Badge>}
+                {isAdmin && u.twoFactorSecret && u.id !== me?.id && (
+                  <div className="mt-1"><ActionButton action={resetTwoFactorAction} fields={{ id: u.id }} label="Remettre à zéro" confirm={`Désactiver la double authentification de ${u.email} (téléphone perdu) ?`} /></div>
+                )}
+              </Td>
               {isAdmin && (
                 <Td><RoleSelect id={u.id} role={u.role} self={me?.id === u.id} /></Td>
               )}

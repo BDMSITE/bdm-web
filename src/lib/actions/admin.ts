@@ -829,3 +829,19 @@ export async function setHostingStatusAction(_prev: AdminActionState, formData: 
   revalidatePath("/compte/accueil");
   return { ok: true, message: { PUBLISHED: "Fiche publiée.", REJECTED: "Fiche refusée.", ARCHIVED: "Fiche retirée." }[status] };
 }
+
+/* ---------- 2FA : remise à zéro par un administrateur (téléphone perdu) ---------- */
+
+export async function resetTwoFactorAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut remettre la double authentification à zéro." };
+  const id = String(formData.get("id") ?? "");
+  const cible = await db.user.findUnique({ where: { id }, select: { id: true, email: true, twoFactorSecret: true } });
+  if (!cible) return { error: "Compte introuvable." };
+  if (!cible.twoFactorSecret) return { error: "La double authentification n'est pas activée sur ce compte." };
+  await db.user.update({ where: { id }, data: { twoFactorSecret: null } });
+  await audit(user.id, "user.2fa_reset", "User", id, { email: cible.email });
+  revalidatePath("/admin/parametres");
+  return { ok: true, message: "Double authentification désactivée : la personne pourra la réactiver depuis Sécurité." };
+}

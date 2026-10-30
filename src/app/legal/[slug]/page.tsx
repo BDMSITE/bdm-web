@@ -108,7 +108,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="max-w-2xl space-y-6">
           <p className="border-l-4 border-accent bg-accent-light p-4 text-sm">
-            <strong>Version 1 du 20 octobre 2026</strong> — rédigée à partir du fonctionnement réel du site, en cours de validation par le HCBE et son conseil juridique. Les points signalés « à compléter » le seront avant la mise en ligne officielle.
+            <strong>Version 1 du 20 octobre 2026</strong> — rédigée à partir du fonctionnement réel du site, en cours de validation par le HCBE et son conseil juridique.
           </p>
           {page.blocs.map((b, i) => (
             <section key={i}>

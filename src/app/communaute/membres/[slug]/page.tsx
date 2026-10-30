@@ -125,7 +125,7 @@ export default async function ProfilPage({ params }: Props) {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold leading-snug">
-                          <Link href={contentHref(c.type)} className="hover:text-primary">{c.title}</Link>
+                          <Link href={contentHref(c.type, c.slug)} className="hover:text-primary">{c.title}</Link>
                         </p>
                         {c.publishedAt && (
                           <p className="mt-0.5 text-xs text-muted">

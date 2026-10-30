@@ -42,8 +42,7 @@ export function AlerteForm({ types }: { types: { value: string; label: string }[
         <div>
           <label htmlFor="frequency" className="mb-1 block text-sm font-bold">Fréquence</label>
           <select id="frequency" name="frequency" defaultValue="DAILY" className="rounded border border-line bg-paper px-3 py-2 text-sm">
-            <option value="DAILY">Quotidienne</option>
-            <option value="INSTANT">Immédiate</option>
+            <option value="DAILY">Quotidienne (chaque matin, s&apos;il y a du nouveau)</option>
           </select>
         </div>
         <button type="submit" disabled={pending} className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60">

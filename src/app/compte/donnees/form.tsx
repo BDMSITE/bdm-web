@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteAccountAction, type ActionState } from "@/lib/actions/compte";
+import { PasswordInput } from "@/components/site/password-input";
 
 export function DeleteAccountForm() {
   const [state, action, pending] = useActionState<ActionState, FormData>(deleteAccountAction, {});
@@ -19,6 +20,10 @@ export function DeleteAccountForm() {
         <p role="alert" className="mt-3 rounded border border-danger bg-paper px-3 py-2.5 text-sm text-danger">{state.error}</p>
       )}
 
+      <label htmlFor="del-password" className="mt-4 block text-sm font-bold">Votre mot de passe (si votre compte en a un)</label>
+      <div className="mt-1 sm:w-64">
+        <PasswordInput id="del-password" name="password" autoComplete="current-password" className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-danger focus:outline-none" />
+      </div>
       <label htmlFor="confirm" className="mt-4 block text-sm font-bold">
         Pour confirmer, tapez <span className="font-mono">SUPPRIMER</span>
       </label>

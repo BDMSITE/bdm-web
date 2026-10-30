@@ -29,6 +29,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
 
   return (
     <>
+      <a href="#contenu" className="skip-link">Aller au contenu</a>
       <StickyBar />
       <header className="border-b border-line bg-paper">
         {/* Rangée haute claire façon modèle : recherche · logo centré · réseaux + connexion */}
@@ -37,6 +38,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
             <input
               type="search"
               name="q"
+              aria-label="Rechercher sur le site"
               placeholder="Recherchez sur le site"
               className="h-11 w-52 border border-line bg-paper px-4 text-sm shadow-[0_2px_4px_rgba(0,0,0,0.12)] focus:border-primary focus:outline-none lg:w-60"
             />
@@ -139,6 +141,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
 
         <Crumbs />
       </header>
+      <span id="contenu" tabIndex={-1} />
 
       {/* Carte : ouverte sur l'accueil, repliée ailleurs */}
       <MapBand defaultOpen={mapDefaultOpen} villes={villes} membres={counts.members} pays={counts.countries} />
@@ -408,9 +411,9 @@ export function AlertsBox({ keywords = [] }: { keywords?: string[] }) {
           </span>
         ))}
       </div>
-      <button className="mt-4 w-full rounded bg-primary py-2 text-sm font-bold text-white hover:bg-primary-dark">
+      <Link href="/compte/alertes" className="mt-4 block w-full rounded bg-primary py-2 text-center text-sm font-bold text-white hover:bg-primary-dark">
         Créer une alerte
-      </button>
+      </Link>
     </div>
   );
 }

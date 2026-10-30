@@ -85,7 +85,7 @@ export default async function AdminDashboard() {
         <StatCard label="Membres actifs" value={fmtNumber(membresActifs)} hint="comptes dont l'e-mail est confirmé" />
         <StatCard label="Nouveaux inscrits (7 j)" value={fmtNumber(inscrits7j)} hint="hors comptes importés" />
         <StatCard label="Contenus publiés (7 j)" value={fmtNumber(publies7j)} hint="tous types confondus" />
-        <StatCard label="Abonnés newsletter" value={fmtNumber(abonnes)} hint="envoi via Brevo à venir" />
+        <StatCard label="Abonnés newsletter" value={fmtNumber(abonnes)} hint="composition et envoi : Newsletter & alertes" />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">

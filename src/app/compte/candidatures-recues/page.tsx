@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EmptyState, fmtDate } from "@/components/site/content";
 import { RelayForm } from "@/components/site/relay-form";
+import { StatusForm } from "./status-form";
 import { contentHref, profileHref } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Candidatures reçues" };
@@ -53,6 +54,7 @@ export default async function CandidaturesRecuesPage() {
                   )}
                 </div>
                 {a.message && <p className="mt-3 whitespace-pre-line border-l-4 border-line pl-3 text-sm">{a.message}</p>}
+                <div className="mt-3"><StatusForm applicationId={a.id} status={a.status} /></div>
                 {p && (
                   <details className="mt-3">
                     <summary className="cursor-pointer text-sm font-bold text-primary">Répondre à {p.displayName.split(" ")[0]}</summary>

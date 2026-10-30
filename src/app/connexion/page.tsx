@@ -12,6 +12,7 @@ const MESSAGES: Record<string, { tone: "ok" | "err"; text: string }> = {
   "erreur=email": { tone: "err", text: "Adresse e-mail invalide." },
   "erreur=2fa_expire": { tone: "err", text: "Délai dépassé pour le code de double authentification : reconnectez-vous." },
   "erreur=trop": { tone: "err", text: "Trop de tentatives : patientez un quart d'heure avant de réessayer." },
+  "erreur=inconnu": { tone: "err", text: "Aucun compte avec cette adresse. Vérifiez l'orthographe ou créez votre compte gratuit." },
   "erreur=auth": { tone: "err", text: "Connexion impossible pour le moment. Réessayez dans quelques instants." },
   "envoye=1": { tone: "ok", text: "Lien envoyé ! Vérifiez votre boîte mail (dossier indésirables inclus)." },
   "inscrit=1": { tone: "ok", text: "Compte créé ! Un lien de confirmation vous a été envoyé : cliquez dessus pour activer votre compte." },
@@ -85,7 +86,7 @@ export default async function ConnexionPage({
           <p className="mt-3 text-sm text-ink-2">L&apos;inscription est gratuite et ouverte à tous : particuliers, entreprises, associations, artistes.</p>
           <ul className="mt-4 space-y-2 text-sm">
             {["Profil dans l'annuaire mondial", "Publication directe : articles, offres, événements, annonces", "Alertes e-mail sur vos mots-clés", "CV visible des recruteurs si vous le souhaitez", "Bons plans et réductions partenaires"].map((b) => (
-              <li key={b} className="flex gap-2"><span className="font-bold text-primary">✓</span>{b}</li>
+              <li key={b} className="flex gap-2"><span aria-hidden className="font-bold text-primary">✓</span>{b}</li>
             ))}
           </ul>
           <Link href="/inscription" className="mt-5 inline-block rounded bg-primary px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-primary-dark">

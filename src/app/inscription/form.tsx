@@ -6,6 +6,8 @@ import { useActionState } from "react";
 import { registerAction, type RegisterState } from "@/lib/actions/auth";
 import { Turnstile } from "@/components/site/turnstile";
 
+const PAYS = ["Bénin", "France", "Canada", "Belgique", "États-Unis", "Côte d'Ivoire", "Togo", "Nigeria", "Sénégal", "Gabon", "Allemagne", "Royaume-Uni", "Suisse", "Italie", "Espagne", "Maroc", "Ghana", "Burkina Faso", "Niger", "Cameroun", "Congo", "Afrique du Sud", "Chine", "Émirats arabes unis", "Brésil"];
+
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none aria-[invalid=true]:border-danger";
 
 export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: string }) {
@@ -41,11 +43,10 @@ export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: 
           </div>
           <div>
             <label htmlFor="pays" className="mb-1 block text-sm font-bold">Pays de résidence *</label>
-            <select id="pays" name="pays" aria-invalid={invalid("pays")} className={INPUT}>
-              {["Bénin", "France", "Canada", "Belgique", "USA", "Côte d'Ivoire", "Togo", "Autre"].map((p) => (
-                <option key={p}>{p}</option>
-              ))}
-            </select>
+            <input id="pays" name="pays" list="pays-suggestions" required autoComplete="country-name" aria-invalid={invalid("pays")} className={INPUT} />
+            <datalist id="pays-suggestions">
+              {PAYS.map((p) => <option key={p} value={p} />)}
+            </datalist>
           </div>
           <div>
             <label htmlFor="ville" className="mb-1 block text-sm font-bold">Ville *</label>
@@ -54,6 +55,7 @@ export function InscriptionForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: 
           <div>
             <label htmlFor="secteur" className="mb-1 block text-sm font-bold">Secteur d&apos;activité</label>
             <select id="secteur" name="secteur" className={INPUT}>
+              <option value="">Non précisé</option>
               {["Informatique", "Santé", "Finance", "BTP", "Éducation", "Droit", "Commerce", "Logistique", "Agriculture", "Art & spectacle", "Autre"].map((s) => (
                 <option key={s}>{s}</option>
               ))}

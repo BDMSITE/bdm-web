@@ -29,7 +29,7 @@ export default function InscriptionPage() {
               <h3 className="section-title text-sm">Gratuit, <em>vraiment</em></h3>
               <ul className="mt-3 space-y-2 text-sm">
                 {["Profil dans l'annuaire mondial", "Publication directe de vos contenus", "Alertes e-mail sur vos mots-clés", "CV visible des recruteurs si vous voulez", "Bons plans partenaires réservés aux membres"].map((b) => (
-                  <li key={b} className="flex gap-2"><span className="font-bold text-primary">✓</span>{b}</li>
+                  <li key={b} className="flex gap-2"><span aria-hidden className="font-bold text-primary">✓</span>{b}</li>
                 ))}
               </ul>
             </div>

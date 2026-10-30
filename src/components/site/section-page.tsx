@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import type { ContentType } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot, AlertsBox, PageBanner } from "@/components/site/chrome";
 import { ContentList, ContentDetail } from "@/components/site/content";
@@ -54,7 +55,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
 
       <form action={config.section} className="border-b border-line bg-paper-2">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-4">
-          <input type="search" name="q" defaultValue={sp.q ?? ""} placeholder={config.placeholder} className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-64" />
+          <input type="search" name="q" aria-label="Rechercher" defaultValue={sp.q ?? ""} placeholder={config.placeholder} className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-64" />
           {countries.length > 0 && (
             <select name="pays" defaultValue={sp.pays ?? ""} aria-label="Pays" className={SELECT}>
               <option value="">Tous les pays</option>
@@ -74,7 +75,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
             </select>
           )}
           <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Rechercher</button>
-          <Link href="/" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">Voir sur la carte</Link>
+          <Link href="/#carte" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">Voir sur la carte</Link>
         </div>
       </form>
 
@@ -118,6 +119,7 @@ export async function contentMetadata(slug: string, fallback: string): Promise<M
 export async function ContentDetailPage({ slug, types }: { slug: string; types: ContentType[] }) {
   const item = await getContent(slug);
   if (!item || !types.includes(item.type)) notFound();
+  after(() => db.content.update({ where: { id: item.id }, data: { views: { increment: 1 } } }).catch(() => {}));
   const [related, session] = await Promise.all([relatedContents(item), auth()]);
   const viewer = session?.user
     ? await (async () => {

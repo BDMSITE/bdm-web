@@ -79,7 +79,7 @@ export function MapBand({ defaultOpen = false, villes, membres, pays }: { defaul
   }, [open, villes]);
 
   return (
-    <section aria-label="Carte de la diaspora">
+    <section id="carte" aria-label="Carte de la diaspora">
       {/* Repliée : onglet suspendu centré sous la navigation, façon modèle */}
       {!open && (
         <div className="flex justify-center">

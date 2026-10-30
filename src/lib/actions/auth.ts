@@ -105,8 +105,9 @@ export async function registerAction(_prev: RegisterState, formData: FormData): 
 
   const displayName = d.accountType === "MEMBER" ? `${d.prenom} ${d.nom.charAt(0)}.` : `${d.prenom} ${d.nom}`.trim();
   const base = slugify(displayName) || "membre";
-  const taken = await db.profile.count({ where: { slug: { startsWith: base } } });
-  const slug = taken ? `${base}-${taken + 1}` : base;
+  const pris = new Set((await db.profile.findMany({ where: { slug: { startsWith: base } }, select: { slug: true } })).map((p) => p.slug));
+  let slug = base;
+  for (let n = 2; pris.has(slug); n++) slug = `${base}-${n}`;
 
   await db.user.create({
     data: {

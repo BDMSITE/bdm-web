@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ profile
   if (!profile || profile.cvUrl !== `/api/cv/${profileId}`) return new Response("Introuvable", { status: 404 });
 
   const viewer = session.user;
-  let allowed = profile.userId === viewer.id || STAFF.has(viewer.role ?? "") || profile.cvPublished;
+  let allowed = profile.userId === viewer.id || STAFF.has(viewer.role ?? "") || (profile.cvPublished && viewer.accountType === "COMPANY");
   if (!allowed) {
     const candidature = await db.application.findFirst({
       where: { userId: profile.userId, content: { ownerProfile: { userId: viewer.id } } },

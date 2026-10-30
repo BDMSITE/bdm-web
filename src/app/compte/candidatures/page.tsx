@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Mes candidatures" };
 /* Candidatures envoyées par le membre connecté (CDC §7.3). */
 
 const STATUS: Record<string, { label: string; tone: string }> = {
-  sent: { label: "Transmise", tone: "border border-line bg-paper-2 text-ink-2" },
+  sent: { label: "Reçue par le recruteur", tone: "border border-line bg-paper-2 text-ink-2" },
   viewed: { label: "CV consulté", tone: "bg-primary-light text-primary-dark" },
   interview: { label: "Entretien proposé", tone: "bg-accent-light text-ink" },
   declined: { label: "Non retenue", tone: "border border-line bg-paper-2 text-ink-2" },

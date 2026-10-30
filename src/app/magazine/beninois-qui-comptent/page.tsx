@@ -71,7 +71,7 @@ export default async function CelebritesPage({ searchParams }: Props) {
                   <article key={p.id} className="border border-line hover:border-primary">
                     {p.photo ? (
                       <div className="relative aspect-square bg-paper-2">
-                        <Image src={p.photo} alt={p.name} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+                        <Image src={p.photo} alt={p.name} fill unoptimized sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
                       </div>
                     ) : (
                       <div className="flex aspect-square items-center justify-center bg-paper-2 font-display text-5xl font-black text-line">{p.name[0]}</div>

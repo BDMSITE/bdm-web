@@ -94,7 +94,7 @@ export default async function RecherchePage({ searchParams }: Props) {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold leading-snug">
-                          <Link href={contentHref(c.type)} className="hover:text-primary">{c.title}</Link>
+                          <Link href={contentHref(c.type, c.slug)} className="hover:text-primary">{c.title}</Link>
                         </p>
                         {c.excerpt && <p className="mt-0.5 line-clamp-1 text-sm text-ink-2">{c.excerpt}</p>}
                         <p className="card-location mt-1">{[c.city, c.country].filter(Boolean).join(" · ")}</p>

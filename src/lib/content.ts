@@ -172,9 +172,9 @@ export async function siteCounts() {
 /* Villes des membres actifs géolocalisés, pour la carte */
 export async function memberCities() {
   const rows = await db.profile.groupBy({
-    by: ["city", "lat", "lng"],
-    where: { ...publicProfileWhere(), lat: { not: null }, lng: { not: null }, city: { not: null } },
+    by: ["city", "country", "lat", "lng"],
+    where: { ...publicProfileWhere(), lat: { not: null }, lng: { not: null } },
     _count: { _all: true },
   });
-  return rows.map((r) => ({ name: r.city!, n: r._count._all, lat: r.lat!, lng: r.lng! }));
+  return rows.map((r) => ({ name: r.city ?? r.country ?? "", n: r._count._all, lat: r.lat!, lng: r.lng! })).filter((r) => r.name);
 }

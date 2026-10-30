@@ -2,7 +2,8 @@ import Link from "next/link";
 import { SiteHeader, SiteFooter, SectionTitle, AdSlot, AlertsBox } from "@/components/site/chrome";
 import { PartnersBand } from "@/components/site/partners-band";
 import { ContentCard, EmptyState } from "@/components/site/content";
-import { listContents, listProfiles, siteCounts } from "@/lib/content";
+import { listContents, siteCounts } from "@/lib/content";
+import { db } from "@/lib/db";
 import { profileHref } from "@/lib/routes";
 
 /* Accueil (CDC §7.2) — chaque section lit la base ; une section vide le dit. */
@@ -16,7 +17,7 @@ export default async function Home() {
     listContents({ types: ["DEAL"], take: 4 }),
     listContents({ types: ["EVENT"], upcoming: true, take: 3 }),
     siteCounts(),
-    listProfiles({ keyword: "competences-de-la-diaspora", take: 3 }),
+    db.profile.findMany({ where: { expertStatus: "APPROVED", user: { status: "ACTIVE" } }, orderBy: { expertAt: "desc" }, take: 3, select: { id: true, slug: true, displayName: true, headline: true, city: true, country: true, expertDomain: true } }).then((items) => ({ items })),
   ]);
   const aLaUne = une.items.length ? une.items : articles.items.slice(0, 3);
 
@@ -83,13 +84,13 @@ export default async function Home() {
             <section>
               <SectionTitle pre="Compétences de la" em="diaspora" href="/communaute/competences" />
               {experts.items.length === 0 ? (
-                <EmptyState title="Les premiers profils experts arrivent" text="Le HCBE met en relation les expertises de la diaspora avec les projets du Bénin. Signalez vos compétences depuis votre profil." href="/compte/profil" cta="Compléter mon profil" />
+                <EmptyState title="Les premiers profils experts arrivent" text="Le HCBE met en relation les expertises de la diaspora avec les projets du Bénin. Proposez vos compétences depuis votre espace." href="/compte/competences" cta="Proposer mes compétences" />
               ) : (
                 <div className="grid gap-4 sm:grid-cols-3">
                   {experts.items.map((p) => (
                     <article key={p.id} className="card-soft border border-line bg-paper p-4">
                       <p className="font-bold leading-tight"><Link href={profileHref(p.slug)} className="hover:text-primary">{p.displayName}</Link></p>
-                      {p.headline && <p className="text-sm text-ink-2">{p.headline}</p>}
+                      <p className="text-sm text-ink-2">{p.expertDomain}{p.headline ? ` · ${p.headline}` : ""}</p>
                       <p className="card-location mt-1">{[p.city, p.country].filter(Boolean).join(" · ")}</p>
                     </article>
                   ))}

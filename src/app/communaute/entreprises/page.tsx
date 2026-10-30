@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pagination, pageHref, pageParam } from "@/components/site/pagination";
 import type { Metadata } from "next";
 import { SiteHeader, SiteFooter, AdSlot, PageBanner } from "@/components/site/chrome";
 import { Avatar } from "@/components/site/avatar";
@@ -15,16 +16,17 @@ export const metadata: Metadata = { title: "Annuaire des entreprises" };
 const SECTION = "/communaute/entreprises";
 const SELECT = "rounded border border-line bg-paper px-3 py-2 text-sm";
 
-type Props = { searchParams: Promise<{ q?: string; pays?: string }> };
+type Props = { searchParams: Promise<{ q?: string; pays?: string; page?: string }> };
 
 export default async function EntreprisesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = sp.q?.trim() ?? "";
   const pays = sp.pays?.trim() ?? "";
   const filtre = Boolean(q || pays);
+  const page = pageParam(sp.page);
 
   const [{ items, total }, countries] = await Promise.all([
-    listProfiles({ accountType: "COMPANY", q, country: pays, take: 30 }),
+    listProfiles({ accountType: "COMPANY", q, country: pays, take: 30, skip: (page - 1) * 30 }),
     db.profile.findMany({
       where: publicProfileWhere({ user: { status: "ACTIVE", accountType: "COMPANY" }, country: { not: null } }),
       distinct: ["country"],
@@ -111,7 +113,7 @@ export default async function EntreprisesPage({ searchParams }: Props) {
                 })}
               </div>
             )}
-            {total > items.length && <p className="mt-6 text-center text-sm text-muted">{items.length} affichées sur {total} — affinez avec les filtres.</p>}
+            <Pagination page={page} total={total} perPage={30} href={pageHref("/communaute/entreprises", { q, pays })} />
           </div>
 
           <aside className="space-y-8">

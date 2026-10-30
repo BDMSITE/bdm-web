@@ -392,6 +392,25 @@ model Message {
   @@index([fromUserId, createdAt])
 }
 
+/* Représentations du Bénin à l'étranger, saisies dans l'admin (page HCBE, pages pays). */
+model Consulate {
+  id        String   @id @default(cuid())
+  country   String   // pays couvert (nom normalisé)
+  city      String
+  kind      String   // AMBASSADE | CONSULAT | CONSULAT_HONORAIRE | MISSION
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+  website   String?
+  hours     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([country])
+}
+
 /* Un membre en bloque un autre : plus de message relais possible dans ce sens. */
 model UserBlock {
   blockerId String

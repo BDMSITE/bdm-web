@@ -11,7 +11,7 @@ import { LiveTicker } from "./live-ticker";
 import { LogoWord } from "./logo-word";
 import { AdSlot } from "./ad-slot";
 export { AdSlot } from "./ad-slot";
-import { memberCities, siteCounts } from "@/lib/content";
+import { mapData, siteCounts } from "@/lib/content";
 import { slugify } from "@/lib/slug";
 import { keywordHref } from "@/lib/routes";
 import { socialLinks } from "@/lib/settings";
@@ -24,7 +24,7 @@ const STAFF = new Set(["EDITOR", "MODERATOR", "ADMIN"]);
 
 export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: boolean }) {
   const socials = await socialLinks();
-  const [session, villes, counts] = await Promise.all([auth(), memberCities(), siteCounts()]);
+  const [session, carte, counts] = await Promise.all([auth(), mapData(), siteCounts()]);
   const user = session?.user ?? null;
   const nonLus = user ? await db.message.count({ where: { toUserId: user.id, readAt: null } }).catch(() => 0) : 0;
   const isStaff = STAFF.has(user?.role ?? "");
@@ -152,7 +152,7 @@ export async function SiteHeader({ mapDefaultOpen = false }: { mapDefaultOpen?: 
       <span id="contenu" tabIndex={-1} />
 
       {/* Carte : ouverte sur l'accueil, repliée ailleurs */}
-      <MapBand defaultOpen={mapDefaultOpen} villes={villes} membres={counts.members} pays={counts.countries} />
+      <MapBand defaultOpen={mapDefaultOpen} data={carte} membres={counts.members} pays={counts.countries} />
     </>
   );
 }

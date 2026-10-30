@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pagination, pageHref, pageParam } from "@/components/site/pagination";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { SiteHeader, SiteFooter, AdSlot, AlertsBox } from "@/components/site/chrome";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Annuaire des membres" };
 const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const PAGE = 24;
 
-type Props = { searchParams: Promise<{ q?: string; pays?: string; secteur?: string; lettre?: string }> };
+type Props = { searchParams: Promise<{ q?: string; pays?: string; secteur?: string; lettre?: string; page?: string }> };
 
 export default async function MembresPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -39,11 +40,13 @@ export default async function MembresPage({ searchParams }: Props) {
     ...(lettre && { displayName: { startsWith: lettre, mode: "insensitive" } }),
   };
 
+  const page = pageParam(sp.page);
   const [membres, total, pays_, secteurs] = await Promise.all([
     db.profile.findMany({
       where,
       orderBy: { displayName: "asc" },
       take: PAGE,
+      skip: (page - 1) * PAGE,
       include: { user: { select: { accountType: true } }, keywords: { include: { keyword: true } } },
     }),
     db.profile.count({ where }),
@@ -170,11 +173,7 @@ export default async function MembresPage({ searchParams }: Props) {
               })}
             </div>
 
-            {total > membres.length && (
-              <p className="mt-6 text-center text-sm text-muted">
-                {membres.length} affichés sur {total} — affinez avec les filtres.
-              </p>
-            )}
+            <Pagination page={page} total={total} perPage={PAGE} href={pageHref("/communaute/membres", { q, pays, secteur, lettre })} />
           </div>
 
           <aside className="space-y-8">

@@ -66,7 +66,9 @@ export async function moderateContentAction(_prev: AdminActionState, formData: F
   const reason = parsed.data.reason ?? null;
 
   if (decision === "publish") {
-    await db.content.update({ where: { id }, data: { status: "PUBLISHED", publishedAt: new Date(), moderationNote: null } });
+    const lieu = await db.content.findUnique({ where: { id }, select: { lat: true, city: true, country: true } });
+    const geo = lieu && lieu.lat === null && lieu.city ? await geocode(lieu.city, lieu.country) : null;
+    await db.content.update({ where: { id }, data: { status: "PUBLISHED", publishedAt: new Date(), moderationNote: null, ...(geo && { lat: geo.lat, lng: geo.lng }) } });
     await audit(user.id, "content.publish", "Content", id, { title: content.title, type: content.type });
   } else {
     await db.content.update({ where: { id }, data: { status: "REJECTED", moderationNote: reason } });
@@ -936,4 +938,49 @@ export async function deleteKeywordAction(_prev: AdminActionState, formData: For
   revalidatePath("/admin/mots-cles");
   revalidatePath("/", "layout");
   return { ok: true, message: `« ${k.name} » supprimé.` };
+}
+
+/* ---------- Ambassades & consulats ---------- */
+
+const consulateSchema = z.object({
+  id: z.preprocess(vide, z.string().optional()),
+  country: z.string().trim().min(2, "Pays obligatoire").max(80),
+  city: z.string().trim().min(2, "Ville obligatoire").max(80),
+  kind: z.enum(["AMBASSADE", "CONSULAT", "CONSULAT_HONORAIRE", "MISSION"], { error: "Type invalide" }),
+  name: z.string().trim().min(3, "Nom obligatoire").max(160),
+  address: z.preprocess(vide, z.string().max(300).optional()),
+  phone: z.preprocess(vide, z.string().max(60).optional()),
+  email: z.preprocess(vide, z.email("E-mail invalide").max(120).optional()),
+  website: z.preprocess(vide, z.string().url("Site web invalide (https://…)").max(300).optional()),
+  hours: z.preprocess(vide, z.string().max(160).optional()),
+  notes: z.preprocess(vide, z.string().max(600).optional()),
+});
+
+export async function saveConsulateAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = consulateSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, ...d } = parsed.data;
+  const data = { ...d, country: normalizeCountry(d.country), city: normalizeCity(d.city), address: d.address ?? null, phone: d.phone ?? null, email: d.email ?? null, website: d.website ?? null, hours: d.hours ?? null, notes: d.notes ?? null };
+  const row = id ? await db.consulate.update({ where: { id }, data }) : await db.consulate.create({ data });
+  await audit(user.id, id ? "consulate.update" : "consulate.create", "Consulate", row.id, { name: row.name, country: row.country });
+  revalidatePath("/admin/consulats");
+  revalidatePath("/hcbe");
+  revalidatePath("/pays", "layout");
+  return { ok: true, message: id ? "Représentation mise à jour." : `« ${row.name} » ajoutée : visible sur la page HCBE et la page ${row.country}.` };
+}
+
+export async function deleteConsulateAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const id = String(formData.get("id") ?? "");
+  const row = await db.consulate.findUnique({ where: { id } });
+  if (!row) return { error: "Représentation introuvable." };
+  await db.consulate.delete({ where: { id } });
+  await audit(user.id, "consulate.delete", "Consulate", id, { name: row.name, country: row.country });
+  revalidatePath("/admin/consulats");
+  revalidatePath("/hcbe");
+  revalidatePath("/pays", "layout");
+  return { ok: true, message: `« ${row.name} » supprimée.` };
 }

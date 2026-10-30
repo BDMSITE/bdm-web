@@ -1,4 +1,5 @@
 import type { ContentType, Prisma, AccountType } from "@prisma/client";
+import { contentHref } from "@/lib/routes";
 import { db } from "./db";
 
 /* Accès aux contenus publiés et aux profils actifs. Toutes les pages publiques
@@ -138,7 +139,7 @@ export function publicProfileWhere(extra: Prisma.ProfileWhereInput = {}): Prisma
   return { user: { status: "ACTIVE" }, visibility: { path: ["directory"], equals: true }, ...extra };
 }
 
-export async function listProfiles(p: { accountType?: AccountType; q?: string; country?: string; keyword?: string; take?: number }) {
+export async function listProfiles(p: { accountType?: AccountType; q?: string; country?: string; keyword?: string; take?: number; skip?: number }) {
   const q = clean(p.q);
   const ci = { mode: "insensitive" as const };
   const where = publicProfileWhere({
@@ -148,7 +149,7 @@ export async function listProfiles(p: { accountType?: AccountType; q?: string; c
     ...(clean(p.keyword) && { keywords: { some: { keyword: { slug: clean(p.keyword) } } } }),
   });
   const [items, total] = await Promise.all([
-    db.profile.findMany({ where, include: PROFILE_INCLUDE, orderBy: { displayName: "asc" }, take: p.take ?? 24 }),
+    db.profile.findMany({ where, include: PROFILE_INCLUDE, orderBy: { displayName: "asc" }, take: p.take ?? 24, skip: p.skip ?? 0 }),
     db.profile.count({ where }),
   ]);
   return { items, total };
@@ -167,6 +168,32 @@ export async function siteCounts() {
     countries: countries.length,
     byType: Object.fromEntries(contents.map((c) => [c.type, c._count._all])) as Partial<Record<ContentType, number>>,
   };
+}
+
+/* Carte : pastilles par ville (membres, afrodescendants, associations) et épingles (adresses, événements). */
+export type MapPoint = { name: string; n: number; lat: number; lng: number; href?: string };
+export type MapData = { membres: MapPoint[]; afrodescendants: MapPoint[]; associations: MapPoint[]; adresses: MapPoint[]; evenements: MapPoint[] };
+
+async function cityBalls(where: Prisma.ProfileWhereInput, href: (city: string, country: string | null) => string): Promise<MapPoint[]> {
+  const rows = await db.profile.groupBy({
+    by: ["city", "country", "lat", "lng"],
+    where: { ...publicProfileWhere(where), lat: { not: null }, lng: { not: null } },
+    _count: { _all: true },
+  });
+  return rows.map((r) => ({ name: r.city ?? r.country ?? "", n: r._count._all, lat: r.lat!, lng: r.lng!, href: href(r.city ?? "", r.country) })).filter((r) => r.name);
+}
+
+export async function mapData(): Promise<MapData> {
+  const now = new Date();
+  const [membres, afrodescendants, associations, adresses, evenements] = await Promise.all([
+    cityBalls({}, (city) => `/communaute/membres?q=${encodeURIComponent(city)}`),
+    cityBalls({ keywords: { some: { keyword: { slug: "afrodescendants" } } } }, (city) => `/communaute/membres?q=${encodeURIComponent(city)}`),
+    cityBalls({ user: { status: "ACTIVE", accountType: "ASSOCIATION" } }, (city) => `/communaute/associations?q=${encodeURIComponent(city)}`),
+    db.content.findMany({ where: { status: "PUBLISHED", type: { in: ["PLACE", "MEMORY_PLACE"] }, lat: { not: null }, lng: { not: null } }, select: { title: true, slug: true, type: true, lat: true, lng: true }, take: 500 }),
+    db.content.findMany({ where: { status: "PUBLISHED", type: "EVENT", lat: { not: null }, lng: { not: null }, event: { startsAt: { gte: now } } }, select: { title: true, slug: true, type: true, lat: true, lng: true }, take: 300 }),
+  ]);
+  const pin = (c: { title: string; slug: string; type: ContentType; lat: number | null; lng: number | null }): MapPoint => ({ name: c.title, n: 1, lat: c.lat!, lng: c.lng!, href: contentHref(c.type, c.slug) });
+  return { membres, afrodescendants, associations, adresses: adresses.map(pin), evenements: evenements.map(pin) };
 }
 
 /* Villes des membres actifs géolocalisés, pour la carte */

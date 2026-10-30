@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader, SiteFooter, SectionTitle, PageBanner } from "@/components/site/chrome";
+import { ConsulateList } from "@/components/site/consulate-list";
+import { allConsulates } from "@/lib/consulats";
 
 export const metadata: Metadata = { title: "Le HCBE" };
 
@@ -17,7 +19,10 @@ function AVenir({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function HcbePage() {
+export default async function HcbePage() {
+  const consulats = await allConsulates();
+  const parPays = new Map<string, typeof consulats>();
+  for (const c of consulats) parPays.set(c.country, [...(parPays.get(c.country) ?? []), c]);
   return (
     <>
       <SiteHeader />
@@ -78,8 +83,17 @@ export default function HcbePage() {
             Les démarches consulaires (passeport, état civil, visas) relèvent des ambassades et consulats du Bénin.
             Le HCBE n&apos;instruit pas ces démarches mais oriente les ressortissants vers la représentation compétente.
           </p>
-          <div className="mt-4">
-            <AVenir>La liste des ambassades et consulats du Bénin, avec leurs coordonnées officielles, sera publiée ici dès validation.</AVenir>
+          <div className="mt-4 space-y-6">
+            {consulats.length === 0 ? (
+              <AVenir>La liste des ambassades et consulats du Bénin, avec leurs coordonnées officielles, sera publiée ici dès validation.</AVenir>
+            ) : (
+              [...parPays.entries()].map(([pays, items]) => (
+                <div key={pays}>
+                  <h3 className="mb-2 font-bold">{pays}</h3>
+                  <ConsulateList items={items} />
+                </div>
+              ))
+            )}
           </div>
         </section>
 

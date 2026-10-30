@@ -10,6 +10,8 @@ import { profileHref } from "@/lib/routes";
 import { ogImageUrl } from "@/lib/og";
 import { slugify } from "@/lib/slug";
 import { enPays } from "@/lib/pays";
+import { consulatesFor } from "@/lib/consulats";
+import { ConsulateList } from "@/components/site/consulate-list";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -40,7 +42,7 @@ export default async function PaysPage({ params }: Props) {
   const pays = await resolveCountry(slug);
   if (!pays) notFound();
 
-  const [membres, agenda, offres, adresses, bonsPlans, annonces, villes] = await Promise.all([
+  const [membres, agenda, offres, adresses, bonsPlans, annonces, villes, consulats] = await Promise.all([
     listProfiles({ country: pays, take: 9 }),
     listContents({ types: ["EVENT"], country: pays, upcoming: true, take: 4 }),
     listContents({ types: ["JOB", "INTERNSHIP"], country: pays, take: 4 }),
@@ -48,6 +50,7 @@ export default async function PaysPage({ params }: Props) {
     listContents({ types: ["DEAL"], country: pays, take: 3 }),
     listContents({ types: ["CLASSIFIED", "HELP_REQUEST"], country: pays, take: 3 }),
     db.profile.groupBy({ by: ["city"], where: { ...publicProfileWhere(), country: pays, city: { not: null } }, _count: { _all: true }, orderBy: { _count: { city: "desc" } }, take: 8 }),
+    consulatesFor(pays),
   ]);
   const q = encodeURIComponent(pays);
   const sections: { pre: string; em: string; href: string; items: typeof agenda.items; total: number; vide: string }[] = [
@@ -110,7 +113,12 @@ export default async function PaysPage({ params }: Props) {
             </div>
             <div className="border border-line bg-paper-2 p-4 text-sm">
               <h3 className="section-title text-sm">Démarches <em>consulaires</em></h3>
-              <p className="mt-2 text-ink-2">Passeport, état civil, carte consulaire : les démarches relèvent de l&apos;ambassade ou du consulat du Bénin compétent pour votre lieu de résidence. Les coordonnées officielles seront publiées ici dès validation par le HCBE.</p>
+              <p className="mt-2 text-ink-2">Passeport, état civil, carte consulaire : les démarches relèvent de l&apos;ambassade ou du consulat du Bénin compétent pour votre lieu de résidence.</p>
+              {consulats.length > 0 ? (
+                <div className="mt-3"><ConsulateList items={consulats} compact /></div>
+              ) : (
+                <p className="mt-2 text-xs text-muted">Les coordonnées officielles seront publiées ici dès validation par le HCBE.</p>
+              )}
               <Link href="/pratique/demarches" className="mt-3 inline-block text-sm font-bold uppercase text-primary hover:underline">Guides de démarches →</Link>
             </div>
             <AlertsBox keywords={[pays]} />

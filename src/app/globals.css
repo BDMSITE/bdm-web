@@ -222,6 +222,22 @@ body {
 }
 
 
+.bdm-ball-afrodescendants { background: var(--yellow-600); color: var(--ink); }
+.bdm-ball-associations { background: var(--red-600); }
+.bdm-pin {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--green-700);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.bdm-pin:hover { transform: rotate(-45deg) scale(1.2); z-index: 10; }
+.bdm-pin-evenements { background: var(--red-600); }
+
 /* Régie pub : barre de progression du carrousel. */
 @keyframes pub-progress {
   from { width: 0; }

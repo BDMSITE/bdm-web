@@ -8,6 +8,7 @@ import { ContentList, ContentDetail } from "@/components/site/content";
 import { getContent, listCategories, listContents, listContractTypes, listCountries, relatedContents } from "@/lib/content";
 import { CONTENT_LABEL, SECTION } from "@/lib/routes";
 import { ogImageUrl } from "@/lib/og";
+import { Pagination, pageHref, pageParam } from "@/components/site/pagination";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -30,14 +31,16 @@ export type SectionConfig = {
   cols?: 2 | 3;
 };
 
-export type SectionSearch = Promise<{ q?: string; pays?: string; cat?: string; contrat?: string; mot?: string }>;
+export type SectionSearch = Promise<{ q?: string; pays?: string; cat?: string; contrat?: string; mot?: string; page?: string }>;
+const PAR_PAGE = 30;
 
 const SELECT = "rounded border border-line bg-paper px-3 py-2 text-sm";
 
 export async function SectionListPage({ config, searchParams }: { config: SectionConfig; searchParams: SectionSearch }) {
   const sp = await searchParams;
+  const page = pageParam(sp.page);
   const [{ items, total }, countries, categories, contrats] = await Promise.all([
-    listContents({ types: config.types, q: sp.q, country: sp.pays, category: sp.cat, contractType: sp.contrat, keyword: sp.mot, upcoming: config.upcoming, take: 30 }),
+    listContents({ types: config.types, q: sp.q, country: sp.pays, category: sp.cat, contractType: sp.contrat, keyword: sp.mot, upcoming: config.upcoming, take: PAR_PAGE, skip: (page - 1) * PAR_PAGE }),
     listCountries(config.types),
     config.categoriesFrom ? listCategories(config.categoriesFrom) : Promise.resolve([] as string[]),
     config.contractTypes ? listContractTypes() : Promise.resolve([] as string[]),
@@ -92,7 +95,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
               cols={config.cols}
               empty={filtre ? { title: "Rien ne correspond à ces critères", text: "Essayez d'autres mots ou retirez un filtre.", href: config.section, cta: "Tout afficher" } : { ...config.empty, href: "/publier", cta: config.publishLabel }}
             />
-            {total > items.length && <p className="mt-6 text-center text-sm text-muted">{items.length} affichés sur {total} — affinez avec les filtres.</p>}
+            <Pagination page={page} total={total} perPage={PAR_PAGE} href={pageHref(config.section, { q: sp.q, pays: sp.pays, cat: sp.cat, contrat: sp.contrat, mot: sp.mot })} />
           </div>
           <aside className="space-y-8">
             <AlertsBox />

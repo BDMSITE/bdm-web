@@ -54,7 +54,7 @@ export function PubCarousel({ slides, tall, width, height }: { slides: Slide[]; 
 
   return (
     <div
-      className={`pub-carousel group relative mx-auto w-full overflow-hidden border border-ink/15 bg-ink shadow-[0_14px_40px_-16px_rgba(0,0,0,.45)] ${tall ? "aspect-[300/600]" : "h-[200px] sm:h-auto sm:[aspect-ratio:var(--ar)]"}`}
+      className={`pub-carousel @container group relative mx-auto w-full overflow-hidden border border-ink/15 bg-ink shadow-[0_14px_40px_-16px_rgba(0,0,0,.45)] ${tall ? "aspect-[300/600]" : "h-[200px] sm:h-auto sm:[aspect-ratio:var(--ar)]"}`}
       style={{ maxWidth: width, "--ar": `${width} / ${height}` } as React.CSSProperties}
       onMouseEnter={() => setPause(true)}
       onMouseLeave={() => setPause(false)}
@@ -150,31 +150,31 @@ function SlideView({ s, tall, active }: { s: Slide; tall: boolean; active: boole
       <div className="wax-bg-soft absolute inset-0 mix-blend-soft-light" />
 
       {tall ? (
-        <div className="relative flex h-full flex-col justify-between p-6">
+        <div className="relative flex h-full flex-col justify-between p-6 pb-8">
           {s.image && (
             <span className="inline-flex h-20 w-20 items-center justify-center bg-white p-2 shadow-md">
               <img src={s.image} alt="" className="h-full w-full object-contain" />
             </span>
           )}
           <div>
-            <p className="font-display text-[2rem] font-extrabold leading-[1.02] tracking-tight drop-shadow-md">{s.headline ?? s.advertiser}</p>
-            {s.tagline && <p className="mt-3 text-[15px] leading-snug opacity-95 drop-shadow">{s.tagline}</p>}
+            <p className="line-clamp-3 font-display text-[2rem] font-extrabold leading-[1.02] tracking-tight drop-shadow-md">{s.headline ?? s.advertiser}</p>
+            {s.tagline && <p className="mt-3 line-clamp-3 text-[15px] leading-snug opacity-95 drop-shadow">{s.tagline}</p>}
             <span className="mt-5 inline-flex items-center gap-2 bg-accent px-5 py-3 text-sm font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark">
               {s.cta ?? "Découvrir"} <span aria-hidden>→</span>
             </span>
           </div>
         </div>
       ) : (
-        <div className="relative flex h-full items-center gap-5 px-5 sm:gap-8 sm:px-10">
+        <div className="relative flex h-full items-center gap-[3cqw] px-[3cqw] py-[clamp(14px,3cqw,28px)]">
           {s.image && (
-            <span className="hidden h-24 w-24 shrink-0 items-center justify-center bg-white p-2.5 shadow-md sm:inline-flex">
+            <span className="hidden aspect-square w-[clamp(56px,9cqw,96px)] shrink-0 items-center justify-center bg-white p-2 shadow-md sm:inline-flex">
               <img src={s.image} alt="" className="h-full w-full object-contain" />
             </span>
           )}
-          <div className="min-w-0 max-w-[62%] sm:max-w-[55%]">
-            <p className="font-display text-[1.6rem] font-extrabold leading-[1.02] tracking-tight drop-shadow-md sm:text-[2.6rem]">{s.headline ?? s.advertiser}</p>
-            {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug opacity-95 drop-shadow sm:mt-3 sm:line-clamp-2 sm:text-base">{s.tagline}</p>}
-            <span className="mt-3 inline-flex items-center gap-2 bg-accent px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark sm:mt-5 sm:px-6 sm:py-3 sm:text-sm">
+          <div className="flex min-w-0 max-w-[64%] flex-col justify-center sm:max-w-[58%]">
+            <p className="line-clamp-2 font-display text-[clamp(1.25rem,3.4cqw,2.5rem)] font-extrabold leading-[1.05] tracking-tight drop-shadow-md">{s.headline ?? s.advertiser}</p>
+            {s.tagline && <p className="mt-[0.6em] line-clamp-2 text-[clamp(12px,1.55cqw,16px)] leading-snug opacity-95 drop-shadow">{s.tagline}</p>}
+            <span className="mt-[clamp(8px,1.6cqw,18px)] inline-flex w-fit items-center gap-2 bg-accent px-[clamp(12px,2cqw,24px)] py-[clamp(7px,1.1cqw,12px)] text-[clamp(11px,1.3cqw,14px)] font-extrabold uppercase tracking-wide text-ink transition group-hover:bg-accent-dark">
               {s.cta ?? "Découvrir"} <span aria-hidden>→</span>
             </span>
           </div>

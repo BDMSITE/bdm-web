@@ -14,7 +14,20 @@ export const SOCIAL_NETWORKS = [
   { key: "social.whatsapp", label: "WhatsApp (lien wa.me)", env: "NEXT_PUBLIC_SOCIAL_WHATSAPP" },
 ] as const;
 
-export type SettingKey = (typeof SOCIAL_NETWORKS)[number]["key"];
+/* Réglages chiffrés (quotas). Vide = valeur par défaut. */
+export const NUMBER_SETTINGS = [
+  { key: "quota.offres", label: "Offres d'emploi et stages gratuites par recruteur", hint: "Offres en ligne ou en attente comptées ensemble. Au-delà, le recruteur est invité à contacter le HCBE.", default: 3, min: 0, max: 1000 },
+] as const;
+
+export type SettingKey = (typeof SOCIAL_NETWORKS)[number]["key"] | (typeof NUMBER_SETTINGS)[number]["key"];
+
+/** Valeur chiffrée d'un réglage, avec son défaut. */
+export async function numberSetting(key: (typeof NUMBER_SETTINGS)[number]["key"]) {
+  const def = NUMBER_SETTINGS.find((n) => n.key === key)!;
+  const raw = (await getSettings())[key];
+  const n = raw === undefined ? NaN : Number(raw);
+  return Number.isFinite(n) ? Math.min(def.max, Math.max(def.min, Math.round(n))) : def.default;
+}
 
 export const getSettings = cache(async (): Promise<Record<string, string>> => {
   const rows = await db.siteSetting.findMany().catch(() => []);

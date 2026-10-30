@@ -11,7 +11,7 @@ import { geocode } from "@/lib/geocode";
 import { contentHref, SECTION } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 import { ADMIN_CONTENT_TYPES, ADMIN_STATUSES } from "@/components/admin/ui";
-import { SOCIAL_NETWORKS } from "@/lib/settings";
+import { SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
 
 /* Actions du back-office. Chaque action : session vérifiée (rôle rédaction,
    modération ou admin), entrées validées par zod, écriture tracée dans AuditLog. */
@@ -715,9 +715,15 @@ export async function createKeywordAction(_prev: AdminActionState, formData: For
 
 /* ---------- Réglages du site (réseaux sociaux…) : ADMIN seul, sans redéploiement ---------- */
 
-const settingsSchema = z.object(
-  Object.fromEntries(SOCIAL_NETWORKS.map((n) => [n.key, z.preprocess(vide, z.string().trim().url(`${n.label} : adresse invalide (https://…)`).max(300).optional())])),
-);
+const settingsSchema = z.object({
+  ...Object.fromEntries(SOCIAL_NETWORKS.map((n) => [n.key, z.preprocess(vide, z.string().trim().url(`${n.label} : adresse invalide (https://…)`).max(300).optional())])),
+  ...Object.fromEntries(
+    NUMBER_SETTINGS.map((n) => [
+      n.key,
+      z.preprocess(vide, z.coerce.number({ error: `${n.label} : nombre attendu` }).int().min(n.min, `${n.label} : minimum ${n.min}`).max(n.max, `${n.label} : maximum ${n.max}`).transform(String).optional()),
+    ]),
+  ),
+});
 
 export async function saveSettingsAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   const user = await requireStaff();

@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { numberSetting } from "@/lib/settings";
 import { slugify } from "@/lib/slug";
 import { PUBLISH_TYPES, publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 
@@ -41,6 +42,18 @@ export async function publishAction(_prev: PublishState, formData: FormData): Pr
 
   const profile = await db.profile.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!profile) return { error: "Votre profil est introuvable : complétez-le dans votre espace avant de publier." };
+
+  /* Quota d'offres gratuites (réglable dans Paramètres) : offres en ligne ou en attente. */
+  if (d.type === "JOB" || d.type === "INTERNSHIP") {
+    const quota = await numberSetting("quota.offres");
+    const enCours = await db.content.count({ where: { ownerProfileId: profile.id, type: { in: ["JOB", "INTERNSHIP"] }, status: { in: ["PUBLISHED", "IN_MODERATION"] } } });
+    if (enCours >= quota) {
+      return {
+        error: `Vous avez déjà ${enCours} offre${enCours > 1 ? "s" : ""} en ligne ou en attente : le quota gratuit est de ${quota}. Archivez une offre terminée, ou écrivez au HCBE pour publier davantage.`,
+        champ: "type",
+      };
+    }
+  }
 
   const details: Prisma.ContentCreateInput = {
     type: d.type,

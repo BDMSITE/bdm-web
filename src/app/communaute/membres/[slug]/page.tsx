@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, AdSlot, KeywordChips } from "@/components/site/chrome";
 import { db } from "@/lib/db";
+import { ogImageUrl } from "@/lib/og";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
 import { RelayForm } from "@/components/site/relay-form";
@@ -27,7 +28,10 @@ async function getProfile(slug: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProfile((await params).slug);
-  return { title: p ? `${p.displayName} — ${TYPE_LABEL[p.user.accountType]}` : "Membre introuvable" };
+  if (!p) return { title: "Membre introuvable" };
+  const title = `${p.displayName} — ${TYPE_LABEL[p.user.accountType]}`;
+  const image = ogImageUrl({ title: p.displayName, kind: TYPE_LABEL[p.user.accountType], place: [p.city, p.country].filter(Boolean).join(", ") });
+  return { title, description: p.headline ?? undefined, openGraph: { type: "profile", title, images: [{ url: image, width: 1200, height: 630, alt: p.displayName }] } };
 }
 
 export default async function ProfilPage({ params }: Props) {

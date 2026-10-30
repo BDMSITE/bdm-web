@@ -4,14 +4,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
 import { SettingsForm } from "./settings-form";
-import { getSettings, SOCIAL_NETWORKS } from "@/lib/settings";
+import { getSettings, SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
 /* Paramètres : état des services (sans exposer de secret), équipe d'administration
    (attribution des rôles réservée aux administrateurs), liens utiles.
-   Les quotas et textes d'e-mails ne sont pas encore configurables depuis le back-office. */
+   Les quotas (offres gratuites) se règlent ici ; les textes d'e-mails restent dans le code. */
 
 export const dynamic = "force-dynamic";
 
@@ -123,6 +123,14 @@ export default async function AdminParametresPage() {
         </Card>
         <Card title="Réseaux sociaux (en-tête et pied de page)">
           <SettingsForm fields={SOCIAL_NETWORKS.map((n) => ({ key: n.key, label: n.label }))} values={settings} canEdit={isAdmin} />
+        </Card>
+        <Card title="Quotas">
+          <SettingsForm
+            fields={NUMBER_SETTINGS.map((n) => ({ key: n.key, label: n.label, type: "number" as const, hint: n.hint, placeholder: String(n.default) }))}
+            values={settings}
+            canEdit={isAdmin}
+            note="Vide = valeur par défaut. Les réseaux sociaux ci-dessus sont enregistrés en même temps."
+          />
         </Card>
       </div>
 

@@ -6,6 +6,7 @@ import { SiteHeader, SiteFooter, AdSlot, AlertsBox, PageBanner } from "@/compone
 import { ContentList, ContentDetail } from "@/components/site/content";
 import { getContent, listCategories, listContents, listContractTypes, listCountries, relatedContents } from "@/lib/content";
 import { CONTENT_LABEL, SECTION } from "@/lib/routes";
+import { ogImageUrl } from "@/lib/og";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -105,7 +106,13 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
 
 export async function contentMetadata(slug: string, fallback: string): Promise<Metadata> {
   const item = await getContent(slug);
-  return { title: item?.title ?? fallback, description: item?.excerpt ?? undefined };
+  if (!item) return { title: fallback };
+  const image = ogImageUrl({ title: item.title, kind: CONTENT_LABEL[item.type], place: [item.city, item.country].filter(Boolean).join(", ") });
+  return {
+    title: item.title,
+    description: item.excerpt ?? undefined,
+    openGraph: { type: "article", title: item.title, description: item.excerpt ?? undefined, images: [{ url: image, width: 1200, height: 630, alt: item.title }] },
+  };
 }
 
 export async function ContentDetailPage({ slug, types }: { slug: string; types: ContentType[] }) {

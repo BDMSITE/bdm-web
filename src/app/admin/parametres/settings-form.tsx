@@ -8,7 +8,9 @@ import { saveSettingsAction, type AdminActionState } from "@/lib/actions/admin";
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none";
 
-export function SettingsForm({ fields, values, canEdit }: { fields: { key: string; label: string }[]; values: Record<string, string>; canEdit: boolean }) {
+type Field = { key: string; label: string; type?: "url" | "number"; hint?: string; placeholder?: string };
+
+export function SettingsForm({ fields, values, canEdit, note }: { fields: Field[]; values: Record<string, string>; canEdit: boolean; note?: string }) {
   const [state, action, pending] = useActionState<AdminActionState, FormData>(saveSettingsAction, {});
   return (
     <form action={action} className="space-y-3 p-4">
@@ -18,7 +20,8 @@ export function SettingsForm({ fields, values, canEdit }: { fields: { key: strin
         {fields.map((f) => (
           <div key={f.key}>
             <label htmlFor={f.key} className="mb-1 block text-xs font-bold">{f.label}</label>
-            <input id={f.key} name={f.key} type="url" defaultValue={values[f.key] ?? ""} placeholder="https://…" disabled={!canEdit} className={INPUT} />
+            <input id={f.key} name={f.key} type={f.type ?? "url"} inputMode={f.type === "number" ? "numeric" : undefined} defaultValue={values[f.key] ?? ""} placeholder={f.placeholder ?? (f.type === "number" ? "" : "https://…")} disabled={!canEdit} className={INPUT} />
+            {f.hint && <p className="mt-1 text-xs text-muted">{f.hint}</p>}
           </div>
         ))}
       </div>
@@ -27,7 +30,7 @@ export function SettingsForm({ fields, values, canEdit }: { fields: { key: strin
           {pending ? "Enregistrement…" : "Enregistrer"}
         </button>
       )}
-      <p className="text-xs text-muted">Tant qu&apos;un lien est vide, son icône reste visible et renvoie vers la page Contact.</p>
+      <p className="text-xs text-muted">{note ?? "Tant qu'un lien est vide, son icône reste visible et renvoie vers la page Contact."}</p>
     </form>
   );
 }

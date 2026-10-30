@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Public_Sans, Caveat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site-url";
+import { DEFAULT_OG } from "@/lib/og";
 
 /* Typo « administrative » : Public Sans — la police officielle open source
    du design system du gouvernement américain (USWDS), même esprit que la
@@ -28,6 +30,9 @@ const script = Caveat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  openGraph: { type: "website", siteName: "Béninois du Monde", locale: "fr_FR", images: [DEFAULT_OG] },
+  twitter: { card: "summary_large_image" },
   title: {
     default: "Béninois du Monde",
     template: "%s — Béninois du Monde",

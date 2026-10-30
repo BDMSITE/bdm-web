@@ -20,10 +20,16 @@ import { verifyTotp } from "@/lib/totp";
 
 const emailSchema = z.email();
 
+/** Page de connexion de retour selon la langue du formulaire (champ caché « lang »). */
+function loginPath(formData: FormData) {
+  return String(formData.get("lang") ?? "") === "en" ? "/en/sign-in" : "/connexion";
+}
+
 export async function loginAction(formData: FormData) {
+  const retour = loginPath(formData);
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const ip = await clientIp();
-  if (!(await rateLimit(`login:${ip}`, 10, 900)) || !(await rateLimit(`login:${email}`, 5, 900))) redirect("/connexion?erreur=trop");
+  if (!(await rateLimit(`login:${ip}`, 10, 900)) || !(await rateLimit(`login:${email}`, 5, 900))) redirect(`${retour}?erreur=trop`);
   const password = String(formData.get("password") ?? "");
   const brut = String(formData.get("suite") ?? "");
   const suite = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/compte";
@@ -32,7 +38,7 @@ export async function loginAction(formData: FormData) {
      vérifié ici, puis un jeton signé (5 min) ouvre la page du code. */
   const u = await db.user.findUnique({ where: { email }, select: { id: true, passwordHash: true, twoFactorSecret: true, status: true } });
   if (u?.twoFactorSecret && u.passwordHash && u.status === "ACTIVE") {
-    if (!(await verify(u.passwordHash, password))) redirect("/connexion?erreur=identifiants");
+    if (!(await verify(u.passwordHash, password))) redirect(`${retour}?erreur=identifiants`);
     const jar = await cookies();
     jar.set("bdm_2fa", signToken({ purpose: "2fa-pending", uid: u.id, suite }, 300), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
     redirect("/connexion/code");
@@ -42,22 +48,23 @@ export async function loginAction(formData: FormData) {
     await signIn("credentials", { email, password, redirectTo: suite });
   } catch (e) {
     if (e instanceof CredentialsSignin) {
-      redirect(`/connexion?erreur=${e.code === "email_non_confirme" ? "email_non_confirme" : "identifiants"}`);
+      redirect(`${retour}?erreur=${e.code === "email_non_confirme" ? "email_non_confirme" : "identifiants"}`);
     }
-    if (e instanceof AuthError) redirect("/connexion?erreur=auth");
+    if (e instanceof AuthError) redirect(`${retour}?erreur=auth`);
     throw e;
   }
 }
 
 export async function magicLinkAction(formData: FormData) {
+  const retour = loginPath(formData);
   const parsed = emailSchema.safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
-  if (!parsed.success) redirect("/connexion?erreur=email");
-  if (!(await rateLimit(`magic:${await clientIp()}`, 5, 900)) || !(await rateLimit(`magic:${parsed.data}`, 3, 3600))) redirect("/connexion?erreur=trop");
+  if (!parsed.success) redirect(`${retour}?erreur=email`);
+  if (!(await rateLimit(`magic:${await clientIp()}`, 5, 900)) || !(await rateLimit(`magic:${parsed.data}`, 3, 3600))) redirect(`${retour}?erreur=trop`);
 
   try {
     await signIn("resend", { email: parsed.data, redirectTo: "/compte" });
   } catch (e) {
-    if (e instanceof AuthError) redirect("/connexion?erreur=auth");
+    if (e instanceof AuthError) redirect(`${retour}?erreur=auth`);
     throw e;
   }
 }
@@ -153,7 +160,7 @@ export async function registerAction(_prev: RegisterState, formData: FormData): 
   } catch (e) {
     if (!(e instanceof AuthError)) throw e;
   }
-  redirect("/connexion?inscrit=1");
+  redirect(`${loginPath(formData)}?inscrit=1`);
 }
 
 /* Étape 2 de la connexion : le code de l'application d'authentification. */

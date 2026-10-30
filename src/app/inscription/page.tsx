@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteHeader, SiteFooter, PageBanner } from "@/components/site/chrome";
+import { SiteHeader, SiteFooter, PageBanner, LangSwitch } from "@/components/site/chrome";
 import { InscriptionForm } from "./form";
 import { turnstileSiteKey } from "@/lib/turnstile";
 
@@ -19,7 +19,9 @@ export default function InscriptionPage() {
         pre="Créer un"
         em="compte gratuit"
         desc="Particuliers, entreprises, associations, artistes : un seul compte membre, gratuit. Vous publiez directement, la modération valide."
-      />
+      >
+        <LangSwitch fr="/inscription" en="/en/join" current="fr" />
+      </PageBanner>
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           <InscriptionForm turnstileSiteKey={turnstileSiteKey} />

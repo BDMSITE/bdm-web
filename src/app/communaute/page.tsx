@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { AccountType } from "@prisma/client";
-import { SiteHeader, SiteFooter, SectionTitle, AdSlot, PageBanner } from "@/components/site/chrome";
+import { SiteHeader, SiteFooter, SectionTitle, AdSlot, PageBanner, LangSwitch } from "@/components/site/chrome";
 import { ContentList } from "@/components/site/content";
 import { db } from "@/lib/db";
 import { listContents, publicProfileWhere } from "@/lib/content";
@@ -45,6 +45,7 @@ export default async function CommunautePage() {
         <Link href="/inscription" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
           Créer mon profil gratuit
         </Link>
+        <LangSwitch fr="/communaute" en="/en/community" current="fr" />
       </PageBanner>
 
       <main className="mx-auto max-w-6xl px-4 py-8">

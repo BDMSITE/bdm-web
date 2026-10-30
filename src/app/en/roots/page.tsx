@@ -42,10 +42,13 @@ export default async function RootsPage() {
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
-              href="/inscription"
+              href="/en/join"
               className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark"
             >
               Join the network
+            </Link>
+            <Link href="/en/community" className="whitespace-nowrap rounded border border-white/40 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
+              The community
             </Link>
             <LangSwitch fr="/memoire" en="/en/roots" current="en" />
           </div>

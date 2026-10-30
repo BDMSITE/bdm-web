@@ -35,7 +35,10 @@ export default async function ConnexionPage({
       <SiteHeader />
       <main className="mx-auto grid max-w-4xl gap-8 px-4 py-12 md:grid-cols-2">
         <section className="border border-line p-6">
-          <h1 className="section-title text-xl">Se <em>connecter</em></h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="section-title text-xl">Se <em>connecter</em></h1>
+            <Link href="/en/sign-in" lang="en" className="text-xs font-bold uppercase text-primary hover:underline">English</Link>
+          </div>
 
           {message && (
             <p

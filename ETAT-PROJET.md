@@ -300,6 +300,17 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   7) Gitleaks sur GitHub Actions (`.github/workflows/gitleaks.yml`, dépôt public). Migrations `moderation_note` et
   `event_timezone` appliquées en local et sur Neon.
 
+- **31/10 — LES « RESTANTS » DE LA RELECTURE, LIVRÉS.** Suppression de compte complète (contenus archivés, messages,
+  favoris, candidatures, fiche d'accueil, photo, blocages) et export RGPD complet ; mots-clés : renommer, fusionner
+  (contenus, profils, alertes déplacés), supprimer (Admin → Mots-clés → Gérer) ; messagerie : blocage d'un membre,
+  lecture au clic seulement, pastille « non lus » dans l'en-tête ; pagination des rubriques (30) et des annuaires (24/30) ;
+  carte des contenus par thème (membres, afrodescendants, associations, bonnes adresses, événements) avec géocodage
+  automatique à la publication ; **ambassades et consulats** saisis dans Admin → Ambassades & consulats, affichés sur
+  /hcbe et chaque page pays (vide tant que le HCBE n'a rien saisi) ; **version anglaise** : /en/join, /en/sign-in,
+  /en/community (+ /en/roots), formulaire d'inscription bilingue, retours de connexion dans la bonne langue, lien
+  « English » dans le pied de page. Migrations `user_block` et `consulats` appliquées en local et sur Neon.
+  L'espace membre et le back-office restent en français (décision : gros chantier, à part).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
    site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

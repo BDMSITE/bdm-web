@@ -238,6 +238,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
       { label: "Accueil & hébergement", href: "/pratique/accueil" },
       { label: "Newsletter", href: "/newsletter" },
       { label: "Mémoire & racines", href: "/memoire" },
+      { label: "English", href: "/en/roots" },
     ],
   },
 ];

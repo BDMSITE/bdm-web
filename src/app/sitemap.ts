@@ -7,7 +7,7 @@ import { slugify } from "@/lib/slug";
 /* Plan du site pour les moteurs : pages fixes + tous les contenus publiés
    + fiches membres visibles dans l'annuaire. Régénéré à chaque demande. */
 
-const FIXES = ["/", "/magazine", "/magazine/beninois-qui-comptent", "/retour-au-pays", "/memoire", "/en/roots", "/emploi", "/emploi/recruteurs", "/communaute", "/communaute/membres", "/communaute/entreprises", "/communaute/associations", "/communaute/artistes", "/communaute/competences", "/adresses", "/agenda", "/bons-plans", "/annonces", "/pratique/chercher-trouver", "/pratique/accueil", "/pratique/demarches", "/pays", "/newsletter", "/publier", "/hcbe", "/annonceurs", "/contact", "/legal/mentions-legales", "/legal/confidentialite", "/legal/cgu"];
+const FIXES = ["/", "/magazine", "/magazine/beninois-qui-comptent", "/retour-au-pays", "/memoire", "/en/roots", "/emploi", "/emploi/recruteurs", "/communaute", "/communaute/membres", "/communaute/entreprises", "/communaute/associations", "/communaute/artistes", "/communaute/competences", "/adresses", "/agenda", "/bons-plans", "/annonces", "/pratique/chercher-trouver", "/pratique/accueil", "/pratique/demarches", "/pays", "/newsletter", "/en/join", "/en/sign-in", "/en/community", "/publier", "/hcbe", "/annonceurs", "/contact", "/legal/mentions-legales", "/legal/confidentialite", "/legal/cgu"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL;

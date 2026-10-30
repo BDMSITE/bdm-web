@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { utcToLocalInput, DEFAULT_TZ } from "@/lib/temps";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -13,9 +14,6 @@ export const metadata: Metadata = { title: "Modifier un contenu" };
    L'accès est filtré par proxy.ts (rôle rédaction / modération / admin). */
 
 const p = (n: number) => String(n).padStart(2, "0");
-/* Date → valeur d'un champ datetime-local (heure locale du serveur, comme à la création). */
-const toLocalInput = (d: Date | null | undefined) =>
-  d ? `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}` : "";
 /* Date → valeur d'un champ date (AAAA-MM-JJ). */
 const toDateInput = (d: Date | null | undefined) => (d ? `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` : "");
 
@@ -43,8 +41,9 @@ export default async function AdminEditContentPage({ params }: { params: Promise
     salary: content.job?.salary ?? "",
     applyMode: content.job?.applyMode ?? "relay_email",
     applyTarget: content.job?.applyTarget ?? "",
-    startsAt: toLocalInput(content.event?.startsAt),
-    endsAt: toLocalInput(content.event?.endsAt),
+    startsAt: utcToLocalInput(content.event?.startsAt, content.event?.timezone ?? DEFAULT_TZ),
+    endsAt: utcToLocalInput(content.event?.endsAt, content.event?.timezone ?? DEFAULT_TZ),
+    timezone: content.event?.timezone ?? "",
     venue: content.event?.venue ?? "",
     isOnline: content.event?.isOnline ?? false,
     category: content.event?.category ?? content.place?.category ?? content.classified?.category ?? "",

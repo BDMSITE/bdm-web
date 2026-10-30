@@ -278,6 +278,7 @@ model EventDetails {
   content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
   startsAt  DateTime
   endsAt    DateTime?
+  timezone  String   @default("Africa/Porto-Novo") // fuseau du lieu : l'heure saisie est celle du lieu
   isOnline  Boolean  @default(false)
   venue     String?
   ticketUrl String?

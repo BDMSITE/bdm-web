@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { TimezoneSelect } from "@/components/site/timezone-select";
 import type { ContentStatus, ContentType } from "@prisma/client";
 import { updateContentAction, withdrawContentAction, republishContentAction, type PublicationState } from "@/lib/actions/publications";
 
@@ -19,6 +20,7 @@ export type PublicationFormValues = {
   keywords: string;
   contractType: string;
   startsAt: string;
+  timezone: string;
   venue: string;
   isOnline: boolean;
   category: string;
@@ -105,8 +107,12 @@ export function PublicationForm({ id, type, status, values }: { id: string; type
       {type === "EVENT" && (
         <div className="grid gap-4 border-t border-line pt-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="startsAt" className="mb-1 block text-sm font-bold">Date et heure *</label>
+            <label htmlFor="startsAt" className="mb-1 block text-sm font-bold">Date et heure (heure du lieu) *</label>
             <input id="startsAt" name="startsAt" type="datetime-local" defaultValue={values.startsAt} aria-invalid={invalid("startsAt")} className={INPUT} />
+          </div>
+          <div>
+            <label htmlFor="timezone" className="mb-1 block text-sm font-bold">Fuseau horaire du lieu</label>
+            <TimezoneSelect value={values.timezone} className={INPUT} />
           </div>
           <div>
             <label htmlFor="category" className="mb-1 block text-sm font-bold">Catégorie</label>

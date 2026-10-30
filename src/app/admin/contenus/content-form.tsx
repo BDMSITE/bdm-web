@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { TimezoneSelect } from "@/components/site/timezone-select";
 import type { ContentStatus, ContentType } from "@prisma/client";
 import { createContentAction, updateContentAdminAction, type AdminFormState } from "@/lib/actions/admin";
 import { ADMIN_STATUSES, CONTENT_STATUS_LABEL, type AdminContentType } from "@/components/admin/ui";
@@ -32,6 +33,7 @@ export type ContentFormValues = {
   applyTarget: string;
   startsAt: string;
   endsAt: string;
+  timezone: string;
   venue: string;
   isOnline: boolean;
   category: string;
@@ -50,7 +52,7 @@ export type ContentFormValues = {
 export const EMPTY_VALUES: ContentFormValues = {
   title: "", excerpt: "", body: "", country: "", city: "", keywords: "", cover: "", lat: "", lng: "", featured: false, expiresAt: "",
   contractType: "", salary: "", applyMode: "relay_email", applyTarget: "",
-  startsAt: "", endsAt: "", venue: "", isOnline: false, category: "", ticketUrl: "",
+  startsAt: "", endsAt: "", timezone: "", venue: "", isOnline: false, category: "", ticketUrl: "",
   address: "", phone: "", hours: "", verified: false,
   price: "", promoCode: "", conditions: "", validFrom: "", validTo: "",
 };
@@ -221,6 +223,11 @@ export function ContentForm(props: Props) {
           <div>
             <label htmlFor="endsAt" className={LABEL}>Fin <span className="font-normal text-muted">(facultatif)</span></label>
             <input id="endsAt" name="endsAt" type="datetime-local" defaultValue={values.endsAt} aria-invalid={invalid("endsAt")} className={INPUT} />
+          </div>
+          <div>
+            <label htmlFor="timezone" className={LABEL}>Fuseau horaire du lieu</label>
+            <TimezoneSelect value={values.timezone} className={INPUT} />
+            <p className="mt-1 text-xs text-muted">Les heures ci-dessus sont celles du lieu ; le site affiche aussi l&apos;heure de Cotonou.</p>
           </div>
           <div>
             <label htmlFor="category" className={LABEL}>Catégorie</label>

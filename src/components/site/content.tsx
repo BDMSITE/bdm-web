@@ -6,6 +6,7 @@ import { RelayForm, ApplyForm } from "@/components/site/relay-form";
 import { ReportButton } from "@/components/site/report-button";
 import { ShareButtons } from "@/components/site/share-buttons";
 import { SITE_URL } from "@/lib/site-url";
+import { fmtEventDate, fmtCotonou, googleCalendarUrl } from "@/lib/temps";
 import { FavoriteButton } from "@/components/site/favorite-button";
 
 export type Viewer = { id: string; cvUrl: string | null; favori: boolean } | null;
@@ -33,7 +34,7 @@ export function EmptyState({ title, text, href, cta }: { title: string; text: st
 export function contentMeta(item: ContentFull): string[] {
   const lieu = [item.city, item.country].filter(Boolean).join(" · ");
   const m: string[] = [];
-  if (item.event) m.push(fmtDate(item.event.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }));
+  if (item.event) m.push(fmtEventDate(item.event.startsAt, item.event.timezone, "short"));
   if (item.job) m.push(item.job.contractType);
   if (item.place) m.push(item.place.category);
   if (item.classified) m.push(item.classified.category + (item.classified.price ? ` · ${item.classified.price}` : ""));
@@ -87,7 +88,15 @@ function Body({ text }: { text: string }) {
 function Details({ item }: { item: ContentFull }) {
   const rows: [string, string | null | undefined][] = [];
   if (item.job) rows.push(["Contrat", item.job.contractType], ["Rémunération", item.job.salary]);
-  if (item.event) rows.push(["Date", fmtDate(item.event.startsAt, { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })], ["Lieu", item.event.isOnline ? "En ligne" : item.event.venue], ["Catégorie", item.event.category]);
+  if (item.event) {
+    const cotonou = fmtCotonou(item.event.startsAt, item.event.timezone);
+    rows.push(
+      ["Date", `${fmtEventDate(item.event.startsAt, item.event.timezone)}${cotonou ? ` · ${cotonou}` : ""}`],
+      ["Fin", item.event.endsAt ? fmtEventDate(item.event.endsAt, item.event.timezone) : null],
+      ["Lieu", item.event.isOnline ? "En ligne" : item.event.venue],
+      ["Catégorie", item.event.category],
+    );
+  }
   if (item.place) rows.push(["Catégorie", item.place.category], ["Adresse", item.place.address], ["Horaires", item.place.hours], ["Téléphone", item.place.phone]);
   if (item.classified) rows.push(["Catégorie", item.classified.category], ["Prix", item.classified.price]);
   if (item.deal) rows.push(["Code", item.deal.promoCode], ["Conditions", item.deal.conditions], ["Valable jusqu'au", item.deal.validTo ? fmtDate(item.deal.validTo) : null]);
@@ -145,6 +154,22 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
       )}
 
       <Details item={item} />
+      {item.event && (
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <a href={`/agenda/${item.slug}/ical`} className="rounded border-2 border-primary px-3 py-1.5 font-bold uppercase text-primary hover:bg-primary hover:text-white">Ajouter à mon agenda (.ics)</a>
+          <a
+            href={googleCalendarUrl({ title: item.title, description: item.excerpt ?? undefined, location: item.event.isOnline ? "En ligne" : [item.event.venue, item.city, item.country].filter(Boolean).join(", "), url: `${SITE_URL}${contentHref(item.type, item.slug)}`, startsAt: item.event.startsAt, endsAt: item.event.endsAt })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded border border-line px-3 py-1.5 font-bold uppercase text-ink-2 hover:border-primary hover:text-primary"
+          >
+            Google Agenda
+          </a>
+          {item.event.ticketUrl && (
+            <a href={item.event.ticketUrl} target="_blank" rel="noopener noreferrer" className="rounded bg-accent px-3 py-1.5 font-bold uppercase text-ink hover:bg-accent-dark">Billetterie</a>
+          )}
+        </div>
+      )}
       {item.body && <Body text={item.body} />}
 
       {cta && (

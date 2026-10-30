@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { PenLine, Briefcase, GraduationCap, CalendarDays, MapPin, Megaphone, HeartHandshake } from "lucide-react";
 import { publishAction, type PublishState } from "@/lib/actions/publier";
+import { TimezoneSelect } from "@/components/site/timezone-select";
 
 /* Formulaire du guichet « Publier » : type, champs communs, champs selon le type.
    Tout contenu part en modération ; rien n'est mis en ligne directement. */
@@ -112,8 +113,13 @@ export function PublierForm() {
         {type === "EVENT" && (
           <div className="grid gap-4 border-t border-line pt-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="startsAt" className="mb-1 block text-sm font-bold">Date et heure *</label>
+              <label htmlFor="startsAt" className="mb-1 block text-sm font-bold">Date et heure (heure du lieu) *</label>
               <input id="startsAt" name="startsAt" type="datetime-local" aria-invalid={invalid("startsAt")} className={INPUT} />
+            </div>
+            <div>
+              <label htmlFor="timezone" className="mb-1 block text-sm font-bold">Fuseau horaire du lieu</label>
+              <TimezoneSelect className={INPUT} />
+              <p className="mt-1 text-xs text-muted">Préréglé sur votre fuseau. Le site affiche aussi l&apos;heure de Cotonou.</p>
             </div>
             <div>
               <label htmlFor="category" className="mb-1 block text-sm font-bold">Catégorie</label>

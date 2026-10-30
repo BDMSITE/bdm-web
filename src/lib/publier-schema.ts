@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { zonedToUtc, isTimezone, DEFAULT_TZ } from "@/lib/temps";
 import type { ContentType } from "@prisma/client";
 import { slugify } from "@/lib/slug";
 
@@ -20,6 +21,7 @@ export const publishFields = z.object({
   keywords: z.string().max(500),
   contractType: z.preprocess(vide, z.string().max(40).optional()),
   startsAt: z.preprocess(vide, z.string().optional()),
+  timezone: z.preprocess(vide, z.string().max(64).optional()),
   venue: z.preprocess(vide, z.string().max(200).optional()),
   isOnline: z.string().optional(),
   category: z.preprocess(vide, z.string().max(60).optional()),
@@ -29,14 +31,20 @@ export const publishFields = z.object({
 
 export type PublishFields = z.infer<typeof publishFields>;
 
+/** Fuseau de l'événement : celui saisi s'il est valide, sinon Cotonou. */
+export function eventTz(tz: string | undefined) {
+  return isTimezone(tz) ? tz : DEFAULT_TZ;
+}
+
 /* Règles propres à chaque type (contrat, date, lieu, catégorie). */
 export function refinePublish(type: ContentType, d: PublishFields, ctx: z.RefinementCtx) {
   if ((type === "JOB" || type === "INTERNSHIP") && !d.contractType) {
     ctx.addIssue({ code: "custom", path: ["contractType"], message: "Type de contrat obligatoire" });
   }
   if (type === "EVENT") {
-    const date = d.startsAt ? new Date(d.startsAt) : null;
+    const date = d.startsAt ? zonedToUtc(d.startsAt, eventTz(d.timezone)) : null;
     if (!date || Number.isNaN(date.getTime())) ctx.addIssue({ code: "custom", path: ["startsAt"], message: "Date et heure de l'événement obligatoires" });
+    if (d.timezone && !isTimezone(d.timezone)) ctx.addIssue({ code: "custom", path: ["timezone"], message: "Fuseau horaire inconnu" });
     if (d.isOnline !== "on" && !d.venue) ctx.addIssue({ code: "custom", path: ["venue"], message: "Indiquez le lieu, ou cochez « en ligne »" });
   }
   if ((type === "PLACE" || type === "CLASSIFIED") && !d.category) {
@@ -65,7 +73,8 @@ export function keywordsCreate(names: string[]) {
 export function detailValues(type: ContentType, d: PublishFields) {
   if (type === "JOB" || type === "INTERNSHIP") return { job: { contractType: d.contractType! } };
   if (type === "EVENT") {
-    return { event: { startsAt: new Date(d.startsAt!), isOnline: d.isOnline === "on", venue: d.isOnline === "on" ? null : (d.venue ?? null), category: d.category ?? null } };
+    const tz = eventTz(d.timezone);
+    return { event: { startsAt: zonedToUtc(d.startsAt!, tz), timezone: tz, isOnline: d.isOnline === "on", venue: d.isOnline === "on" ? null : (d.venue ?? null), category: d.category ?? null } };
   }
   if (type === "PLACE") return { place: { category: d.category!, address: d.address ?? null } };
   if (type === "CLASSIFIED") return { classified: { category: d.category!, price: d.price ?? null } };

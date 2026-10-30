@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { utcToLocalInput } from "@/lib/temps";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -12,11 +13,6 @@ export const metadata: Metadata = { title: "Modifier une publication" };
 
 /* Édition d'une publication : réservée au propriétaire (sinon 404). */
 
-/* Date → valeur d'un champ datetime-local (heure locale du serveur, comme à la création). */
-function toLocalInput(d: Date) {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-}
 
 export default async function EditPublicationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -64,7 +60,8 @@ export default async function EditPublicationPage({ params }: { params: Promise<
           city: content.city ?? "",
           keywords: content.keywords.map((k) => k.keyword.name).join(", "),
           contractType: content.job?.contractType ?? "",
-          startsAt: content.event ? toLocalInput(content.event.startsAt) : "",
+          startsAt: content.event ? utcToLocalInput(content.event.startsAt, content.event.timezone) : "",
+          timezone: content.event?.timezone ?? "",
           venue: content.event?.venue ?? "",
           isOnline: content.event?.isOnline ?? false,
           category: content.event?.category ?? content.place?.category ?? content.classified?.category ?? "",

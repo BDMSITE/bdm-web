@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Prisma, type ContentType } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { zonedToUtc } from "@/lib/temps";
 import { sendModerationResult } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site-url";
 import { slugify } from "@/lib/slug";
@@ -352,7 +353,7 @@ function refineAdmin(type: ContentType, d: AdminFields, ctx: z.RefinementCtx) {
   for (const [path, value] of [["expiresAt", d.expiresAt], ["endsAt", d.endsAt], ["validFrom", d.validFrom], ["validTo", d.validTo]] as const) {
     if (invalidDate(value)) ctx.addIssue({ code: "custom", path: [path], message: "Date invalide" });
   }
-  if (type === "EVENT" && d.endsAt && d.startsAt && new Date(d.endsAt) < new Date(d.startsAt)) {
+  if (type === "EVENT" && d.endsAt && d.startsAt && d.endsAt < d.startsAt) {
     ctx.addIssue({ code: "custom", path: ["endsAt"], message: "La fin doit suivre le début" });
   }
   if (type === "DEAL" && d.validFrom && d.validTo && new Date(d.validTo) < new Date(d.validFrom)) {
@@ -366,7 +367,7 @@ const date = (s: string | undefined) => (s ? new Date(s) : null);
 function adminDetailValues(type: ContentType, d: AdminFields) {
   const base = detailValues(type, d);
   if (base.job) return { job: { ...base.job, salary: d.salary ?? null, applyMode: d.applyMode, applyTarget: d.applyTarget ?? null } };
-  if (base.event) return { event: { ...base.event, endsAt: date(d.endsAt), ticketUrl: d.ticketUrl ?? null } };
+  if (base.event) return { event: { ...base.event, endsAt: d.endsAt ? zonedToUtc(d.endsAt, base.event.timezone) : null, ticketUrl: d.ticketUrl ?? null } };
   if (base.place) return { place: { ...base.place, phone: d.phone ?? null, hours: d.hours ?? null, verified: d.verified } };
   if (base.classified) return { classified: base.classified };
   if (type === "MEMORY_PLACE") return { place: { category: d.category!, address: d.address ?? null, phone: d.phone ?? null, hours: d.hours ?? null, verified: d.verified } };

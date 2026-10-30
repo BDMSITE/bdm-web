@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { sendAlertDigest } from "@/lib/mail";
 import { contentHref, CONTENT_LABEL } from "@/lib/routes";
 import { SITE_URL as BASE } from "@/lib/site-url";
+import { numberSetting } from "@/lib/settings";
+import { pendingIssues, sendNewsletterBatch } from "@/lib/newsletter";
 
 /* Alertes par mots-clés : chaque matin (cron Vercel), pour chaque alerte,
    les contenus publiés depuis le dernier envoi qui portent un de ses mots-clés
@@ -52,5 +54,17 @@ export async function GET(req: Request) {
     }
   }
   console.info(`[alertes] ${alerts.length} alertes, ${envoyes} e-mails envoyés, ${sansNouveaute} membres sans nouveauté`);
-  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute });
+
+  /* Newsletter : les numéros dont l'envoi est entamé continuent dans la limite journalière. */
+  let budget = (await numberSetting("quota.mails.jour")) - envoyes;
+  let newsletter = 0;
+  for (const issue of await pendingIssues()) {
+    if (budget <= 0) break;
+    const r = await sendNewsletterBatch(issue.id, budget);
+    newsletter += r.sent;
+    budget -= r.sent;
+    if (r.error || !r.done) break;
+  }
+  if (newsletter) console.info(`[newsletter] ${newsletter} e-mails envoyés par le cron`);
+  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter });
 }

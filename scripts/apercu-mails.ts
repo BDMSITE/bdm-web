@@ -48,6 +48,20 @@ const pages: Record<string, string> = {
     panelFirst: true,
     footnote: "Vous recevez cet e-mail parce que vous avez créé une alerte. Modifiez vos mots-clés ou supprimez l'alerte à tout moment.",
   }),
+  newsletter: layout({
+    preheader: "Comptable bilingue, cabinet à Montréal",
+    eyebrow: "La lettre",
+    title: "La lettre de novembre : 12 offres, 5 événements",
+    paragraphs: ["Ce mois-ci, la diaspora recrute à Montréal et à Paris, Cotonou prépare les fêtes et nos partenaires ouvrent leurs portes aux membres."],
+    panel: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:14px 0;border-bottom:1px solid #e6e9e7"><span style="display:inline-block;margin-bottom:6px;padding:2px 8px;background:#fdf4cd;font:700 11px/1.4 Helvetica,Arial,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:#1b1f1d">Offre d'emploi</span><span style="margin-left:8px;font:13px/1.4 Helvetica,Arial,sans-serif;color:#5b625e">Montréal, Canada</span><br><a href="${base}/emploi" style="font:700 19px/1.35 Helvetica,Arial,sans-serif;color:#1b1f1d;text-decoration:none">Comptable bilingue, cabinet à Montréal</a><p style="margin:6px 0 0;font:15px/1.5 Helvetica,Arial,sans-serif;color:#5b625e">CDI, télétravail partiel, cabinet fondé par un Béninois de Montréal.</p></td></tr>
+      <tr><td style="padding:14px 0;border-bottom:1px solid #e6e9e7"><span style="display:inline-block;margin-bottom:6px;padding:2px 8px;background:#fdf4cd;font:700 11px/1.4 Helvetica,Arial,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:#1b1f1d">Événement</span><span style="margin-left:8px;font:13px/1.4 Helvetica,Arial,sans-serif;color:#5b625e">Paris, France</span><br><a href="${base}/agenda" style="font:700 19px/1.35 Helvetica,Arial,sans-serif;color:#1b1f1d;text-decoration:none">Soirée des indépendances, Paris 19e</a></td></tr>
+      <tr><td style="padding:14px 0;border-bottom:1px solid #e6e9e7"><span style="display:inline-block;margin-bottom:6px;padding:2px 8px;background:#fdf4cd;font:700 11px/1.4 Helvetica,Arial,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:#1b1f1d">Bon plan</span><br><a href="${base}/bons-plans" style="font:700 19px/1.35 Helvetica,Arial,sans-serif;color:#1b1f1d;text-decoration:none">-15 % sur le studio Wanilo pour les membres</a></td></tr>
+    </table>`,
+    panelFirst: true,
+    cta: { label: "Tout voir sur le site", url: base },
+    footnote: `Vous recevez cette lettre parce que vous y êtes abonné. <a href="${base}/newsletter" style="color:#5b625e">Se désinscrire en un clic</a>.`,
+  }),
 };
 
 for (const [name, html] of Object.entries(pages)) writeFileSync(join(out, `${name}.html`), html);

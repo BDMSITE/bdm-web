@@ -95,6 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: user.id, status: "PENDING_EMAIL" },
           data: { status: "ACTIVE", emailVerified: new Date() },
         });
+        if (user.email) await db.subscriber.updateMany({ where: { email: user.email, confirmedAt: null }, data: { confirmedAt: new Date() } });
       }
     },
   },

@@ -11,7 +11,8 @@ import { geocode } from "@/lib/geocode";
 import { contentHref, SECTION } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 import { ADMIN_CONTENT_TYPES, ADMIN_STATUSES } from "@/components/admin/ui";
-import { SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
+import { SOCIAL_NETWORKS, NUMBER_SETTINGS, numberSetting } from "@/lib/settings";
+import { countRecipients, issueStats, sendNewsletterBatch } from "@/lib/newsletter";
 
 /* Actions du back-office. Chaque action : session vérifiée (rôle rédaction,
    modération ou admin), entrées validées par zod, écriture tracée dans AuditLog. */
@@ -743,4 +744,51 @@ export async function saveSettingsAction(_prev: AdminActionState, formData: Form
   revalidatePath("/", "layout");
   revalidatePath("/admin/parametres");
   return { ok: true, message: "Réglages enregistrés : visibles immédiatement sur le site." };
+}
+
+/* ---------- Newsletter : composer un numéro, lancer l'envoi ---------- */
+
+const composeSchema = z.object({
+  subject: z.string().trim().min(5, "Objet trop court (5 caractères minimum)").max(120, "Objet limité à 120 caractères"),
+  intro: z.preprocess(vide, z.string().trim().max(800, "Introduction limitée à 800 caractères").optional()),
+});
+
+export async function composeNewsletterAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = composeSchema.safeParse({ subject: formData.get("subject"), intro: formData.get("intro") });
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const ids = formData.getAll("contentIds").map(String).filter(Boolean).slice(0, 30);
+  if (ids.length === 0) return { error: "Cochez au moins un contenu à inclure." };
+  const n = await db.content.count({ where: { id: { in: ids }, status: "PUBLISHED" } });
+  if (n !== ids.length) return { error: "Un des contenus cochés n'est plus publié." };
+  const issue = await db.newsletterIssue.create({ data: { subject: parsed.data.subject, intro: parsed.data.intro ?? null, contentIds: ids, stats: { sent: 0, lastEmail: null, done: false } } });
+  await audit(user.id, "newsletter.compose", "NewsletterIssue", issue.id, { contents: ids.length });
+  revalidatePath("/admin/newsletter");
+  return { ok: true, message: `Numéro « ${parsed.data.subject} » enregistré avec ${ids.length} contenu${ids.length > 1 ? "s" : ""}. Lancez l'envoi depuis la liste.` };
+}
+
+export async function sendNewsletterAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut envoyer la newsletter." };
+  const id = String(formData.get("id") ?? "");
+  const issue = await db.newsletterIssue.findUnique({ where: { id } });
+  if (!issue) return { error: "Numéro introuvable." };
+  if (issueStats(issue.stats).done) return { error: "Ce numéro a déjà été envoyé à tout le monde." };
+  if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY) return { error: "Aucun service d'e-mail configuré : rien ne peut partir." };
+  const total = await countRecipients();
+  if (total === 0) return { error: "Aucun abonné confirmé pour l'instant." };
+  const budget = await numberSetting("quota.mails.jour");
+  if (!issue.sentAt) await db.newsletterIssue.update({ where: { id }, data: { stats: { ...issueStats(issue.stats), total } } });
+  const r = await sendNewsletterBatch(id, budget);
+  await audit(user.id, "newsletter.send", "NewsletterIssue", id, { sent: r.sent, done: r.done });
+  revalidatePath("/admin/newsletter");
+  if (r.error) return { error: r.error };
+  return {
+    ok: true,
+    message: r.done
+      ? `Envoi terminé : ${r.sent} e-mail${r.sent > 1 ? "s" : ""} partis à l'instant.`
+      : `${r.sent} e-mails envoyés aujourd'hui (limite ${budget}). Le reste partira automatiquement demain matin.`,
+  };
 }

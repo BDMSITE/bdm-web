@@ -17,6 +17,7 @@ export const SOCIAL_NETWORKS = [
 /* Réglages chiffrés (quotas). Vide = valeur par défaut. */
 export const NUMBER_SETTINGS = [
   { key: "quota.offres", label: "Offres d'emploi et stages gratuites par recruteur", hint: "Offres en ligne ou en attente comptées ensemble. Au-delà, le recruteur est invité à contacter le HCBE.", default: 3, min: 0, max: 1000 },
+  { key: "quota.mails.jour", label: "E-mails de masse par jour (newsletter + alertes)", hint: "Brevo gratuit : 300 par jour. Marge gardée pour les e-mails de connexion et de relais.", default: 250, min: 10, max: 100000 },
 ] as const;
 
 export type SettingKey = (typeof SOCIAL_NETWORKS)[number]["key"] | (typeof NUMBER_SETTINGS)[number]["key"];

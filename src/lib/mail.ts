@@ -208,6 +208,55 @@ export function sendRelayNotification(to: string, fromName: string, subject: str
   );
 }
 
+/* Newsletter : confirmation d'abonnement (double opt-in). */
+export function sendNewsletterConfirm(to: string, url: string) {
+  return send(
+    to,
+    "Un clic pour confirmer votre abonnement",
+    `Vous avez demandé à recevoir la lettre de Béninois du Monde. Confirmez votre adresse en ouvrant ce lien (valable 7 jours) :\n${url}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne sera envoyé.${SIGN}`,
+    layout({
+      preheader: "Confirmez votre adresse et la prochaine lettre est pour vous.",
+      eyebrow: "Newsletter",
+      title: "Encore un clic et c'est réglé.",
+      paragraphs: ["Vous avez demandé à recevoir la lettre de Béninois du Monde : l'essentiel de la diaspora, chaque mois, dans votre boîte."],
+      cta: { label: "Confirmer mon abonnement", url },
+      footnote: "Lien valable 7 jours. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne sera envoyé.",
+    }),
+  );
+}
+
+/* Newsletter : un numéro composé dans l'admin, lien de désinscription obligatoire. */
+export function sendNewsletter(
+  to: string,
+  issue: { subject: string; intro: string; items: { title: string; href: string; label: string; excerpt: string; place: string }[] },
+  unsubscribeUrl: string,
+) {
+  const list = issue.items
+    .map(
+      (i) => `<tr><td style="padding:14px 0;border-bottom:1px solid ${LINE}">
+        <span style="display:inline-block;margin-bottom:6px;padding:2px 8px;background:#fdf4cd;font:700 11px/1.4 Helvetica,Arial,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:${INK}">${esc(i.label)}</span>${i.place ? `<span style="margin-left:8px;font:13px/1.4 Helvetica,Arial,sans-serif;color:${INK_2}">${esc(i.place)}</span>` : ""}<br>
+        <a href="${i.href}" style="font:700 19px/1.35 'Source Sans 3',Helvetica,Arial,sans-serif;color:${INK};text-decoration:none">${esc(i.title)}</a>
+        ${i.excerpt ? `<p style="margin:6px 0 0;font:15px/1.5 Helvetica,Arial,sans-serif;color:${INK_2}">${esc(i.excerpt)}</p>` : ""}</td></tr>`,
+    )
+    .join("");
+  const text = `${issue.intro ? issue.intro + "\n\n" : ""}${issue.items.map((i) => `• [${i.label}] ${i.title}\n  ${i.href}`).join("\n")}\n\nSe désinscrire : ${unsubscribeUrl}${SIGN}`;
+  return send(
+    to,
+    issue.subject,
+    text,
+    layout({
+      preheader: issue.items[0]?.title ?? issue.subject,
+      eyebrow: "La lettre",
+      title: issue.subject,
+      paragraphs: issue.intro ? [esc(issue.intro).replace(/\n/g, "<br>")] : [],
+      panel: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${list}</table>`,
+      panelFirst: true,
+      cta: { label: "Tout voir sur le site", url: SITE_URL },
+      footnote: `Vous recevez cette lettre parce que vous y êtes abonné. <a href="${unsubscribeUrl}" style="color:${INK_2}">Se désinscrire en un clic</a>.`,
+    }),
+  );
+}
+
 /* Alertes par mots-clés : la sélection du jour, un e-mail par membre. */
 export function sendAlertDigest(to: string, items: { title: string; href: string; label: string }[], manageLink: string) {
   const n = items.length;

@@ -459,6 +459,7 @@ model Celebrity {
 model NewsletterIssue {
   id         String    @id @default(cuid())
   subject    String
+  intro      String?
   contentIds Json
   sentAt     DateTime?
   stats      Json?

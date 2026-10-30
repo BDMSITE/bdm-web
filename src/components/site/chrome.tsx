@@ -347,6 +347,7 @@ export async function SiteFooter() {
             <ul className="flex flex-wrap gap-x-9 gap-y-3 text-[0.9rem] font-semibold">
               {[
                 { label: "Contact", href: "/contact" },
+                { label: "Newsletter", href: "/newsletter" },
                 { label: "Annonceurs", href: "/annonceurs" },
                 { label: "Espace recruteur", href: "/emploi/recruteurs" },
                 { label: "Le HCBE", href: "/hcbe" },

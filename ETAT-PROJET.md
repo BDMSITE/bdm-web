@@ -254,6 +254,24 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   visible à toute taille d'écran. Comptes : l'administrateur a aussi son espace membre (normal), les membres n'ont jamais
   accès au back-office (proxy).
 
+- **30/10 (après-midi) — LES 7 OMISSIONS VALIDÉES + SUGGESTIONS, LIVRÉES.** Tout est en prod (commits 8acc55a → 7747430).
+  1. **E-mails maison** : gabarit unique `layout()` dans `src/lib/mail.ts` (bande tricolore, fresque, titre, bouton vert,
+     pied « Partenaire officiel du HCBE »), 10 messages réécrits ; aperçu : `pnpm tsx scripts/apercu-mails.ts dossier`.
+  2. **Image de partage** `/api/og?t=&k=&s=` (Public Sans 800, composition drapeau, < 60 Ko pour WhatsApp) sur chaque contenu
+     et chaque fiche membre ; `metadataBase`, OG/Twitter par défaut.
+  3. **Manifest PWA** + icônes générées (`/api/icone`, `/apple-icon`).
+  4. **Quota recruteurs** : `quota.offres` (3 par défaut) réglable dans Paramètres → Quotas, appliqué à la publication.
+  5. **Newsletter complète** : `/newsletter` (double confirmation, désinscription 1 clic), admin : composer un numéro (contenus
+     cochés), Envoyer / Continuer, reprise automatique par le cron dans la limite `quota.mails.jour` (250).
+  6. **Compétences** : le membre propose (`/compte/competences`), l'équipe valide (`/admin/competences`), page publique
+     alimentée, badge « Expert validé par le HCBE » sur la fiche. **Accueil & hébergement** : fiche membre
+     (`/compte/accueil`), relecture dans Admin → Services, page publique alimentée. Contacts via messagerie relais.
+  7. **Rapport annonceurs** : CSV 90 j (Admin → Régie) + e-mail mensuel le 1er à CONTACT_EMAIL.
+  Suggestions : accusé de candidature au candidat, hebdo « près de chez vous » (lundi, abonnés à la lettre avec un pays),
+  rappel unique de profil incomplet (lundi), export CSV de l'annuaire (Admin → Communauté), **afficher / masquer le mot de
+  passe** sur les 9 champs. Migrations `newsletter_intro` et `experts_accueil` appliquées en local et sur Neon.
+  **Adhésion payante : en attente de la réponse du HCBE** (obligatoire ou optionnelle ?) — page Notion « 💳 Adhésion & accès ».
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
    site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

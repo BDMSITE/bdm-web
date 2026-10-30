@@ -64,8 +64,9 @@ async function contactAction(formData: FormData) {
 
 const INPUT = "w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none";
 
-export default async function ContactPage({ searchParams }: { searchParams: Promise<{ envoye?: string; erreur?: string }> }) {
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ envoye?: string; erreur?: string; sujet?: string }> }) {
   const sp = await searchParams;
+  const sujetInitial = SUJETS.find((s) => s === sp.sujet) ?? SUJETS[0];
   const erreur = sp.erreur ? ERREURS[sp.erreur] ?? ERREURS.envoi : null;
 
   return (
@@ -104,7 +105,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
               </div>
               <div>
                 <label htmlFor="sujet" className="mb-1 block text-sm font-bold">Sujet *</label>
-                <select id="sujet" name="sujet" className={`${INPUT} sm:w-2/3`}>
+                <select id="sujet" name="sujet" defaultValue={sujetInitial} className={`${INPUT} sm:w-2/3`}>
                   {SUJETS.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </div>

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, AdSlot, KeywordChips } from "@/components/site/chrome";
 import { db } from "@/lib/db";
 import { ogImageUrl } from "@/lib/og";
+import { SITE_URL } from "@/lib/site-url";
+import { ShareButtons } from "@/components/site/share-buttons";
 import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
@@ -84,13 +86,14 @@ export default async function ProfilPage({ params }: Props) {
                 </span>
               </div>
             </div>
-            {!isSelf && (
-              <div className="flex shrink-0 flex-wrap gap-3">
+            <div className="flex shrink-0 flex-wrap items-center gap-3">
+              <ShareButtons url={`${SITE_URL}/communaute/membres/${profile.slug}`} title={profile.displayName} compact />
+              {!isSelf && (
                 <a href="#ecrire" className="whitespace-nowrap rounded bg-accent px-4 py-2 text-sm font-bold text-ink hover:bg-accent-dark">
                   Écrire à {prenom}
                 </a>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

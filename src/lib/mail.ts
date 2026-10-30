@@ -413,3 +413,23 @@ export function sendModerationResult(to: string, r: { title: string; published: 
     }),
   );
 }
+
+/* Compétences : un porteur de projet cherche un expert → e-mail au HCBE. */
+export function sendExpertRequest(d: { nom: string; organisation: string; email: string; domaine: string; besoin: string }) {
+  const to = process.env.CONTACT_EMAIL ?? parseFrom(FROM).email;
+  return send(
+    to,
+    `[Compétences] ${d.organisation} cherche un expert : ${d.domaine}`,
+    `Demande reçue via « Je cherche un expert ».\n\nDe : ${d.nom} (${d.organisation}) <${d.email}>\nDomaine : ${d.domaine}\n\n${d.besoin}\n\nExperts validés : ${SITE_URL}/admin/competences${SIGN}`,
+    layout({
+      preheader: `${d.organisation} cherche un expert en ${d.domaine}.`,
+      eyebrow: "Compétences de la diaspora",
+      title: `${d.organisation} cherche un expert.`,
+      paragraphs: [`<strong>${esc(d.nom)}</strong> &lt;${esc(d.email)}&gt; · domaine : <strong>${esc(d.domaine)}</strong>`],
+      panel: `<p style="margin:0;font:16px/1.65 Helvetica,Arial,sans-serif;color:${INK};white-space:pre-line">${esc(d.besoin)}</p>`,
+      panelFirst: true,
+      cta: { label: "Voir les experts validés", url: `${SITE_URL}/admin/competences` },
+      footnote: "Répondez directement à cette adresse depuis votre messagerie.",
+    }),
+  );
+}

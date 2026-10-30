@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter, AdSlot, PageBanner, SectionTitle } from "@/comp
 import { EmptyState } from "@/components/site/content";
 import { db } from "@/lib/db";
 import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
+import { DemandeExpertForm } from "./demande-form";
 import { Stethoscope, Scale, Cpu, GraduationCap } from "lucide-react";
 
 export const metadata: Metadata = { title: "Compétences de la diaspora" };
@@ -19,7 +20,21 @@ const DOMAINES = [
   { icon: GraduationCap, t: "Enseignement & recherche", d: "Enseignants, formateurs, chercheurs." },
 ];
 
-export default async function CompetencesPage() {
+const ERREURS: Record<string, string> = {
+  nom: "Indiquez votre nom.",
+  organisation: "Indiquez votre organisation.",
+  email: "Adresse e-mail invalide.",
+  domaine: "Choisissez un domaine.",
+  besoin: "Décrivez votre besoin (40 caractères minimum).",
+  consent: "Vous devez accepter la mise en relation.",
+  spam: "Le formulaire n'a pas pu être envoyé.",
+  envoi: "Envoi impossible pour le moment. Réessayez dans quelques instants.",
+  trop: "Trop de demandes depuis votre connexion : réessayez dans une heure.",
+  robot: "Vérification anti-robot échouée : rechargez la page et réessayez.",
+};
+
+export default async function CompetencesPage({ searchParams }: { searchParams: Promise<{ erreur?: string; envoye?: string }> }) {
+  const sp = await searchParams;
   const experts = await db.profile.findMany({
     where: { expertStatus: "APPROVED", user: { status: "ACTIVE" } },
     orderBy: { expertAt: "desc" },
@@ -110,6 +125,12 @@ export default async function CompetencesPage() {
                 </>
               )}
             </section>
+
+            <section id="demande">
+              <SectionTitle pre="Je cherche" em="un expert" />
+              <p className="mb-4 text-sm text-ink-2">Institution, entreprise, association au Bénin : décrivez votre besoin, le HCBE fait le lien avec les experts validés.</p>
+              <DemandeExpertForm erreur={sp.erreur ? ERREURS[sp.erreur] ?? ERREURS.spam : null} envoye={Boolean(sp.envoye)} />
+            </section>
           </div>
 
           <aside className="space-y-8">
@@ -127,8 +148,8 @@ export default async function CompetencesPage() {
             <div className="border border-line bg-paper-2 p-4 text-sm text-ink-2">
               <p className="font-bold text-ink">Vous portez un projet au Bénin ?</p>
               <p className="mt-2">Institution, entreprise, association : dites-nous quelles expertises vous cherchez.</p>
-              <Link href="/contact" className="mt-3 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
-                Nous écrire →
+              <Link href="#demande" className="mt-3 inline-block whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+                Décrire mon besoin →
               </Link>
             </div>
             <AdSlot slot="SIDE" section="communaute" />

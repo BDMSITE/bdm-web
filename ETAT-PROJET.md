@@ -289,6 +289,17 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   l'admin Communauté, e-mail au membre après modération, photo de profil, fuseaux horaires des événements,
   partage WhatsApp, pages pays, guides de démarches, Gitleaks en CI.
 
+- **30/10 (nuit) — LES 7 CHANTIERS VALIDÉS PAR JOSUÉ, LIVRÉS.** 1) modération : refus avec motif, e-mail « publié / non
+  retenu » à l'auteur, motif visible dans Mes publications ; 2) admin Communauté : recherche (nom, e-mail, ville),
+  filtres type / statut, pagination par 50 ; 3) profil : photo (Blob public, 2 Mo), fonction, détails entreprise /
+  association / artiste, avatars partout ; 4) référentiel pays (`src/lib/pays.ts`) : suggestions Pays + Ville
+  (Nominatim) dans tous les formulaires, normalisation à l'enregistrement ; 5) événements : fuseau horaire du lieu
+  (`EventDetails.timezone`), affichage « 19:00 (Montréal) · 01:00 à Cotonou », « Ajouter à mon agenda » (.ics, Google),
+  calendrier abonnable `/agenda/ical` ; 6) partage WhatsApp / copie de lien, formulaire « Je cherche un expert »,
+  pages pays `/pays` + `/pays/[slug]`, guides de démarches `/pratique/demarches` (articles tagués « Démarches ») ;
+  7) Gitleaks sur GitHub Actions (`.github/workflows/gitleaks.yml`, dépôt public). Migrations `moderation_note` et
+  `event_timezone` appliquées en local et sur Neon.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
    site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

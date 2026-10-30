@@ -44,3 +44,14 @@ export function normalizeCity(input: string | null | undefined): string {
   if (!raw) return "";
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
+
+const AU = new Set(["Bénin","Canada","Togo","Nigeria","Sénégal","Gabon","Maroc","Ghana","Burkina Faso","Niger","Cameroun","Congo","RD Congo","Brésil","Mali","Luxembourg","Portugal","Royaume-Uni","Japon","Liban","Qatar","Koweït","Danemark","Mexique","Pérou","Chili","Viêt Nam","Kenya","Rwanda","Mozambique","Zimbabwe","Botswana","Soudan","Soudan du Sud","Tchad","Liberia","Malawi","Burundi","Cambodge","Laos","Népal","Pakistan","Bangladesh","Sri Lanka","Panama","Paraguay","Venezuela","Costa Rica","Yémen","Oman","Bahreïn","Monténégro","Kazakhstan","Liechtenstein","Zambie"]);
+const AUX = new Set(["États-Unis","Pays-Bas","Émirats arabes unis","Comores","Seychelles","Philippines","Bahamas"]);
+
+/** « au Bénin », « aux États-Unis », « en France », « à Maurice ». */
+export function enPays(pays: string) {
+  if (AUX.has(pays)) return `aux ${pays}`;
+  if (AU.has(pays)) return `au ${pays}`;
+  if (["Maurice","Madagascar","Cuba","Haïti","Singapour","Malte","Chypre","Monaco","Djibouti","Mayotte","Taïwan","Sao Tomé-et-Principe","Trinité-et-Tobago"].includes(pays)) return `à ${pays}`;
+  return `en ${pays}`;
+}

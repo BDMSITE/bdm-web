@@ -19,6 +19,7 @@ export type PublicationFormValues = {
   country: string;
   city: string;
   keywords: string;
+  cover: string;
   contractType: string;
   startsAt: string;
   timezone: string;
@@ -87,6 +88,18 @@ export function PublicationForm({ id, type, status, values }: { id: string; type
       <div>
         <label htmlFor="keywords" className="mb-1 block text-sm font-bold">Mots-clés <span className="font-normal text-muted">(séparés par des virgules)</span></label>
         <input id="keywords" name="keywords" maxLength={500} defaultValue={values.keywords} className={INPUT} />
+      </div>
+      <div>
+        <label htmlFor="cover" className="mb-1 block text-sm font-bold">Photo ou visuel <span className="font-normal text-muted">(facultatif)</span></label>
+        {values.cover && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={values.cover} alt="" className="mb-2 h-28 w-auto border border-line object-cover" />
+        )}
+        <input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" aria-invalid={invalid("cover")} className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-white hover:file:bg-primary-dark" />
+        {values.cover && (
+          <label className="mt-2 flex items-center gap-2 text-xs text-ink-2"><input type="checkbox" name="removeCover" className="h-4 w-4 accent-primary" /> Retirer le visuel actuel</label>
+        )}
+        <p className="mt-1 text-xs text-muted">JPG, PNG ou WebP, 3 Mo maximum.</p>
       </div>
 
       {isJob && (

@@ -450,3 +450,51 @@ export function sendProVerified(to: string, r: { displayName: string; href: stri
     }),
   );
 }
+
+/* Invitation envoyée par un membre à un proche. */
+export function sendFriendInvite(to: string, r: { from: string; message: string; url: string; profileUrl: string }) {
+  return send(
+    to,
+    `${r.from} vous invite sur Béninois du Monde`,
+    `${r.from} vous invite à rejoindre Béninois du Monde, le réseau de la diaspora béninoise.${r.message ? `\n\n« ${r.message} »` : ""}\n\nInscription gratuite : ${r.url}${SIGN}`,
+    layout({
+      preheader: `${r.from} vous a réservé une place dans le réseau de la diaspora.`,
+      eyebrow: "Invitation",
+      title: `${r.from} vous invite.`,
+      paragraphs: [`<strong>${esc(r.from)}</strong> est membre de Béninois du Monde, le média et le réseau des Béninois où qu'ils vivent : annuaire, emploi, événements, bonnes adresses, bons plans. Et vous invite à le rejoindre.`],
+      panel: r.message ? `<p style="margin:0;font:italic 16px/1.6 Georgia,serif;color:${INK}">« ${esc(r.message)} »</p><p style="margin:8px 0 0;font:13px/1.4 Helvetica,Arial,sans-serif;color:${INK_2}">— <a href="${r.profileUrl}" style="color:${GREEN}">${esc(r.from)}</a></p>` : undefined,
+      panelFirst: true,
+      cta: { label: "Créer mon compte gratuit", url: r.url },
+      footnote: "Vous recevez cet e-mail parce qu'un membre a saisi votre adresse pour vous inviter. Elle n'est pas conservée si vous ne vous inscrivez pas.",
+    }),
+  );
+}
+
+/* Tableau de bord mensuel pour le HCBE. */
+export function sendMonthlyReport(to: string, mois: string, s: { inscrits: number; actifs: number; pays: number; publications: number; messages: number; candidatures: number; abonnes: number; experts: number }, regie: { advertiser: string; title: string; impressions: number; clicks: number }[], adminUrl: string) {
+  const f = (n: number) => n.toLocaleString("fr-FR");
+  const lignes = [
+    ["Nouveaux comptes activés", s.inscrits], ["Membres actifs au total", s.actifs], ["Pays représentés", s.pays], ["Contenus publiés dans le mois", s.publications],
+    ["Messages échangés", s.messages], ["Candidatures envoyées", s.candidatures], ["Abonnés à la lettre", s.abonnes], ["Experts validés", s.experts],
+  ] as const;
+  const table = lignes.map(([l, n]) => `<tr><td style="padding:7px 0;border-bottom:1px solid ${LINE};font:15px/1.4 Helvetica,Arial,sans-serif;color:${INK}">${l}</td><td align="right" style="padding:7px 0;border-bottom:1px solid ${LINE};font:700 15px/1.4 Helvetica,Arial,sans-serif;color:${INK}">${f(n)}</td></tr>`).join("");
+  const pub = regie.length
+    ? `<p style="margin:16px 0 6px;font:600 12px/1.4 Helvetica,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:${INK_2}">Régie publicitaire</p>` +
+      regie.map((r) => `<p style="margin:0 0 4px;font:14px/1.5 Helvetica,Arial,sans-serif;color:${INK}">${esc(r.advertiser)} — ${esc(r.title)} : ${f(r.impressions)} affichages, ${f(r.clicks)} clics</p>`).join("")
+    : "";
+  return send(
+    to,
+    `Béninois du Monde : le mois de ${mois} en chiffres`,
+    `Tableau de bord ${mois}\n\n${lignes.map(([l, n]) => `${l} : ${f(n)}`).join("\n")}\n\n${regie.map((r) => `${r.advertiser} — ${r.title} : ${r.impressions} affichages, ${r.clicks} clics`).join("\n")}\n\nBack-office : ${adminUrl}${SIGN}`,
+    layout({
+      preheader: `${f(s.inscrits)} nouveaux membres, ${f(s.publications)} publications, ${f(s.pays)} pays.`,
+      eyebrow: "Tableau de bord",
+      title: `Le mois de ${mois}.`,
+      paragraphs: ["Les chiffres du site pour le HCBE, calculés automatiquement. Les mêmes chiffres, en détail, sont dans le back-office."],
+      panel: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${table}</table>${pub}`,
+      panelFirst: true,
+      cta: { label: "Ouvrir le back-office", url: adminUrl },
+      footnote: "Envoyé le 1er de chaque mois à l'adresse de contact du site.",
+    }),
+  );
+}

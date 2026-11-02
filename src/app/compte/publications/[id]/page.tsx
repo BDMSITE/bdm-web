@@ -59,6 +59,7 @@ export default async function EditPublicationPage({ params }: { params: Promise<
           country: content.country ?? "",
           city: content.city ?? "",
           keywords: content.keywords.map((k) => k.keyword.name).join(", "),
+          cover: content.cover ?? "",
           contractType: content.job?.contractType ?? "",
           startsAt: content.event ? utcToLocalInput(content.event.startsAt, content.event.timezone) : "",
           timezone: content.event?.timezone ?? "",

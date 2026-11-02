@@ -19,3 +19,16 @@ export async function uploadPhoto(profileId: string, file: FormDataEntryValue | 
 export async function removePhotoBlob(url: string | null | undefined) {
   if (url && url.includes(".public.blob.vercel-storage.com/") && process.env.BLOB_READ_WRITE_TOKEN) await del(url).catch(() => {});
 }
+
+const COVER_MAX = 3 * 1024 * 1024;
+
+/** Visuel d'un contenu (annonce, événement, adresse, article membre) : Blob public, 3 Mo. */
+export async function uploadCover(file: FormDataEntryValue | null): Promise<string | null> {
+  if (!(file instanceof File) || file.size === 0) return null;
+  const ext = PHOTO_TYPES[file.type];
+  if (!ext) throw new Error("Visuel : format accepté JPG, PNG ou WebP.");
+  if (file.size > COVER_MAX) throw new Error("Visuel : 3 Mo maximum.");
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error("Visuel : stockage non configuré sur ce serveur.");
+  const r = await put(`contenus/${Date.now()}.${ext}`, file, { access: "public", contentType: file.type, addRandomSuffix: true });
+  return r.url;
+}

@@ -76,6 +76,12 @@ export function PublierForm() {
         </div>
 
         <div>
+          <label htmlFor="cover" className="mb-1 block text-sm font-bold">Photo ou visuel <span className="font-normal text-muted">(facultatif)</span></label>
+          <input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" aria-invalid={invalid("cover")} className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-white hover:file:bg-primary-dark" />
+          <p className="mt-1 text-xs text-muted">JPG, PNG ou WebP, 3 Mo maximum. Une photo multiplie les lectures d&apos;une annonce ou d&apos;un événement.</p>
+        </div>
+
+        <div>
           <label htmlFor="body" className="mb-1 block text-sm font-bold">Texte *</label>
           <textarea id="body" name="body" rows={8} required aria-invalid={invalid("body")} className={INPUT} />
           <p className="mt-1 text-xs text-muted">Pas de coordonnées personnelles dans le texte : le contact passe par le formulaire relais du site.</p>

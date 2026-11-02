@@ -1,9 +1,8 @@
 import { db } from "./db";
-import { sendProfileReminder, sendWeeklyDigest, sendRegieReport } from "./mail";
+import { sendProfileReminder, sendWeeklyDigest, sendMonthlyReport } from "./mail";
 import { contentHref, CONTENT_LABEL } from "./routes";
 import { SITE_URL } from "./site-url";
 import { unsubscribeLink } from "./newsletter";
-import { SLOTS } from "./pub-slots";
 
 /* E-mails périodiques lancés par le cron du matin (dans la limite journalière) :
    - lundi : « nouveautés près de chez vous » aux abonnés de la lettre qui ont un pays
@@ -85,28 +84,30 @@ export async function profileReminders(budget: number): Promise<number> {
   return sent;
 }
 
-export async function monthlyRegieReport(): Promise<boolean> {
+export async function monthlyHcbeReport(): Promise<boolean> {
   const to = process.env.CONTACT_EMAIL ?? process.env.EMAIL_FROM?.match(/<([^>]+)>/)?.[1];
   if (!to) return false;
   const now = new Date();
   const debut = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const fin = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const stats = await db.bannerStat.groupBy({
-    by: ["bannerId"],
-    where: { day: { gte: debut, lt: fin } },
-    _sum: { impressions: true, clicks: true },
-  });
-  if (stats.length === 0) return false;
-  const banners = await db.banner.findMany({ where: { id: { in: stats.map((s) => s.bannerId) } }, select: { id: true, title: true, advertiser: true, slot: true, house: true } });
-  const slotLabel = new Map(SLOTS.map((s) => [s.code, s.label]));
-  const byId = new Map(banners.map((b) => [b.id, b]));
-  const rows = stats
-    .map((s) => {
-      const b = byId.get(s.bannerId);
-      return { advertiser: b?.advertiser ?? "?", title: b?.title ?? s.bannerId, slot: (b && slotLabel.get(b.slot)) ?? "", house: b?.house ?? false, impressions: s._sum.impressions ?? 0, clicks: s._sum.clicks ?? 0 };
-    })
-    .sort((a, b) => b.impressions - a.impressions);
   const mois = debut.toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
-  await sendRegieReport(to, mois, rows, `${SITE_URL}/api/admin/export/regie?jours=31`);
+  const periode = { gte: debut, lt: fin };
+  const [inscrits, actifs, pays, publications, messages, candidatures, abonnes, experts, stats] = await Promise.all([
+    db.user.count({ where: { status: "ACTIVE", emailVerified: periode } }),
+    db.user.count({ where: { status: "ACTIVE" } }),
+    db.profile.findMany({ where: { user: { status: "ACTIVE" }, country: { not: null } }, distinct: ["country"], select: { country: true } }).then((r) => r.length),
+    db.content.count({ where: { status: "PUBLISHED", publishedAt: periode } }),
+    db.message.count({ where: { createdAt: periode } }),
+    db.application.count({ where: { createdAt: periode } }),
+    db.subscriber.count({ where: { confirmedAt: { not: null } } }),
+    db.profile.count({ where: { expertStatus: "APPROVED" } }),
+    db.bannerStat.groupBy({ by: ["bannerId"], where: { day: periode }, _sum: { impressions: true, clicks: true } }),
+  ]);
+  const banners = stats.length ? await db.banner.findMany({ where: { id: { in: stats.map((s) => s.bannerId) } }, select: { id: true, title: true, advertiser: true } }) : [];
+  const byId = new Map(banners.map((b) => [b.id, b]));
+  const regie = stats
+    .map((s) => ({ advertiser: byId.get(s.bannerId)?.advertiser ?? "?", title: byId.get(s.bannerId)?.title ?? s.bannerId, impressions: s._sum.impressions ?? 0, clicks: s._sum.clicks ?? 0 }))
+    .sort((a, b) => b.impressions - a.impressions);
+  await sendMonthlyReport(to, mois, { inscrits, actifs, pays, publications, messages, candidatures, abonnes, experts }, regie, `${SITE_URL}/admin`);
   return true;
 }

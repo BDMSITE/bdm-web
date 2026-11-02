@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { uploadCover, removePhotoBlob } from "@/lib/photo";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { indexContent } from "@/lib/search";
 import { SECTION, contentHref } from "@/lib/routes";
@@ -29,7 +30,7 @@ async function requireUserId() {
 async function ownedContent(id: string, userId: string) {
   return db.content.findFirst({
     where: { id, ownerProfile: { userId } },
-    select: { id: true, type: true, slug: true, status: true, publishedAt: true },
+    select: { id: true, type: true, slug: true, status: true, publishedAt: true, cover: true },
   });
 }
 
@@ -65,8 +66,18 @@ export async function updateContentAction(_prev: PublicationState, formData: For
   // Un contenu déjà relu (en ligne ou refusé) repasse en modération ; sinon le statut ne bouge pas.
   const backToModeration = content.status === "PUBLISHED" || content.status === "REJECTED";
 
+  let cover: string | null | undefined;
+  try {
+    const nouveau = await uploadCover(formData.get("cover"));
+    if (nouveau) { cover = nouveau; await removePhotoBlob(content.cover); }
+    else if (formData.get("removeCover") === "on") { cover = null; await removePhotoBlob(content.cover); }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Visuel impossible à enregistrer.", champ: "cover" };
+  }
+
   const data: Prisma.ContentUpdateInput = {
     title: d.title,
+    ...(cover !== undefined && { cover }),
     excerpt: d.excerpt || null,
     body: d.body,
     country: normalizeCountry(d.country),

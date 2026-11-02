@@ -212,6 +212,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
       { label: "Artistes / groupes", href: "/communaute/artistes" },
       { label: "Compétences de la diaspora", href: "/communaute/competences" },
       { label: "La diaspora par pays", href: "/pays" },
+      { label: "La diaspora en chiffres", href: "/chiffres" },
       { label: "Articles membres", href: "/magazine" },
     ],
   },

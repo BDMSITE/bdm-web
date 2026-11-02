@@ -433,3 +433,20 @@ export function sendExpertRequest(d: { nom: string; organisation: string; email:
     }),
   );
 }
+
+/* Fiche entreprise / association / artiste validée par l'équipe. */
+export function sendProVerified(to: string, r: { displayName: string; href: string }) {
+  return send(
+    to,
+    `Votre fiche est dans l'annuaire : ${r.displayName}`,
+    `Bonne nouvelle : la fiche « ${r.displayName} » a été validée par l'équipe et apparaît maintenant dans l'annuaire.\n${r.href}${SIGN}`,
+    layout({
+      preheader: `${r.displayName} est maintenant dans l'annuaire.`,
+      eyebrow: "Annuaire",
+      title: "Vous êtes dans l'annuaire.",
+      paragraphs: [`La fiche <strong>${esc(r.displayName)}</strong> a été relue et validée par l'équipe. Elle apparaît maintenant dans l'annuaire, sur la carte et dans les pages pays.`],
+      cta: { label: "Voir ma fiche", url: r.href },
+      footnote: "Complétez-la quand vous voulez depuis Mon profil public.",
+    }),
+  );
+}

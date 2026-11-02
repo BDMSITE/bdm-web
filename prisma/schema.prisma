@@ -171,6 +171,7 @@ model Profile {
   expertModes    Json?    // ["MENTORAT","MISSION","CONSEIL"]
   expertPitch    String?  // ce que le membre propose, relu par le HCBE
   expertAt       DateTime? // date de la demande ou de la décision
+  proVerifiedAt  DateTime? // fiche entreprise / association / artiste validée par l'équipe (si la validation est activée)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

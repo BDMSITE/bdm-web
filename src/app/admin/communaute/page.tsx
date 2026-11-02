@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import type { AccountType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { setUserStatusAction } from "@/lib/actions/admin";
+import { setUserStatusAction, setProVerifiedAction } from "@/lib/actions/admin";
+import { flag } from "@/lib/settings";
 import { ActionButton } from "@/components/admin/action-button";
 import { PageHead, StatCard, Card, Badge, TableShell, Th, Td, EmptyState, UserStatusBadge, fmtDate, fmtNumber } from "@/components/admin/ui";
 
@@ -13,8 +14,8 @@ export const metadata: Metadata = { title: "Communauté" };
    pagination par 50, suspension / réactivation. */
 
 const PAR_PAGE = 50;
-const STATUTS = ["ACTIVE", "PENDING_EMAIL", "SUSPENDED"] as const;
-const STATUT_LABEL: Record<string, string> = { ACTIVE: "Actifs", PENDING_EMAIL: "E-mail non confirmé", SUSPENDED: "Suspendus" };
+const STATUTS = ["ACTIVE", "PENDING_EMAIL", "SUSPENDED", "PRO_A_VALIDER"] as const;
+const STATUT_LABEL: Record<string, string> = { ACTIVE: "Actifs", PENDING_EMAIL: "E-mail non confirmé", SUSPENDED: "Suspendus", PRO_A_VALIDER: "Fiches pro à valider" };
 
 const TYPE_LABEL: Record<AccountType, string> = {
   MEMBER: "Membres",
@@ -37,7 +38,8 @@ export default async function AdminCommunautePage({ searchParams }: { searchPara
   const statut = STATUTS.find((s) => s === sp.statut);
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
   const where = {
-    status: statut ?? { not: "DELETED" as const },
+    status: statut === "PRO_A_VALIDER" ? ("ACTIVE" as const) : (statut ?? { not: "DELETED" as const }),
+    ...(statut === "PRO_A_VALIDER" && { accountType: { not: "MEMBER" as const }, profile: { proVerifiedAt: null } }),
     ...(type && { accountType: type }),
     ...(q && {
       OR: [
@@ -48,6 +50,7 @@ export default async function AdminCommunautePage({ searchParams }: { searchPara
       ],
     }),
   };
+  const validationPro = await flag("communaute.validation_pro");
   const [session, parType, parTypeActifs, total, derniers] = await Promise.all([
     auth(),
     db.user.groupBy({ by: ["accountType"], where: { status: { not: "DELETED" } }, _count: { _all: true } }),
@@ -67,7 +70,7 @@ export default async function AdminCommunautePage({ searchParams }: { searchPara
         status: true,
         importedFrom: true,
         createdAt: true,
-        profile: { select: { displayName: true, slug: true, city: true, country: true } },
+        profile: { select: { displayName: true, slug: true, city: true, country: true, proVerifiedAt: true } },
       },
     }),
   ]);
@@ -135,12 +138,20 @@ export default async function AdminCommunautePage({ searchParams }: { searchPara
                   </p>
                   <p className="text-xs text-muted">{u.email}{u.importedFrom ? ` · importé (${u.importedFrom})` : ""}</p>
                 </Td>
-                <Td className="text-ink-2">{TYPE_LABEL_SINGULIER[u.accountType]}</Td>
+                <Td className="text-ink-2">
+                  {TYPE_LABEL_SINGULIER[u.accountType]}
+                  {validationPro && u.accountType !== "MEMBER" && (u.profile?.proVerifiedAt ? <Badge tone="green">Validée</Badge> : <Badge tone="yellow">À valider</Badge>)}
+                </Td>
                 <Td className="whitespace-nowrap text-ink-2">{[u.profile?.city, u.profile?.country].filter(Boolean).join(", ") || "—"}</Td>
                 <Td className="whitespace-nowrap text-muted">{fmtDate(u.createdAt)}</Td>
                 <Td><UserStatusBadge status={u.status} /></Td>
                 <Td>
                   <div className="flex flex-nowrap justify-end gap-2">
+                    {validationPro && u.accountType !== "MEMBER" && u.profile && (
+                      u.profile.proVerifiedAt
+                        ? <ActionButton action={setProVerifiedAction} fields={{ id: u.id, decision: "revoke" }} label="Retirer de l'annuaire" />
+                        : <ActionButton action={setProVerifiedAction} fields={{ id: u.id, decision: "approve" }} label="Valider la fiche" tone="primary" />
+                    )}
                     {u.id === session?.user?.id ? (
                       <span className="text-xs text-muted">vous</span>
                     ) : u.status === "SUSPENDED" ? (
@@ -162,8 +173,8 @@ export default async function AdminCommunautePage({ searchParams }: { searchPara
           </nav>
         )}
         <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-          Un compte suspendu ne peut plus se connecter (effectif en 5 minutes) ; ses contenus restent visibles. Il n&apos;existe pas encore de validation manuelle des comptes
-          professionnels : un compte entreprise, association ou artiste est actif dès que son e-mail est confirmé.
+          Un compte suspendu ne peut plus se connecter (effectif en 5 minutes) ; ses contenus restent visibles.
+          {validationPro ? " Les fiches entreprise, association et artiste n'apparaissent dans leur annuaire qu'après « Valider la fiche »." : " La validation manuelle des fiches pro est désactivée (Paramètres → Sécurité & validation)."}
         </p>
       </Card>
     </>

@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
 import { SettingsForm } from "./settings-form";
-import { getSettings, maintenance, SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
+import { getSettings, maintenance, SOCIAL_NETWORKS, NUMBER_SETTINGS, FLAG_SETTINGS } from "@/lib/settings";
+import { FlagsForm } from "./flags-form";
 import { MaintenanceForm } from "./maintenance-form";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 import { resetTwoFactorAction } from "@/lib/actions/admin";
@@ -128,6 +129,9 @@ export default async function AdminParametresPage() {
         </Card>
         <Card title="Réseaux sociaux (en-tête et pied de page)">
           <SettingsForm fields={SOCIAL_NETWORKS.map((n) => ({ key: n.key, label: n.label }))} values={settings} canEdit={isAdmin} />
+        </Card>
+        <Card title="Sécurité & validation">
+          <FlagsForm flags={FLAG_SETTINGS.map((f) => ({ key: f.key, label: f.label, hint: f.hint, on: settings[f.key] === "1" }))} canEdit={isAdmin} />
         </Card>
         <Card title="Quotas">
           <SettingsForm

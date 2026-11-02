@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { flag } from "@/lib/settings";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { slugify } from "@/lib/slug";
 import { indexProfile } from "@/lib/search";
@@ -60,7 +61,12 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
 
   /* Ce que le membre représente : un attribut du compte, pas un compte à part.
      Les tables de détails (entreprise, association, artiste) sont créées à la demande. */
+  const avantType = (await db.user.findUnique({ where: { id: session.user.id }, select: { accountType: true } }))?.accountType;
   await db.user.update({ where: { id: session.user.id }, data: { accountType: d.kind } });
+  /* Changement de type vers une fiche pro : remise en attente de validation si l'interrupteur est actif. */
+  if (d.kind !== "MEMBER" && d.kind !== avantType && (await flag("communaute.validation_pro"))) {
+    await db.profile.update({ where: { id: pid }, data: { proVerifiedAt: null } });
+  }
   if (d.kind === "COMPANY") {
     const v = { size: d.companySize || null, sector: d.companySector || null };
     await db.companyDetails.upsert({ where: { profileId: pid }, update: v, create: { profileId: pid, ...v } });

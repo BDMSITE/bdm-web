@@ -56,3 +56,14 @@ export async function maintenance() {
   const s = await getSettings();
   return { on: s[MAINTENANCE_KEY] === "1", message: s[MAINTENANCE_MESSAGE_KEY] || MAINTENANCE_DEFAULT_MESSAGE };
 }
+
+/* Interrupteurs oui / non (Paramètres → Sécurité & validation). */
+export const FLAG_SETTINGS = [
+  { key: "securite.2fa_equipe", label: "Double authentification obligatoire pour l'équipe", hint: "Toute personne ayant accès au back-office doit activer la 2FA avant d'y entrer. Recommandé avant l'ouverture." },
+  { key: "communaute.validation_pro", label: "Valider les fiches entreprise, association et artiste avant leur publication dans les annuaires", hint: "Le membre reste visible comme particulier ; sa fiche pro apparaît dans l'annuaire concerné après validation (Admin → Communauté)." },
+] as const;
+export type FlagKey = (typeof FLAG_SETTINGS)[number]["key"];
+
+export async function flag(key: FlagKey) {
+  return (await getSettings())[key] === "1";
+}

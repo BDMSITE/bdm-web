@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ProfilForm } from "./form";
+import { flag } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "Mon profil public" };
 
@@ -17,6 +18,7 @@ export default async function ProfilComptePage() {
   if (!profile) return <p className="text-sm text-muted">Profil introuvable.</p>;
 
   const visibility = (profile.visibility ?? {}) as { directory?: boolean };
+  const proEnAttente = profile.user.accountType !== "MEMBER" && !profile.proVerifiedAt && (await flag("communaute.validation_pro"));
 
   return (
     <div className="space-y-6">
@@ -33,6 +35,11 @@ export default async function ProfilComptePage() {
         </Link>
       </div>
 
+      {proEnAttente && (
+        <p role="status" className="rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">
+          Votre fiche {profile.user.accountType === "COMPANY" ? "entreprise" : profile.user.accountType === "ASSOCIATION" ? "association" : "artiste"} sera visible dans son annuaire après validation par l&apos;équipe. Vous restez visible dans l&apos;annuaire des membres.
+        </p>
+      )}
       <ProfilForm
         values={{
           displayName: profile.displayName,

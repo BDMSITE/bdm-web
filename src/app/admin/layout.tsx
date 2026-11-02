@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { flag } from "@/lib/settings";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminTopbar } from "@/components/admin/ui";
 import { AdminMobileNav } from "@/components/admin/mobile-nav";
@@ -22,14 +24,26 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [session, enModeration, signalements] = await Promise.all([
+  const [session, enModeration, signalements, deuxFacteursObligatoire, validationPro] = await Promise.all([
     auth(),
     db.content.count({ where: { status: "IN_MODERATION" } }),
     db.report.count({ where: { status: "open" } }),
+    flag("securite.2fa_equipe"),
+    flag("communaute.validation_pro"),
   ]);
+
+  /* 2FA obligatoire pour l'équipe : sans secret TOTP, direction la page Sécurité. */
+  if (deuxFacteursObligatoire && session?.user?.id) {
+    const u = await db.user.findUnique({ where: { id: session.user.id }, select: { twoFactorSecret: true } });
+    if (!u?.twoFactorSecret) redirect("/compte/securite?obligatoire=1");
+  }
 
   const badges: Record<string, number> = {};
   if (enModeration + signalements > 0) badges["/admin/moderation"] = enModeration + signalements;
+  if (validationPro) {
+    const proAValider = await db.profile.count({ where: { proVerifiedAt: null, user: { status: "ACTIVE", accountType: { not: "MEMBER" } } } });
+    if (proAValider > 0) badges["/admin/communaute"] = proAValider;
+  }
 
   const user = session?.user
     ? {

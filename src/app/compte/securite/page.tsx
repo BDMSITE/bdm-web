@@ -12,8 +12,9 @@ export const metadata: Metadata = { title: "Sécurité" };
 
 const STAFF = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
 
-export default async function SecuritePage() {
+export default async function SecuritePage({ searchParams }: { searchParams: Promise<{ obligatoire?: string }> }) {
   const session = await auth();
+  const obligatoire = Boolean((await searchParams).obligatoire);
   const user = await db.user.findUnique({ where: { id: session!.user.id }, select: { passwordHash: true, twoFactorSecret: true } });
   const hasPassword = Boolean(user?.passwordHash);
   const staff = STAFF.has(session!.user.role ?? "");
@@ -23,6 +24,7 @@ export default async function SecuritePage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-extrabold">Sécurité</h1>
+        {obligatoire && <p role="alert" className="mt-3 rounded border border-danger bg-danger-light px-3 py-2.5 text-sm text-danger">L&apos;accès au back-office exige la double authentification : activez-la ci-dessous, puis retournez dans l&apos;administration.</p>}
         <p className="mt-1 text-sm text-ink-2">Mot de passe et protection de votre compte.</p>
       </div>
 

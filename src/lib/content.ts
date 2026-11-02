@@ -1,5 +1,6 @@
 import type { ContentType, Prisma, AccountType } from "@prisma/client";
 import { contentHref } from "@/lib/routes";
+import { flag } from "@/lib/settings";
 import { db } from "./db";
 
 /* Accès aux contenus publiés et aux profils actifs. Toutes les pages publiques
@@ -142,8 +143,10 @@ export function publicProfileWhere(extra: Prisma.ProfileWhereInput = {}): Prisma
 export async function listProfiles(p: { accountType?: AccountType; q?: string; country?: string; keyword?: string; take?: number; skip?: number }) {
   const q = clean(p.q);
   const ci = { mode: "insensitive" as const };
+  const validationPro = p.accountType && p.accountType !== "MEMBER" ? await flag("communaute.validation_pro") : false;
   const where = publicProfileWhere({
     ...(p.accountType && { user: { status: "ACTIVE", accountType: p.accountType } }),
+    ...(validationPro && { proVerifiedAt: { not: null } }),
     ...(q && { OR: [{ displayName: { contains: q, ...ci } }, { bio: { contains: q, ...ci } }, { city: { contains: q, ...ci } }, { keywords: { some: { keyword: { name: { contains: q, ...ci } } } } }] }),
     ...(clean(p.country) && { country: clean(p.country) }),
     ...(clean(p.keyword) && { keywords: { some: { keyword: { slug: clean(p.keyword) } } } }),

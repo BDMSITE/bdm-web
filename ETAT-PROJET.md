@@ -325,13 +325,20 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   désormais lui-même les règles d'accès (/admin réservé à l'équipe, /compte aux connectés) sur toutes les pages et
   transmet le chemin au layout (x-pathname). **Site mis en maintenance le 02/11 à la demande de Josué.**
 
+- **02/11 — SÉCURITÉ & VALIDATION, PILOTABLES.** Paramètres → carte « Sécurité & validation » (ADMIN) : (1) **2FA
+  obligatoire pour l'équipe** : sans TOTP, toute entrée dans /admin redirige vers Sécurité avec un message ; (2) **validation
+  des fiches pro** : une fiche entreprise / association / artiste n'apparaît dans son annuaire qu'après « Valider la
+  fiche » (Admin → Communauté, filtre « Fiches pro à valider », pastille dans la barre), e-mail au membre à la validation,
+  notice dans son profil. Champ `Profile.proVerifiedAt` (migration `pro_verified`, locale + Neon). Les deux
+  interrupteurs sont **désactivés par défaut** : à activer avant l'ouverture.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
    d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
-4. Plus tard : 2FA obligatoire pour ADMIN, Meilisearch hébergé si besoin, validation des comptes pro, modèle « expert ».
+4. Plus tard : Meilisearch hébergé si besoin.
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

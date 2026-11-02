@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { zonedToUtc } from "@/lib/temps";
-import { sendModerationResult } from "@/lib/mail";
+import { sendModerationResult, sendProVerified } from "@/lib/mail";
 import { SITE_URL } from "@/lib/site-url";
 import { slugify } from "@/lib/slug";
 import { indexContent } from "@/lib/search";
@@ -15,7 +15,7 @@ import { geocode } from "@/lib/geocode";
 import { contentHref, SECTION } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 import { ADMIN_CONTENT_TYPES, ADMIN_STATUSES } from "@/components/admin/ui";
-import { SOCIAL_NETWORKS, NUMBER_SETTINGS, numberSetting, MAINTENANCE_KEY, MAINTENANCE_MESSAGE_KEY } from "@/lib/settings";
+import { SOCIAL_NETWORKS, NUMBER_SETTINGS, FLAG_SETTINGS, numberSetting, MAINTENANCE_KEY, MAINTENANCE_MESSAGE_KEY } from "@/lib/settings";
 import { countRecipients, issueStats, sendNewsletterBatch } from "@/lib/newsletter";
 
 /* Actions du back-office. Chaque action : session vérifiée (rôle rédaction,
@@ -1004,4 +1004,45 @@ export async function setMaintenanceAction(_prev: AdminActionState, formData: Fo
   await audit(user.id, on ? "maintenance.on" : "maintenance.off", "SiteSetting", MAINTENANCE_KEY, { message });
   revalidatePath("/", "layout");
   return { ok: true, message: on ? "Site fermé aux visiteurs : ils voient la page d'attente. Vous continuez à voir le site." : "Site rouvert à tous." };
+}
+
+/* ---------- Interrupteurs oui / non : ADMIN seul ---------- */
+
+export async function saveFlagsAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut modifier ces réglages." };
+  const actifs: string[] = [];
+  await db.$transaction(
+    FLAG_SETTINGS.map((f) => {
+      const on = formData.get(f.key) === "on";
+      if (on) actifs.push(f.key);
+      return on
+        ? db.siteSetting.upsert({ where: { key: f.key }, update: { value: "1" }, create: { key: f.key, value: "1" } })
+        : db.siteSetting.deleteMany({ where: { key: f.key } });
+    }),
+  );
+  await audit(user.id, "settings.update", "SiteSetting", null, { flags: actifs });
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Réglages enregistrés." };
+}
+
+/* ---------- Fiches pro : validation par l'équipe ---------- */
+
+export async function setProVerifiedAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = z.object({ id: z.string().min(1), decision: z.enum(["approve", "revoke"]) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const p = await db.profile.findUnique({ where: { userId: parsed.data.id }, select: { id: true, slug: true, displayName: true, user: { select: { email: true, status: true, accountType: true } } } });
+  if (!p) return { error: "Profil introuvable." };
+  const approve = parsed.data.decision === "approve";
+  await db.profile.update({ where: { id: p.id }, data: { proVerifiedAt: approve ? new Date() : null } });
+  await audit(user.id, approve ? "pro.approve" : "pro.revoke", "Profile", p.id, { displayName: p.displayName, type: p.user.accountType });
+  if (approve && p.user.status === "ACTIVE") {
+    await sendProVerified(p.user.email, { displayName: p.displayName, href: `${SITE_URL}/communaute/membres/${p.slug}` }).catch(() => {});
+  }
+  revalidatePath("/admin/communaute");
+  revalidatePath("/communaute", "layout");
+  return { ok: true, message: approve ? `Fiche de ${p.displayName} validée : visible dans l'annuaire.` : `Fiche de ${p.displayName} retirée de l'annuaire.` };
 }

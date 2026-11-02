@@ -3,6 +3,8 @@ import Link from "next/link";
 import { SiteHeader, SiteFooter, SectionTitle, PageBanner } from "@/components/site/chrome";
 import { ConsulateList } from "@/components/site/consulate-list";
 import { allConsulates } from "@/lib/consulats";
+import { SectionList } from "@/components/site/section-list";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Le HCBE" };
 
@@ -20,7 +22,7 @@ function AVenir({ children }: { children: React.ReactNode }) {
 }
 
 export default async function HcbePage() {
-  const consulats = await allConsulates();
+  const [consulats, sections] = await Promise.all([allConsulates(), db.hcbeSection.findMany({ orderBy: [{ country: "asc" }, { name: "asc" }], include: { contactProfile: { select: { slug: true, displayName: true } } } })]);
   const parPays = new Map<string, typeof consulats>();
   for (const c of consulats) parPays.set(c.country, [...(parPays.get(c.country) ?? []), c]);
   return (
@@ -75,6 +77,15 @@ export default async function HcbePage() {
         <section>
           <SectionTitle pre="Le bureau" em="exécutif" />
           <AVenir>La composition du bureau exécutif sera publiée ici une fois communiquée par le HCBE.</AVenir>
+        </section>
+
+        <section>
+          <SectionTitle pre="Les sections" em="locales" />
+          {sections.length === 0 ? (
+            <AVenir>La liste des sections locales du HCBE, pays par pays, sera publiée ici dès communication par le HCBE.</AVenir>
+          ) : (
+            <SectionList items={sections} />
+          )}
         </section>
 
         <section>

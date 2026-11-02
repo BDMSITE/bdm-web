@@ -1046,3 +1046,50 @@ export async function setProVerifiedAction(_prev: AdminActionState, formData: Fo
   revalidatePath("/communaute", "layout");
   return { ok: true, message: approve ? `Fiche de ${p.displayName} validée : visible dans l'annuaire.` : `Fiche de ${p.displayName} retirée de l'annuaire.` };
 }
+
+/* ---------- Sections locales du HCBE ---------- */
+
+const sectionSchema = z.object({
+  id: z.preprocess(vide, z.string().optional()),
+  country: z.string().trim().min(2, "Pays obligatoire").max(80),
+  city: z.preprocess(vide, z.string().max(80).optional()),
+  name: z.string().trim().min(2, "Nom obligatoire").max(160),
+  description: z.preprocess(vide, z.string().max(600).optional()),
+  contactEmail: z.preprocess(vide, z.email("E-mail du responsable invalide").optional()),
+  website: z.preprocess(vide, z.string().url("Site invalide (https://…)").max(300).optional()),
+});
+
+export async function saveSectionAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = sectionSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, contactEmail, ...d } = parsed.data;
+  let contactProfileId: string | null = null;
+  if (contactEmail) {
+    const p = await db.profile.findFirst({ where: { user: { email: contactEmail.toLowerCase(), status: "ACTIVE" } }, select: { id: true } });
+    if (!p) return { error: `Aucun membre actif avec l'adresse ${contactEmail} : le responsable doit d'abord avoir un compte activé.` };
+    contactProfileId = p.id;
+  }
+  const data = { country: normalizeCountry(d.country), city: d.city ? normalizeCity(d.city) : null, name: d.name, description: d.description ?? null, website: d.website ?? null, contactProfileId };
+  const row = id ? await db.hcbeSection.update({ where: { id }, data }) : await db.hcbeSection.create({ data });
+  await audit(user.id, id ? "section.update" : "section.create", "HcbeSection", row.id, { name: row.name, country: row.country });
+  revalidatePath("/admin/sections");
+  revalidatePath("/hcbe");
+  revalidatePath("/pays", "layout");
+  return { ok: true, message: id ? "Section mise à jour." : `Section « ${row.name} » ajoutée : visible sur la page HCBE et la page ${row.country}.` };
+}
+
+export async function deleteSectionAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const id = String(formData.get("id") ?? "");
+  const row = await db.hcbeSection.findUnique({ where: { id } });
+  if (!row) return { error: "Section introuvable." };
+  await db.hcbeSection.delete({ where: { id } });
+  await audit(user.id, "section.delete", "HcbeSection", id, { name: row.name, country: row.country });
+  revalidatePath("/admin/sections");
+  revalidatePath("/hcbe");
+  revalidatePath("/pays", "layout");
+  return { ok: true, message: `Section « ${row.name} » supprimée.` };
+}

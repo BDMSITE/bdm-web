@@ -108,6 +108,7 @@ model User {
   messagesReceived Message[] @relation("MessageToUser")
   blocks       UserBlock[]   @relation("Blocker")
   blockedBy    UserBlock[]   @relation("Blocked")
+  rsvps        EventRsvp[]
 }
 
 // --- Auth.js (comptes OAuth futurs, sessions, jetons de lien magique) ---
@@ -184,6 +185,34 @@ model Profile {
   messages    Message[]           @relation("MessageTo")
   partner     Partner?
   hosting     HostingOffer?
+  sections    HcbeSection[]  @relation("SectionContact")
+}
+
+/* « J'y vais » : participation annoncée à un événement (rappel la veille). */
+model EventRsvp {
+  contentId String
+  userId    String
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([contentId, userId])
+}
+
+/* Section locale du HCBE (pays / région), saisie dans l'admin ; contact par messagerie relais. */
+model HcbeSection {
+  id               String   @id @default(cuid())
+  country          String
+  city             String?
+  name             String
+  description      String?
+  website          String?
+  contactProfileId String?
+  contactProfile   Profile? @relation("SectionContact", fields: [contactProfileId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([country])
 }
 
 /* Fiche d'accueil d'un membre (CDC §7.10) : relue par le HCBE avant publication,
@@ -262,6 +291,7 @@ model Content {
   reports      Report[]
   favorites    Favorite[]
   messages     Message[]
+  rsvps        EventRsvp[]
 
   @@index([type, status, publishedAt])
   @@index([country, city])

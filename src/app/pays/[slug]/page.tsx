@@ -12,6 +12,7 @@ import { slugify } from "@/lib/slug";
 import { enPays } from "@/lib/pays";
 import { consulatesFor } from "@/lib/consulats";
 import { ConsulateList } from "@/components/site/consulate-list";
+import { SectionList } from "@/components/site/section-list";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -42,7 +43,7 @@ export default async function PaysPage({ params }: Props) {
   const pays = await resolveCountry(slug);
   if (!pays) notFound();
 
-  const [membres, agenda, offres, adresses, bonsPlans, annonces, villes, consulats] = await Promise.all([
+  const [membres, agenda, offres, adresses, bonsPlans, annonces, villes, consulats, sectionsHcbe] = await Promise.all([
     listProfiles({ country: pays, take: 9 }),
     listContents({ types: ["EVENT"], country: pays, upcoming: true, take: 4 }),
     listContents({ types: ["JOB", "INTERNSHIP"], country: pays, take: 4 }),
@@ -51,6 +52,7 @@ export default async function PaysPage({ params }: Props) {
     listContents({ types: ["CLASSIFIED", "HELP_REQUEST"], country: pays, take: 3 }),
     db.profile.groupBy({ by: ["city"], where: { ...publicProfileWhere(), country: pays, city: { not: null } }, _count: { _all: true }, orderBy: { _count: { city: "desc" } }, take: 8 }),
     consulatesFor(pays),
+    db.hcbeSection.findMany({ where: { country: pays }, orderBy: { name: "asc" }, include: { contactProfile: { select: { slug: true, displayName: true } } } }),
   ]);
   const q = encodeURIComponent(pays);
   const sections: { pre: string; em: string; href: string; items: typeof agenda.items; total: number; vide: string }[] = [
@@ -106,10 +108,16 @@ export default async function PaysPage({ params }: Props) {
           <aside className="space-y-8">
             <div className="border-2 border-primary p-4">
               <h3 className="section-title text-sm">Le HCBE <em>dans ce pays</em></h3>
-              <p className="mt-2 text-sm text-ink-2">
-                Le Haut Conseil des Béninois de l&apos;Extérieur s&apos;appuie sur des sections locales. Pour joindre les responsables de {pays} ou proposer une section, écrivez-nous.
-              </p>
-              <Link href="/contact?sujet=Question%20au%20HCBE" className="mt-3 inline-block w-full rounded bg-primary py-2 text-center text-sm font-bold text-white hover:bg-primary-dark">Contacter le HCBE</Link>
+              {sectionsHcbe.length > 0 ? (
+                <div className="mt-3"><SectionList items={sectionsHcbe} compact /></div>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm text-ink-2">
+                    Le Haut Conseil des Béninois de l&apos;Extérieur s&apos;appuie sur des sections locales. Pour joindre les responsables de {pays} ou proposer une section, écrivez-nous.
+                  </p>
+                  <Link href="/contact?sujet=Question%20au%20HCBE" className="mt-3 inline-block w-full rounded bg-primary py-2 text-center text-sm font-bold text-white hover:bg-primary-dark">Contacter le HCBE</Link>
+                </>
+              )}
             </div>
             <div className="border border-line bg-paper-2 p-4 text-sm">
               <h3 className="section-title text-sm">Démarches <em>consulaires</em></h3>

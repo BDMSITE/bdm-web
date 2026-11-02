@@ -6,7 +6,7 @@ import { contentHref, CONTENT_LABEL } from "@/lib/routes";
 import { SITE_URL as BASE } from "@/lib/site-url";
 import { numberSetting } from "@/lib/settings";
 import { pendingIssues, sendNewsletterBatch } from "@/lib/newsletter";
-import { weeklyDigest, profileReminders, monthlyHcbeReport } from "@/lib/rappels";
+import { weeklyDigest, profileReminders, monthlyHcbeReport, eventReminders } from "@/lib/rappels";
 
 /* Alertes par mots-clés : chaque matin (cron Vercel), pour chaque alerte,
    les contenus publiés depuis le dernier envoi qui portent un de ses mots-clés
@@ -68,7 +68,11 @@ export async function GET(req: Request) {
   }
   if (newsletter) console.info(`[newsletter] ${newsletter} e-mails envoyés par le cron`);
 
-  /* Lundi : hebdo « près de chez vous » puis rappels de profil ; 1er du mois : rapport régie. */
+  /* Chaque jour : rappels de la veille aux participants d'événements. */
+  const evenements = await eventReminders(budget);
+  budget -= evenements;
+
+  /* Lundi : hebdo « près de chez vous » puis rappels de profil ; 1er du mois : rapport mensuel. */
   let hebdo = 0, rappels = 0, rapport = false;
   if (now.getUTCDay() === 1) {
     hebdo = await weeklyDigest(budget);
@@ -77,5 +81,5 @@ export async function GET(req: Request) {
     budget -= rappels;
   }
   if (now.getUTCDate() === 1) rapport = await monthlyHcbeReport().catch((e) => { console.error("[rapport mensuel] impossible", e); return false; });
-  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter, hebdo, rappels, rapport });
+  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter, evenements, hebdo, rappels, rapport });
 }

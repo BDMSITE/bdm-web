@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { sendProfileReminder, sendWeeklyDigest, sendMonthlyReport } from "./mail";
+import { sendProfileReminder, sendWeeklyDigest, sendMonthlyReport, sendEventReminder } from "./mail";
 import { contentHref, CONTENT_LABEL } from "./routes";
 import { SITE_URL } from "./site-url";
 import { unsubscribeLink } from "./newsletter";
@@ -110,4 +110,35 @@ export async function monthlyHcbeReport(): Promise<boolean> {
     .sort((a, b) => b.impressions - a.impressions);
   await sendMonthlyReport(to, mois, { inscrits, actifs, pays, publications, messages, candidatures, abonnes, experts }, regie, `${SITE_URL}/admin`);
   return true;
+}
+
+/** Rappel aux participants des événements qui ont lieu dans 24 à 48 h (cron quotidien : un seul envoi par événement). */
+export async function eventReminders(budget: number): Promise<number> {
+  if (budget <= 0) return 0;
+  const now = Date.now();
+  const events = await db.content.findMany({
+    where: { type: "EVENT", status: "PUBLISHED", event: { startsAt: { gte: new Date(now + 24 * 3600e3), lt: new Date(now + 48 * 3600e3) } } },
+    include: { event: true, rsvps: { include: { user: { select: { email: true, status: true, profile: { select: { displayName: true } } } } } } },
+  });
+  let sent = 0;
+  for (const e of events) {
+    for (const r of e.rsvps) {
+      if (sent >= budget) return sent;
+      if (r.user.status !== "ACTIVE" || !e.event) continue;
+      try {
+        await sendEventReminder(r.user.email, {
+          title: e.title,
+          href: `${SITE_URL}${contentHref(e.type, e.slug)}`,
+          startsAt: e.event.startsAt,
+          timezone: e.event.timezone,
+          place: e.event.isOnline ? "En ligne" : [e.event.venue, e.city, e.country].filter(Boolean).join(", "),
+          prenom: r.user.profile?.displayName.split(" ")[0] ?? "",
+        });
+        sent++;
+      } catch (err) {
+        console.error("[rappel événement] envoi impossible", r.user.email, err);
+      }
+    }
+  }
+  return sent;
 }

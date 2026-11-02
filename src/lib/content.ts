@@ -13,7 +13,7 @@ export const CONTENT_INCLUDE = {
   place: true,
   deal: true,
   keywords: { include: { keyword: true } },
-  ownerProfile: { select: { displayName: true, slug: true, user: { select: { accountType: true } } } },
+  ownerProfile: { select: { displayName: true, slug: true, user: { select: { id: true, accountType: true } } } },
 } satisfies Prisma.ContentInclude;
 
 export type ContentFull = Prisma.ContentGetPayload<{ include: typeof CONTENT_INCLUDE }>;

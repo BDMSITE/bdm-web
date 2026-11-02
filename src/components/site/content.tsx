@@ -5,11 +5,12 @@ import { CONTENT_LABEL, contentHref, keywordHref, profileHref } from "@/lib/rout
 import { RelayForm, ApplyForm } from "@/components/site/relay-form";
 import { ReportButton } from "@/components/site/report-button";
 import { ShareButtons } from "@/components/site/share-buttons";
+import { RsvpButton } from "@/components/site/rsvp-button";
 import { SITE_URL } from "@/lib/site-url";
 import { fmtEventDate, fmtCotonou, googleCalendarUrl } from "@/lib/temps";
 import { FavoriteButton } from "@/components/site/favorite-button";
 
-export type Viewer = { id: string; cvUrl: string | null; favori: boolean } | null;
+export type Viewer = { id: string; cvUrl: string | null; favori: boolean; going?: boolean } | null;
 
 /* Briques d'affichage des contenus réels : carte, liste, fiche, état vide.
    Pas d'image = pas de bloc image (aucun faux « photo »). */
@@ -116,7 +117,7 @@ function Details({ item }: { item: ContentFull }) {
   );
 }
 
-export function ContentDetail({ item, related, viewer = null }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer }) {
+export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, participants = [] }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer; rsvpCount?: number; participants?: { slug: string; displayName: string }[] }) {
   const owner = item.ownerProfile;
   const isJob = item.type === "JOB" || item.type === "INTERNSHIP";
   const cta =
@@ -154,6 +155,17 @@ export function ContentDetail({ item, related, viewer = null }: { item: ContentF
       )}
 
       <Details item={item} />
+      {item.event && item.event.startsAt > new Date() && (
+        <div className="mt-4 border border-line bg-paper-2 p-4">
+          <RsvpButton contentId={item.id} retour={contentHref(item.type, item.slug)} going={Boolean(viewer?.going)} count={rsvpCount} connected={Boolean(viewer)} />
+          {participants.length > 0 && (
+            <p className="mt-3 text-xs text-ink-2">
+              <span className="font-bold">Participants annoncés (visible par l&apos;organisateur) :</span>{" "}
+              {participants.map((p, i) => <span key={p.slug}>{i > 0 && ", "}<Link href={profileHref(p.slug)} className="text-primary hover:underline">{p.displayName}</Link></span>)}
+            </p>
+          )}
+        </div>
+      )}
       {item.event && (
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <a href={`/agenda/${item.slug}/ical`} className="rounded border-2 border-primary px-3 py-1.5 font-bold uppercase text-primary hover:bg-primary hover:text-white">Ajouter à mon agenda (.ics)</a>

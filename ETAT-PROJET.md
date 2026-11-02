@@ -332,6 +332,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   notice dans son profil. Champ `Profile.proVerifiedAt` (migration `pro_verified`, locale + Neon). Les deux
   interrupteurs sont **désactivés par défaut** : à activer avant l'ouverture.
 
+- **02/11 — NOUVELLES FONCTIONS (idées validées « go »).** Photos / visuels sur les contenus des membres (publier et
+  modifier, Blob public 3 Mo) ; page publique **/chiffres** (membres par pays et secteur, inscriptions sur 12 mois,
+  contenus, calculé en direct) ; **Inviter mes proches** (/compte/inviter : 5 e-mails à la fois, 20/jour, message
+  personnel, lien WhatsApp) ; **tableau de bord mensuel** envoyé au HCBE le 1er (inscrits, actifs, pays, publications,
+  messages, candidatures, abonnés, experts, régie) ; **« J'y vais »** sur les événements (compteur, liste des
+  participants pour l'organisateur et l'équipe, rappel automatique la veille par le cron) ; **sections locales du HCBE**
+  (Admin → Sections locales HCBE : pays, ville, nom, présentation, responsable joignable par la messagerie relais, site),
+  affichées sur /hcbe et sur chaque page pays. Migration `rsvp_sections` (locale + Neon).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.

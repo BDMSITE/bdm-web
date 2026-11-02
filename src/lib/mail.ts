@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { SITE_URL } from "./site-url";
+import { fmtEventDate, fmtCotonou } from "./temps";
 
 /* E-mails transactionnels. Fournisseur choisi par la clé présente :
    BREVO_API_KEY (gratuit, envoie sans domaine) > RESEND_API_KEY > console (dev).
@@ -495,6 +496,27 @@ export function sendMonthlyReport(to: string, mois: string, s: { inscrits: numbe
       panelFirst: true,
       cta: { label: "Ouvrir le back-office", url: adminUrl },
       footnote: "Envoyé le 1er de chaque mois à l'adresse de contact du site.",
+    }),
+  );
+}
+
+/* Rappel la veille d'un événement auquel le membre a dit « J'y vais ». */
+export function sendEventReminder(to: string, e: { title: string; href: string; startsAt: Date; timezone: string; place: string; prenom: string }) {
+  const quand = fmtEventDate(e.startsAt, e.timezone);
+  const cotonou = fmtCotonou(e.startsAt, e.timezone);
+  return send(
+    to,
+    `Demain : ${e.title}`,
+    `${e.prenom ? `${e.prenom}, c` : "C"}'est demain : ${e.title}\n${quand}${cotonou ? ` · ${cotonou}` : ""}\n${e.place}\n\n${e.href}${SIGN}`,
+    layout({
+      preheader: `${quand} · ${e.place}`,
+      eyebrow: "Rappel",
+      title: `${e.prenom ? `${e.prenom}, c` : "C"}'est demain.`,
+      paragraphs: [`Vous avez annoncé votre présence à <strong>${esc(e.title)}</strong>.`],
+      panel: `<p style="margin:0 0 6px;font:700 17px/1.4 Helvetica,Arial,sans-serif;color:${INK}">${esc(quand)}${cotonou ? ` <span style="font-weight:400;color:${INK_2}">· ${esc(cotonou)}</span>` : ""}</p><p style="margin:0;font:15px/1.5 Helvetica,Arial,sans-serif;color:${INK_2}">${esc(e.place)}</p>`,
+      panelFirst: true,
+      cta: { label: "Voir l'événement", url: e.href },
+      footnote: "Empêchement ? Ouvrez l'événement et cliquez de nouveau sur « J'y vais » pour vous désinscrire.",
     }),
   );
 }

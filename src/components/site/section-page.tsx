@@ -124,13 +124,20 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
   if (!item || !types.includes(item.type)) notFound();
   after(() => db.content.update({ where: { id: item.id }, data: { views: { increment: 1 } } }).catch(() => {}));
   const [related, session] = await Promise.all([relatedContents(item), auth()]);
+  const rsvpCount = item.type === "EVENT" ? await db.eventRsvp.count({ where: { contentId: item.id } }) : 0;
+  /* L'organisateur (auteur) et l'équipe voient qui vient. */
+  const estOrganisateur = session?.user && (item.ownerProfile?.user.id === session.user.id || ["EDITOR", "MODERATOR", "ADMIN"].includes(session.user.role ?? ""));
+  const participants = item.type === "EVENT" && estOrganisateur
+    ? (await db.eventRsvp.findMany({ where: { contentId: item.id }, include: { user: { select: { profile: { select: { slug: true, displayName: true } } } } }, orderBy: { createdAt: "asc" } })).flatMap((r) => (r.user.profile ? [r.user.profile] : []))
+    : [];
   const viewer = session?.user
     ? await (async () => {
-        const [p, f] = await Promise.all([
+        const [p, f, r] = await Promise.all([
           db.profile.findUnique({ where: { userId: session.user.id }, select: { cvUrl: true } }),
           db.favorite.findUnique({ where: { userId_contentId: { userId: session.user.id, contentId: item.id } }, select: { userId: true } }),
+          item.type === "EVENT" ? db.eventRsvp.findUnique({ where: { contentId_userId: { contentId: item.id, userId: session.user.id } }, select: { userId: true } }) : null,
         ]);
-        return { id: session.user.id, cvUrl: p?.cvUrl ?? null, favori: Boolean(f) };
+        return { id: session.user.id, cvUrl: p?.cvUrl ?? null, favori: Boolean(f), going: Boolean(r) };
       })()
     : null;
   return (
@@ -138,7 +145,7 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <ContentDetail item={item} related={related} viewer={viewer} />
+          <ContentDetail item={item} related={related} viewer={viewer} rsvpCount={rsvpCount} participants={participants} />
           <aside className="space-y-8">
             <AdSlot slot="SIDE" section={SECTION[item.type].replace(/^\//, "")} />
             <AlertsBox />

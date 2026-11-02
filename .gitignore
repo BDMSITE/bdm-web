@@ -44,3 +44,4 @@ rapport-import-*.csv
 
 # sauvegardes locales (pnpm db:backup)
 /backups
+DNS-HOSTINGER-A-FAIRE.md

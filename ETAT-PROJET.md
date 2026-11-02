@@ -311,9 +311,15 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   « English » dans le pied de page. Migrations `user_block` et `consulats` appliquées en local et sur Neon.
   L'espace membre et le back-office restent en français (décision : gros chantier, à part).
 
+- **02/11 — LE SITE EST SUR SON DOMAINE : https://beninois-du-monde.com.** Domaine Hostinger pointé sur Vercel
+  (2 A + CNAME www + 2 TXT _vercel saisis par Josué, nameservers et boîte mail Hostinger conservés), certificat délivré,
+  www → apex et bdm-web-psi.vercel.app → domaine en 308. `AUTH_URL` et `NEXT_PUBLIC_SITE_URL` posés en production.
+  L'ancien WordPress n'est plus servi (à supprimer de l'hébergement Hostinger quand Josué veut). **Reste** : SPF avec
+  `include:spf.brevo.com` + authentification du domaine dans Brevo (DKIM / DMARC), Turnstile : ajouter le domaine
+  dans le widget Cloudflare.
+
 ## Ce qui RESTE (ordre)
-1. **Josué / HCBE** : accès DNS/registrar de beninois-du-monde.com (authentification Brevo du domaine, puis bascule du
-   site), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
+1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure

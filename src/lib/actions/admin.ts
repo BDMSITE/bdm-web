@@ -15,7 +15,7 @@ import { geocode } from "@/lib/geocode";
 import { contentHref, SECTION } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 import { ADMIN_CONTENT_TYPES, ADMIN_STATUSES } from "@/components/admin/ui";
-import { SOCIAL_NETWORKS, NUMBER_SETTINGS, numberSetting } from "@/lib/settings";
+import { SOCIAL_NETWORKS, NUMBER_SETTINGS, numberSetting, MAINTENANCE_KEY, MAINTENANCE_MESSAGE_KEY } from "@/lib/settings";
 import { countRecipients, issueStats, sendNewsletterBatch } from "@/lib/newsletter";
 
 /* Actions du back-office. Chaque action : session vérifiée (rôle rédaction,
@@ -983,4 +983,25 @@ export async function deleteConsulateAction(_prev: AdminActionState, formData: F
   revalidatePath("/hcbe");
   revalidatePath("/pays", "layout");
   return { ok: true, message: `« ${row.name} » supprimée.` };
+}
+
+/* ---------- Mode maintenance : ADMIN seul ---------- */
+
+export async function setMaintenanceAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut fermer ou rouvrir le site." };
+  const on = formData.get("on") === "on";
+  const message = String(formData.get("message") ?? "").trim().slice(0, 300);
+  await db.$transaction([
+    on
+      ? db.siteSetting.upsert({ where: { key: MAINTENANCE_KEY }, update: { value: "1" }, create: { key: MAINTENANCE_KEY, value: "1" } })
+      : db.siteSetting.deleteMany({ where: { key: MAINTENANCE_KEY } }),
+    message
+      ? db.siteSetting.upsert({ where: { key: MAINTENANCE_MESSAGE_KEY }, update: { value: message }, create: { key: MAINTENANCE_MESSAGE_KEY, value: message } })
+      : db.siteSetting.deleteMany({ where: { key: MAINTENANCE_MESSAGE_KEY } }),
+  ]);
+  await audit(user.id, on ? "maintenance.on" : "maintenance.off", "SiteSetting", MAINTENANCE_KEY, { message });
+  revalidatePath("/", "layout");
+  return { ok: true, message: on ? "Site fermé aux visiteurs : ils voient la page d'attente. Vous continuez à voir le site." : "Site rouvert à tous." };
 }

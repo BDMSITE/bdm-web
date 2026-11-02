@@ -322,6 +322,8 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "user.role": "Rôle modifié",
   "keyword.create": "Mot-clé ajouté",
   "keyword.rename": "Mot-clé renommé",
+  "maintenance.on": "Site fermé aux visiteurs (maintenance)",
+  "maintenance.off": "Site rouvert",
   "consulate.create": "Représentation ajoutée",
   "consulate.update": "Représentation modifiée",
   "consulate.delete": "Représentation supprimée",

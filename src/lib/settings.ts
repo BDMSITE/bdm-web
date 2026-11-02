@@ -46,3 +46,13 @@ export async function socialLinks() {
   const settings = await getSettings();
   return SOCIAL_NETWORKS.map((n) => ({ key: n.key.replace("social.", ""), label: n.label, url: settings[n.key] ?? "" }));
 }
+
+/* Mode maintenance : « 1 » ferme le site aux visiteurs ; message affiché sur la page d'attente. */
+export const MAINTENANCE_KEY = "maintenance";
+export const MAINTENANCE_MESSAGE_KEY = "maintenance.message";
+export const MAINTENANCE_DEFAULT_MESSAGE = "Nous intervenons sur le site : il revient très bientôt, avec des nouveautés. Merci de votre patience.";
+
+export async function maintenance() {
+  const s = await getSettings();
+  return { on: s[MAINTENANCE_KEY] === "1", message: s[MAINTENANCE_MESSAGE_KEY] || MAINTENANCE_DEFAULT_MESSAGE };
+}

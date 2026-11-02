@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageHead, Card, Badge, TableShell, Th, Td } from "@/components/admin/ui";
 import { SettingsForm } from "./settings-form";
-import { getSettings, SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
+import { getSettings, maintenance, SOCIAL_NETWORKS, NUMBER_SETTINGS } from "@/lib/settings";
+import { MaintenanceForm } from "./maintenance-form";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 import { resetTwoFactorAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
@@ -28,6 +29,7 @@ export default async function AdminParametresPage() {
   const env = process.env;
   const mail = env.BREVO_API_KEY ? "Brevo" : env.RESEND_API_KEY ? "Resend" : null;
   const settings = await getSettings();
+  const maint = await maintenance();
   const socialsManquants = SOCIAL_NETWORKS.filter((n) => !settings[n.key]).map((n) => n.label);
   /* Tout ce qui existe sur le site mais n'est pas encore configuré : à traiter avant l'ouverture. */
   const aConfigurer = [
@@ -72,6 +74,10 @@ export default async function AdminParametresPage() {
   return (
     <>
       <PageHead title="Paramètres" desc="État des services branchés au site et équipe d'administration. Aucune clé n'est affichée." />
+
+      <Card className={`mb-6 ${maint.on ? "border-danger" : ""}`} title="Maintenance" action={maint.on ? <Badge tone="red">Site fermé aux visiteurs</Badge> : <Badge tone="green">Site ouvert</Badge>}>
+        <MaintenanceForm on={maint.on} message={maint.message} canEdit={isAdmin} />
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Services">

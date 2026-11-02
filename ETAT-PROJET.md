@@ -318,6 +318,13 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   `include:spf.brevo.com` + authentification du domaine dans Brevo (DKIM / DMARC), Turnstile : ajouter le domaine
   dans le widget Cloudflare.
 
+- **02/11 — MODE MAINTENANCE.** Admin → Paramètres → carte « Maintenance » (ADMIN seul) : case « Fermer le site aux
+  visiteurs » + message. Les visiteurs voient une page d'attente (noindex) sur toutes les pages publiques ; /connexion,
+  /en/sign-in, /admin et /api restent ouverts ; l'équipe connectée voit le site normalement avec un bandeau rouge.
+  Réglage `maintenance` / `maintenance.message` en base (SiteSetting), journalisé. Au passage : le proxy applique
+  désormais lui-même les règles d'accès (/admin réservé à l'équipe, /compte aux connectés) sur toutes les pages et
+  transmet le chemin au layout (x-pathname). **Site mis en maintenance le 02/11 à la demande de Josué.**
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.

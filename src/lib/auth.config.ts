@@ -5,9 +5,9 @@ import type { AccountType, Role } from "@prisma/client";
    (serveur, avec adaptateur + fournisseurs) et proxy.ts (protection des
    routes, qui ne lit que le JWT). */
 
-const STAFF_ROLES = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
+export const STAFF_ROLES = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
 /* Le rôle Régie ne voit que la régie publicitaire. */
-const REGIE_ONLY = ["/admin/regie"];
+export const REGIE_ONLY = ["/admin/regie"];
 
 export const authConfig = {
   session: { strategy: "jwt" },

@@ -4,6 +4,12 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site-url";
 import { DEFAULT_OG } from "@/lib/og";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { maintenance } from "@/lib/settings";
+import { MaintenancePage, MaintenanceBanner } from "@/components/site/maintenance";
+
+const STAFF = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
 
 /* Typo « administrative » : Public Sans — la police officielle open source
    du design system du gouvernement américain (USWDS), même esprit que la
@@ -41,7 +47,19 @@ export const metadata: Metadata = {
     "Le média et le réseau des Béninois où qu'ils vivent : emploi, communauté, bonnes adresses, agenda, mémoire et racines.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/* Chemins qui restent ouverts en maintenance : connexion de l'équipe et back-office. */
+const OUVERT_EN_MAINTENANCE = ["/admin", "/connexion", "/en/sign-in", "/api"];
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const [maint, h] = await Promise.all([maintenance().catch(() => ({ on: false, message: "" })), headers()]);
+  const path = h.get("x-pathname") ?? "/";
+  let contenu: React.ReactNode = children;
+  let bandeau = false;
+  if (maint.on && !OUVERT_EN_MAINTENANCE.some((p) => path === p || path.startsWith(p + "/"))) {
+    const session = await auth().catch(() => null);
+    if (session?.user && STAFF.has(session.user.role ?? "")) bandeau = true;
+    else contenu = <MaintenancePage message={maint.message} />;
+  }
   return (
     <html
       lang="fr"
@@ -49,7 +67,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <div className="tricolor" aria-hidden />
-        {children}
+        {bandeau && <MaintenanceBanner />}
+        {contenu}
         <Analytics />
       </body>
     </html>

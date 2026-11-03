@@ -61,6 +61,7 @@ export async function maintenance() {
 export const FLAG_SETTINGS = [
   { key: "securite.2fa_equipe", label: "Double authentification obligatoire pour l'équipe", hint: "Toute personne ayant accès au back-office doit activer la 2FA avant d'y entrer. Recommandé avant l'ouverture." },
   { key: "communaute.validation_pro", label: "Valider les fiches entreprise, association et artiste avant leur publication dans les annuaires", hint: "Le membre reste visible comme particulier ; sa fiche pro apparaît dans l'annuaire concerné après validation (Admin → Communauté)." },
+  { key: "communaute.recommandations_libres", label: "Publier les recommandations entre membres sans relecture", hint: "Par défaut, chaque recommandation (d'un membre ou d'une bonne adresse) passe par Admin → Modération avant d'apparaître. Activez pour les publier immédiatement ; le signalement reste possible." },
 ] as const;
 export type FlagKey = (typeof FLAG_SETTINGS)[number]["key"];
 

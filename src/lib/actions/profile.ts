@@ -33,6 +33,23 @@ const schema = z.object({
 
 export type ProfileState = { error?: string; ok?: boolean };
 
+/* Formation : jusqu'à 4 lignes (école, filière, année de sortie), champs répétés dans le formulaire. */
+const MAX_EDUCATIONS = 4;
+function parseEducations(formData: FormData) {
+  const schools = formData.getAll("edu_school").map(String);
+  const fields = formData.getAll("edu_field").map(String);
+  const years = formData.getAll("edu_year").map(String);
+  const rows: { school: string; schoolSlug: string; field: string | null; endYear: number | null }[] = [];
+  for (let i = 0; i < Math.min(schools.length, MAX_EDUCATIONS); i++) {
+    const school = schools[i].trim().slice(0, 120);
+    if (!school) continue;
+    const year = years[i]?.trim() ? Number(years[i]) : NaN;
+    if (years[i]?.trim() && (!Number.isInteger(year) || year < 1940 || year > new Date().getFullYear() + 8)) throw new Error("Année de sortie invalide");
+    rows.push({ school, schoolSlug: slugify(school), field: fields[i]?.trim().slice(0, 120) || null, endYear: Number.isInteger(year) ? year : null });
+  }
+  return rows;
+}
+
 
 export async function updateProfileAction(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
   const session = await auth();
@@ -41,6 +58,12 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
+  let educations: ReturnType<typeof parseEducations>;
+  try {
+    educations = parseEducations(formData);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Formation invalide." };
+  }
 
   const keywordNames = [...new Set(d.keywords.split(",").map((k) => k.trim()).filter(Boolean))].slice(0, 15);
 
@@ -92,6 +115,7 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
       bio: d.bio || null,
       website: d.website || null,
       visibility: { directory: d.directory === "on" },
+      educations: { deleteMany: {}, create: educations },
       keywords: {
         deleteMany: {},
         create: keywordNames.map((name) => ({
@@ -112,5 +136,6 @@ export async function updateProfileAction(_prev: ProfileState, formData: FormDat
   revalidatePath("/compte/profil");
   revalidatePath(`/communaute/membres/${profile.slug}`);
   revalidatePath("/communaute", "layout");
+  revalidatePath("/communaute/anciens");
   return { ok: true };
 }

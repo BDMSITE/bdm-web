@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import { TimezoneSelect } from "@/components/site/timezone-select";
 import { LieuFields } from "@/components/site/lieu-fields";
 import type { ContentStatus, ContentType } from "@prisma/client";
-import { updateContentAction, withdrawContentAction, republishContentAction, type PublicationState } from "@/lib/actions/publications";
+import { updateContentAction, withdrawContentAction, republishContentAction, resolveHelpAction, type PublicationState } from "@/lib/actions/publications";
+import { HELP_CATEGORIES, HELP_KIND_LABEL } from "@/lib/entraide";
 
 /* Édition d'une publication du membre : mêmes champs que le guichet Publier,
    pré-remplis. Le type ne change pas. Un contenu en ligne ou refusé repasse
@@ -28,6 +29,9 @@ export type PublicationFormValues = {
   category: string;
   address: string;
   price: string;
+  helpKind: string;
+  helpCategory: string;
+  urgent: boolean;
 };
 
 const CONTRACTS_JOB = ["CDI", "CDD", "Mission", "Freelance"];
@@ -168,6 +172,27 @@ export function PublicationForm({ id, type, status, values }: { id: string; type
         </div>
       )}
 
+      {type === "HELP_REQUEST" && (
+        <div className="grid gap-4 border-t border-line pt-5 sm:grid-cols-3">
+          <div>
+            <label htmlFor="helpKind" className="mb-1 block text-sm font-bold">Il s&apos;agit de… *</label>
+            <select id="helpKind" name="helpKind" defaultValue={values.helpKind || "NEED"} aria-invalid={invalid("helpKind")} className={INPUT}>
+              {(["NEED", "OFFER"] as const).map((k) => <option key={k} value={k}>{HELP_KIND_LABEL[k]}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="helpCategory" className="mb-1 block text-sm font-bold">Catégorie *</label>
+            <select id="helpCategory" name="helpCategory" defaultValue={values.helpCategory} aria-invalid={invalid("helpCategory")} className={INPUT}>
+              {withCurrent([...HELP_CATEGORIES], values.helpCategory).map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <label className="flex items-center gap-2.5 self-end pb-2 text-sm">
+            <input type="checkbox" name="urgent" defaultChecked={values.urgent} className="h-4 w-4 accent-primary" />
+            Demande urgente
+          </label>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-4 border-t border-line pt-5">
         <button
           type="submit"
@@ -236,6 +261,22 @@ export function RepublishButton({ id, compact = false }: { id: string; compact?:
       </button>
       {state.error && <span role="alert" className="text-xs text-danger">{state.error}</span>}
       {state.ok && state.message && !compact && <span role="status" className="text-xs text-primary-dark">{state.message}</span>}
+    </form>
+  );
+}
+
+/* Entraide : la demande est résolue → marquée et retirée de la rubrique. */
+export function ResolveHelpButton({ id }: { id: string }) {
+  const [state, action, pending] = useActionState<PublicationState, FormData>(resolveHelpAction, {});
+  if (state.ok) return <p role="status" className="text-sm text-primary-dark">{state.message}</p>;
+  return (
+    <form action={action} className="flex flex-wrap items-center gap-3">
+      <input type="hidden" name="id" value={id} />
+      <button type="submit" disabled={pending} className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60">
+        {pending ? "Enregistrement…" : "C'est résolu, merci !"}
+      </button>
+      <span className="text-sm text-ink-2">La demande quitte la rubrique Entraide ; vous pourrez la republier si besoin.</span>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
     </form>
   );
 }

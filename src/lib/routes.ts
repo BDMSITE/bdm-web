@@ -11,7 +11,7 @@ export const CONTENT_LABEL: Record<ContentType, string> = {
   CLASSIFIED: "Annonce",
   PLACE: "Adresse",
   DEAL: "Bon plan",
-  HELP_REQUEST: "Mise en relation",
+  HELP_REQUEST: "Entraide",
   MEMORY_PLACE: "Lieu de mémoire",
 };
 

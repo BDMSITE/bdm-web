@@ -8,7 +8,7 @@ export async function GET() {
   if (!session?.user) return new Response("Connexion requise", { status: 401 });
   const userId = session.user.id;
 
-  const [user, profile, contents, alerts, applications, messages, favorites, hosting, reports, blocks] = await Promise.all([
+  const [user, profile, contents, alerts, applications, messages, favorites, hosting, reports, blocks, recommandationsDonnees] = await Promise.all([
     db.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true, emailVerified: true, name: true, image: true, role: true, accountType: true, status: true, createdAt: true, updatedAt: true },
@@ -20,6 +20,8 @@ export async function GET() {
         company: true,
         association: true,
         artist: true,
+        educations: { select: { school: true, field: true, endYear: true } },
+        recommendations: { where: { status: "PUBLISHED" }, select: { text: true, createdAt: true, author: { select: { profile: { select: { displayName: true } } } } } },
       },
     }),
     db.content.findMany({
@@ -42,6 +44,7 @@ export async function GET() {
     db.hostingOffer.findFirst({ where: { profile: { userId } } }),
     db.report.findMany({ where: { reporterId: userId }, select: { reason: true, status: true, createdAt: true, content: { select: { title: true } } } }),
     db.userBlock.findMany({ where: { blockerId: userId }, select: { createdAt: true, blocked: { select: { profile: { select: { displayName: true } } } } } }),
+    db.recommendation.findMany({ where: { authorId: userId }, select: { text: true, status: true, createdAt: true, profile: { select: { displayName: true } }, content: { select: { title: true } } } }),
   ]);
   if (!user) return new Response("Compte introuvable", { status: 404 });
 
@@ -52,7 +55,8 @@ export async function GET() {
   const payload = {
     exportedAt: new Date().toISOString(),
     user,
-    profile: profile && { ...profile, keywords: profile.keywords.map((k) => k.keyword) },
+    profile: profile && { ...profile, keywords: profile.keywords.map((k) => k.keyword), recommendations: profile.recommendations.map((r) => ({ text: r.text, par: r.author.profile?.displayName ?? "membre", createdAt: r.createdAt })) },
+    recommandationsDonnees: recommandationsDonnees.map((r) => ({ cible: r.profile?.displayName ?? r.content?.title ?? "—", text: r.text, status: r.status, createdAt: r.createdAt })),
     contents: contents.map((c) => ({ ...c, keywords: c.keywords.map((k) => k.keyword) })),
     alerts: alerts.map((a) => ({ ...a, keywords: (a.keywordIds as string[]).map((id) => keywordName.get(id) ?? id) })),
     applications,

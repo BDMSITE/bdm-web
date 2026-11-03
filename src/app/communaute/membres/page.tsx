@@ -47,7 +47,7 @@ export default async function MembresPage({ searchParams }: Props) {
       orderBy: { displayName: "asc" },
       take: PAGE,
       skip: (page - 1) * PAGE,
-      include: { user: { select: { accountType: true } }, keywords: { include: { keyword: true } } },
+      include: { user: { select: { accountType: true } }, keywords: { include: { keyword: true } }, _count: { select: { recommendations: { where: { status: "PUBLISHED" } } } } },
     }),
     db.profile.count({ where }),
     db.profile.findMany({ where: { user: { status: "ACTIVE" }, country: { not: null } }, distinct: ["country"], select: { country: true }, orderBy: { country: "asc" } }),
@@ -102,7 +102,10 @@ export default async function MembresPage({ searchParams }: Props) {
           <button className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">
             Rechercher
           </button>
-          <Link href="/#carte" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+          <Link href="/communaute/anciens" className="ml-auto whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
+            Anciens élèves &amp; promotions
+          </Link>
+          <Link href="/#carte" className="whitespace-nowrap text-sm font-bold uppercase text-primary hover:underline">
             Voir sur la carte
           </Link>
         </div>
@@ -161,6 +164,9 @@ export default async function MembresPage({ searchParams }: Props) {
                       )}
                       {afro && (
                         <span className="rounded-full border border-primary bg-primary-faint px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-primary-dark">Afrodescendant·e</span>
+                      )}
+                      {m._count.recommendations > 0 && (
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-white">{m._count.recommendations} recommandation{m._count.recommendations > 1 ? "s" : ""}</span>
                       )}
                     </div>
                     {m.publishedCount > 0 && (

@@ -11,6 +11,8 @@ import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
 import { RelayForm } from "@/components/site/relay-form";
+import { RecommendationsBlock } from "@/components/site/recommendations";
+import { GraduationCap, ThumbsUp } from "lucide-react";
 
 /* Fiche profil membre (CDC §7.5) — données en base. Le contact passe par
    un formulaire relais (S3) : l'e-mail n'est jamais affiché. */
@@ -26,6 +28,8 @@ async function getProfile(slug: string) {
       user: { select: { accountType: true, createdAt: true } },
       keywords: { include: { keyword: true } },
       contents: { where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" }, take: 10 },
+      educations: { orderBy: { endYear: "desc" } },
+      recommendations: { where: { status: "PUBLISHED" }, orderBy: { createdAt: "desc" }, take: 50, select: { id: true, text: true, createdAt: true, author: { select: { profile: { select: { slug: true, displayName: true, photo: true } } } } } },
     },
   });
 }
@@ -48,6 +52,11 @@ export default async function ProfilPage({ params }: Props) {
   const allKeywords = profile.keywords.map((k) => k.keyword.name);
   const lieu = [profile.city, profile.country].filter(Boolean).join(" · ");
   const prenom = profile.displayName.split(" ")[0];
+
+  const maReco = viewerId && !isSelf ? await db.recommendation.findUnique({ where: { authorId_profileId: { authorId: viewerId, profileId: profile.id } }, select: { id: true, text: true, status: true } }) : null;
+  const anciens = profile.educations.length
+    ? await Promise.all(profile.educations.map((e) => db.profile.count({ where: { id: { not: profile.id }, user: { status: "ACTIVE" }, visibility: { path: ["directory"], equals: true }, educations: { some: { schoolSlug: e.schoolSlug } } } })))
+    : [];
 
   const similaires = await db.profile.findMany({
     where: {
@@ -80,6 +89,11 @@ export default async function ProfilPage({ params }: Props) {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{TYPE_LABEL[profile.user.accountType]}</span>
                 {profile.cvPublished && <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">CV publié</span>}
                 {profile.expertStatus === "APPROVED" && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-dark">Expert validé par le HCBE</span>}
+                {profile.recommendations.length > 0 && (
+                  <a href="#recommandations" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold hover:bg-white/20">
+                    <ThumbsUp aria-hidden className="h-3.5 w-3.5" /> Recommandé·e par {profile.recommendations.length} membre{profile.recommendations.length > 1 ? "s" : ""}
+                  </a>
+                )}
                 <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-ink">
                   Membre depuis {profile.user.createdAt.getFullYear()}
                 </span>
@@ -140,6 +154,36 @@ export default async function ProfilPage({ params }: Props) {
                 </ul>
               )}
             </section>
+
+            {profile.educations.length > 0 && (
+              <section>
+                <h2 className="section-title mb-4 border-b-2 border-line pb-2 text-lg">
+                  <em>Formation</em>
+                </h2>
+                <ul className="space-y-2 text-sm">
+                  {profile.educations.map((e, i) => (
+                    <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <GraduationCap aria-hidden className="h-4 w-4 text-primary" />
+                      <span className="font-bold">{e.school}</span>
+                      {(e.field || e.endYear) && <span className="text-ink-2">{[e.field, e.endYear ? `promo ${e.endYear}` : null].filter(Boolean).join(" · ")}</span>}
+                      <Link href={`/communaute/anciens?ecole=${encodeURIComponent(e.schoolSlug)}`} className="text-xs font-bold uppercase text-primary hover:underline">
+                        {anciens[i] > 0 ? `${anciens[i]} autre${anciens[i] > 1 ? "s" : ""} ancien${anciens[i] > 1 ? "s" : ""}` : "Les anciens"}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <RecommendationsBlock
+              items={profile.recommendations}
+              profileId={profile.id}
+              retour={profileHref(profile.slug)}
+              mine={maReco}
+              viewerConnected={Boolean(viewerId)}
+              canRecommend={!isSelf}
+              cible={prenom}
+            />
 
             {profile.expertStatus === "APPROVED" && (
               <section className="border border-line p-5">

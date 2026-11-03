@@ -6,6 +6,7 @@ import { LieuFields } from "@/components/site/lieu-fields";
 import type { ContentStatus, ContentType } from "@prisma/client";
 import { createContentAction, updateContentAdminAction, type AdminFormState } from "@/lib/actions/admin";
 import { ADMIN_STATUSES, CONTENT_STATUS_LABEL, type AdminContentType } from "@/components/admin/ui";
+import { HELP_CATEGORIES, HELP_KIND_LABEL } from "@/lib/entraide";
 
 /* Formulaire générique de contenu du back-office (création et modification).
    Champs communs + champs de détails selon le type ; l'équipe choisit le statut.
@@ -48,6 +49,9 @@ export type ContentFormValues = {
   conditions: string;
   validFrom: string;
   validTo: string;
+  helpKind: string;
+  helpCategory: string;
+  urgent: boolean;
 };
 
 export const EMPTY_VALUES: ContentFormValues = {
@@ -56,6 +60,7 @@ export const EMPTY_VALUES: ContentFormValues = {
   startsAt: "", endsAt: "", timezone: "", venue: "", isOnline: false, category: "", ticketUrl: "",
   address: "", phone: "", hours: "", verified: false,
   price: "", promoCode: "", conditions: "", validFrom: "", validTo: "",
+  helpKind: "NEED", helpCategory: "", urgent: false,
 };
 
 /* Mêmes listes que le guichet Publier (src/app/compte/publications/[id]/form.tsx). */
@@ -283,6 +288,28 @@ export function ContentForm(props: Props) {
             <label htmlFor="price" className={LABEL}>Prix <span className="font-normal text-muted">(facultatif)</span></label>
             <input id="price" name="price" maxLength={60} defaultValue={values.price} className={INPUT} />
           </div>
+        </div>
+      )}
+
+      {type === "HELP_REQUEST" && (
+        <div className="grid gap-4 border-t border-line pt-5 sm:grid-cols-3">
+          <div>
+            <label htmlFor="helpKind" className={LABEL}>Il s&apos;agit de… *</label>
+            <select id="helpKind" name="helpKind" defaultValue={values.helpKind || "NEED"} aria-invalid={invalid("helpKind")} className={INPUT}>
+              {(["NEED", "OFFER"] as const).map((k) => <option key={k} value={k}>{HELP_KIND_LABEL[k]}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="helpCategory" className={LABEL}>Catégorie d&apos;entraide *</label>
+            <select id="helpCategory" name="helpCategory" defaultValue={values.helpCategory} aria-invalid={invalid("helpCategory")} className={INPUT}>
+              {withCurrent([...HELP_CATEGORIES], values.helpCategory).map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <label className="flex items-center gap-2.5 self-end pb-2 text-sm">
+            <input type="checkbox" name="urgent" defaultChecked={values.urgent} className="h-4 w-4 accent-primary" />
+            Demande urgente
+          </label>
+          <p className="text-xs text-muted sm:col-span-3">À la publication d&apos;un besoin, les membres volontaires de la ville reçoivent un e-mail.</p>
         </div>
       )}
 

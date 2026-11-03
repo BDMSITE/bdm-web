@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
-import { moderateContentAction, resolveReportAction } from "@/lib/actions/admin";
+import { moderateContentAction, resolveReportAction, moderateRecommendationAction } from "@/lib/actions/admin";
+import { profileHref } from "@/lib/routes";
 import { ActionButton } from "@/components/admin/action-button";
 import { RejectForm } from "./reject-form";
 import { PageHead, Card, Badge, TableShell, Th, Td, EmptyState, TypeBadge, EditLink, fmtDateTime } from "@/components/admin/ui";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Modération" };
    Signalement : Clôturer (sans suite) ou Retirer le contenu (ARCHIVED + clôture). */
 
 export default async function ModerationPage() {
-  const [enAttente, signalements] = await Promise.all([
+  const [enAttente, signalements, recos] = await Promise.all([
     db.content.findMany({
       where: { status: "IN_MODERATION" },
       orderBy: { createdAt: "asc" },
@@ -41,6 +42,17 @@ export default async function ModerationPage() {
         createdAt: true,
         content: { select: { id: true, title: true, type: true, slug: true } },
         reporter: { select: { name: true, email: true } },
+      },
+    }),
+    db.recommendation.findMany({
+      where: { status: "IN_MODERATION" },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+      select: {
+        id: true, text: true, createdAt: true,
+        author: { select: { profile: { select: { slug: true, displayName: true } } } },
+        profile: { select: { slug: true, displayName: true } },
+        content: { select: { title: true, type: true, slug: true } },
       },
     }),
   ]);
@@ -81,6 +93,34 @@ export default async function ModerationPage() {
                       <EditLink id={c.id} />
                       <ActionButton action={moderateContentAction} fields={{ id: c.id, decision: "publish" }} label="Valider" tone="primary" />
                       <RejectForm id={c.id} title={c.title} />
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+            </TableShell>
+          )}
+        </Card>
+
+        <Card title={`Recommandations en attente (${recos.length})`}>
+          {recos.length === 0 ? (
+            <EmptyState title="Aucune recommandation à relire.">
+              Les recommandations laissées par un membre sur un autre membre ou une bonne adresse passent ici (sauf si « recommandations libres » est activé dans Paramètres).
+            </EmptyState>
+          ) : (
+            <TableShell head={<><Th>Recommandation</Th><Th>Par</Th><Th>Pour</Th><Th>Quand</Th><Th>&nbsp;</Th></>}>
+              {recos.map((r) => (
+                <tr key={r.id} className="hover:bg-primary-faint">
+                  <Td className="max-w-[420px] italic text-ink-2">« {r.text} »</Td>
+                  <Td className="text-ink-2">{r.author.profile ? <Link href={profileHref(r.author.profile.slug)} className="hover:text-primary hover:underline">{r.author.profile.displayName}</Link> : "—"}</Td>
+                  <Td className="text-ink-2">
+                    {r.profile ? <Link href={profileHref(r.profile.slug)} className="hover:text-primary hover:underline">{r.profile.displayName}</Link>
+                      : r.content ? <Link href={contentHref(r.content.type, r.content.slug)} className="hover:text-primary hover:underline">{r.content.title}</Link> : "—"}
+                  </Td>
+                  <Td className="whitespace-nowrap text-muted">{fmtDateTime(r.createdAt)}</Td>
+                  <Td>
+                    <div className="flex flex-nowrap justify-end gap-2">
+                      <ActionButton action={moderateRecommendationAction} fields={{ id: r.id, decision: "publish" }} label="Publier" tone="primary" />
+                      <ActionButton action={moderateRecommendationAction} fields={{ id: r.id, decision: "reject" }} label="Supprimer" tone="danger" confirm="Supprimer cette recommandation ? L'auteur n'est pas prévenu." />
                     </div>
                   </Td>
                 </tr>

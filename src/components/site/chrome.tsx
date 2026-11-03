@@ -211,6 +211,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
       { label: "Associations", href: "/communaute/associations" },
       { label: "Artistes / groupes", href: "/communaute/artistes" },
       { label: "Compétences de la diaspora", href: "/communaute/competences" },
+      { label: "Anciens élèves & promotions", href: "/communaute/anciens" },
       { label: "La diaspora par pays", href: "/pays" },
       { label: "La diaspora en chiffres", href: "/chiffres" },
       { label: "Articles membres", href: "/magazine" },
@@ -234,7 +235,7 @@ const SITEMAP: { title: string; href: string; links: { label: string; href: stri
     links: [
       { label: "Alertes / notifications", href: "/compte" },
       { label: "Petites annonces", href: "/annonces" },
-      { label: "Chercher / trouver", href: "/pratique/chercher-trouver" },
+      { label: "Entraide : chercher / trouver", href: "/pratique/chercher-trouver" },
       { label: "Guides de démarches", href: "/pratique/demarches" },
       { label: "Accueil & hébergement", href: "/pratique/accueil" },
       { label: "Newsletter", href: "/newsletter" },

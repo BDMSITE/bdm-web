@@ -6,6 +6,7 @@ import { CONTENT_LABEL } from "@/lib/routes";
 import { deleteAlertAction } from "@/lib/actions/compte";
 import { EmptyState } from "@/components/site/content";
 import { AlerteForm } from "./form";
+import { EntraideForm } from "./entraide-form";
 
 export const metadata: Metadata = { title: "Mes alertes" };
 
@@ -17,7 +18,10 @@ const TYPE_OPTIONS = (Object.keys(CONTENT_LABEL) as ContentType[]).map((value) =
 
 export default async function AlertesPage() {
   const session = await auth();
-  const alerts = await db.alert.findMany({ where: { userId: session!.user.id }, orderBy: { createdAt: "desc" } });
+  const [alerts, profile] = await Promise.all([
+    db.alert.findMany({ where: { userId: session!.user.id }, orderBy: { createdAt: "desc" } }),
+    db.profile.findUnique({ where: { userId: session!.user.id }, select: { helpVolunteer: true, city: true } }),
+  ]);
 
   const allIds = [...new Set(alerts.flatMap((a) => a.keywordIds as string[]))];
   const keywords = allIds.length
@@ -33,6 +37,8 @@ export default async function AlertesPage() {
           Recevez par e-mail les nouveaux contenus qui correspondent à vos mots-clés, en envoi groupé quotidien ou immédiat.
         </p>
       </div>
+
+      <EntraideForm on={profile?.helpVolunteer ?? false} city={profile?.city ?? null} />
 
       <AlerteForm types={TYPE_OPTIONS} />
 

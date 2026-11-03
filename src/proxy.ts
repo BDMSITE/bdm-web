@@ -27,5 +27,5 @@ export default NextAuth(authConfig).auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|images/|pub/|icons/|manifest.webmanifest|robots.txt|sitemap.xml|flux.xml|api/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images/|pub/|icons/|manifest.webmanifest|sw.js|robots.txt|sitemap.xml|flux.xml|api/).*)"],
 };

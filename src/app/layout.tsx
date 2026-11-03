@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { maintenance } from "@/lib/settings";
 import { MaintenancePage, MaintenanceBanner } from "@/components/site/maintenance";
+import { OfflineRegister } from "@/components/site/offline";
 
 const STAFF = new Set(["EDITOR", "MODERATOR", "REGIE", "ADMIN"]);
 
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
 };
 
 /* Chemins qui restent ouverts en maintenance : connexion de l'équipe et back-office. */
-const OUVERT_EN_MAINTENANCE = ["/admin", "/connexion", "/en/sign-in", "/api"];
+const OUVERT_EN_MAINTENANCE = ["/admin", "/connexion", "/en/sign-in", "/api", "/hors-ligne"];
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const [maint, h] = await Promise.all([maintenance().catch(() => ({ on: false, message: "" })), headers()]);
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <div className="tricolor" aria-hidden />
         {bandeau && <MaintenanceBanner />}
         {contenu}
+        <OfflineRegister />
         <Analytics />
       </body>
     </html>

@@ -83,6 +83,7 @@ export async function publishAction(_prev: PublishState, formData: FormData): Pr
   if (v.event) details.event = { create: v.event };
   if (v.place) details.place = { create: v.place };
   if (v.classified) details.classified = { create: v.classified };
+  if (v.help) details.help = { create: v.help };
 
   await db.content.create({ data: details });
 

@@ -9,6 +9,10 @@ import { RsvpButton } from "@/components/site/rsvp-button";
 import { SITE_URL } from "@/lib/site-url";
 import { fmtEventDate, fmtCotonou, googleCalendarUrl } from "@/lib/temps";
 import { FavoriteButton } from "@/components/site/favorite-button";
+import { HELP_KIND_LABEL, HELP_KIND_SHORT } from "@/lib/entraide";
+import { RecommendationsBlock, type RecoItem } from "@/components/site/recommendations";
+import type { MyReco } from "@/components/site/recommend";
+import { SaveOfflineButton } from "@/components/site/offline";
 
 export type Viewer = { id: string; cvUrl: string | null; favori: boolean; going?: boolean } | null;
 
@@ -40,6 +44,7 @@ export function contentMeta(item: ContentFull): string[] {
   if (item.place) m.push(item.place.category);
   if (item.classified) m.push(item.classified.category + (item.classified.price ? ` · ${item.classified.price}` : ""));
   if (item.deal?.validTo) m.push(`jusqu'au ${fmtDate(item.deal.validTo)}`);
+  if (item.help) m.push(`${HELP_KIND_SHORT[item.help.kind]} · ${item.help.category}`);
   if (lieu) m.push(lieu);
   return m;
 }
@@ -57,6 +62,7 @@ export function ContentCard({ item, compact = false }: { item: ContentFull; comp
         <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">
           {CONTENT_LABEL[item.type]}
         </span>
+        {item.help?.urgent && <span className="ml-1.5 inline-block bg-danger px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-white">Urgent</span>}
         <h3 className="mt-2 font-display font-bold leading-snug">
           <Link href={href} className="hover:text-primary">{item.title}</Link>
         </h3>
@@ -101,6 +107,7 @@ function Details({ item }: { item: ContentFull }) {
   if (item.place) rows.push(["Catégorie", item.place.category], ["Adresse", item.place.address], ["Horaires", item.place.hours], ["Téléphone", item.place.phone]);
   if (item.classified) rows.push(["Catégorie", item.classified.category], ["Prix", item.classified.price]);
   if (item.deal) rows.push(["Code", item.deal.promoCode], ["Conditions", item.deal.conditions], ["Valable jusqu'au", item.deal.validTo ? fmtDate(item.deal.validTo) : null]);
+  if (item.help) rows.push(["Entraide", HELP_KIND_LABEL[item.help.kind]], ["Catégorie", item.help.category], ["Urgence", item.help.urgent ? "Demande urgente" : null]);
   const lieu = [item.city, item.country].filter(Boolean).join(" · ");
   if (lieu) rows.push(["Localisation", lieu]);
   const shown = rows.filter(([, v]) => v);
@@ -117,20 +124,26 @@ function Details({ item }: { item: ContentFull }) {
   );
 }
 
-export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, participants = [] }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer; rsvpCount?: number; participants?: { slug: string; displayName: string }[] }) {
+export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, participants = [], recommendations = [], myReco = null }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer; rsvpCount?: number; participants?: { slug: string; displayName: string }[]; recommendations?: RecoItem[]; myReco?: MyReco }) {
   const owner = item.ownerProfile;
   const isJob = item.type === "JOB" || item.type === "INTERNSHIP";
+  const isGuide = (item.type === "ARTICLE" || item.type === "MEMBER_ARTICLE") && item.keywords.some((k) => k.keyword.slug === "demarches");
   const cta =
     item.type === "JOB" || item.type === "INTERNSHIP" ? "Postuler" :
     item.type === "EVENT" ? "Contacter l'organisateur" :
-    item.type === "CLASSIFIED" || item.type === "HELP_REQUEST" ? "Répondre à l'annonce" :
+    item.type === "HELP_REQUEST" ? (item.help?.kind === "OFFER" ? "Demander cette aide" : "Proposer mon aide") :
+    item.type === "CLASSIFIED" ? "Répondre à l'annonce" :
     item.type === "PLACE" ? "Signaler une erreur" : null;
 
   return (
     <article className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">{CONTENT_LABEL[item.type]}</span>
+        <span>
+          <span className="inline-block bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-ink">{CONTENT_LABEL[item.type]}</span>
+          {item.help?.urgent && <span className="ml-1.5 inline-block bg-danger px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-white">Urgent</span>}
+        </span>
         <div className="flex flex-wrap items-center gap-2">
+          {isGuide && <SaveOfflineButton title={item.title} />}
           <ShareButtons url={`${SITE_URL}${contentHref(item.type, item.slug)}`} title={item.title} compact />
           {viewer && <FavoriteButton contentId={item.id} initial={viewer.favori} compact />}
         </div>
@@ -206,6 +219,26 @@ export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, par
           ) : (
             <div className="mt-3"><RelayForm contentId={item.id} label={cta} placeholder={`Votre message à ${owner.displayName}…`} /></div>
           )}
+        </div>
+      )}
+
+      {item.type === "HELP_REQUEST" && item.help?.kind === "NEED" && (
+        <p className="mt-4 text-sm text-ink-2">
+          Vous habitez {item.city ?? "près d'ici"} ? <Link href="/compte/alertes#entraide" className="font-bold text-primary hover:underline">Devenez volontaire</Link> pour être prévenu·e par e-mail des prochains besoins d&apos;entraide dans votre ville.
+        </p>
+      )}
+
+      {item.type === "PLACE" && (
+        <div className="mt-8">
+          <RecommendationsBlock
+            items={recommendations}
+            contentId={item.id}
+            retour={contentHref(item.type, item.slug)}
+            mine={myReco}
+            viewerConnected={Boolean(viewer)}
+            canRecommend={!viewer || owner?.user.id !== viewer.id}
+            cible="cette adresse"
+          />
         </div>
       )}
 

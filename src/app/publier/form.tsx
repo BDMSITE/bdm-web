@@ -5,6 +5,7 @@ import { PenLine, Briefcase, GraduationCap, CalendarDays, MapPin, Megaphone, Hea
 import { publishAction, type PublishState } from "@/lib/actions/publier";
 import { TimezoneSelect } from "@/components/site/timezone-select";
 import { LieuFields } from "@/components/site/lieu-fields";
+import { HELP_CATEGORIES } from "@/lib/entraide";
 
 /* Formulaire du guichet « Publier » : type, champs communs, champs selon le type.
    Tout contenu part en modération ; rien n'est mis en ligne directement. */
@@ -16,7 +17,12 @@ const TYPES = [
   { value: "EVENT", icon: CalendarDays, t: "Un événement", d: "Conférence, soirée, concert, rencontre." },
   { value: "PLACE", icon: MapPin, t: "Une bonne adresse", d: "Restaurant, commerce, service béninois près de chez vous." },
   { value: "CLASSIFIED", icon: Megaphone, t: "Une petite annonce", d: "Logement, covoiturage, services, bonnes affaires." },
-  { value: "HELP_REQUEST", icon: HeartHandshake, t: "Chercher / trouver", d: "Une demande d'aide ou de mise en relation." },
+  { value: "HELP_REQUEST", icon: HeartHandshake, t: "Entraide : chercher / trouver", d: "J'ai besoin d'aide, ou je peux aider : hébergement, traduction, démarches, santé…" },
+] as const;
+
+const HELP_KINDS = [
+  { value: "NEED", label: "J'ai besoin d'aide", d: "Les volontaires de votre ville sont prévenus." },
+  { value: "OFFER", label: "Je peux aider", d: "Votre offre reste visible dans la rubrique Entraide." },
 ] as const;
 
 type PublishType = (typeof TYPES)[number]["value"];
@@ -164,6 +170,36 @@ export function PublierForm() {
               <label htmlFor="price" className="mb-1 block text-sm font-bold">Prix <span className="font-normal text-muted">(facultatif)</span></label>
               <input id="price" name="price" placeholder="Ex. : 350 € / mois" className={INPUT} />
             </div>
+          </div>
+        )}
+
+
+        {type === "HELP_REQUEST" && (
+          <div className="space-y-4 border-t border-line pt-5">
+            <fieldset>
+              <legend className="mb-2 block text-sm font-bold">Il s&apos;agit de… *</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {HELP_KINDS.map((k) => (
+                  <label key={k.value} className="flex cursor-pointer items-start gap-3 border border-line p-3 text-sm has-[:checked]:border-2 has-[:checked]:border-primary has-[:checked]:bg-primary-faint">
+                    <input type="radio" name="helpKind" value={k.value} defaultChecked={k.value === "NEED"} className="mt-0.5 h-4 w-4 accent-primary" />
+                    <span><span className="block font-bold">{k.label}</span><span className="text-ink-2">{k.d}</span></span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="helpCategory" className="mb-1 block text-sm font-bold">Catégorie *</label>
+                <select id="helpCategory" name="helpCategory" aria-invalid={invalid("helpCategory")} className={INPUT}>
+                  {HELP_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <label className="flex items-center gap-2.5 self-end pb-2 text-sm">
+                <input type="checkbox" name="urgent" className="h-4 w-4 accent-primary" />
+                Demande urgente <span className="text-muted">(dans les prochains jours)</span>
+              </label>
+            </div>
+            <p className="text-xs text-muted">À la publication d&apos;un besoin, les membres volontaires de votre ville sont prévenus par e-mail. Les réponses arrivent par le formulaire relais : votre adresse reste cachée.</p>
           </div>
         )}
 

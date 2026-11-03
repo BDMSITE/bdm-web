@@ -29,6 +29,19 @@ async function requireUserId(callback: string) {
   return session.user.id;
 }
 
+/* --- Entraide : volontaire dans ma ville --------------------------------- */
+
+export async function setHelpVolunteerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const userId = await requireUserId("/compte/alertes");
+  const on = formData.get("helpVolunteer") === "on";
+  const profile = await db.profile.findUnique({ where: { userId }, select: { city: true } });
+  if (!profile) return { error: "Profil introuvable." };
+  if (on && !profile.city) return { error: "Indiquez d'abord votre ville dans Mon profil public : les alertes d'entraide sont locales." };
+  await db.profile.update({ where: { userId }, data: { helpVolunteer: on } });
+  revalidatePath("/compte/alertes");
+  return { ok: true };
+}
+
 /* --- Alertes ------------------------------------------------------------ */
 
 const CONTENT_TYPES = Object.keys(CONTENT_LABEL) as [ContentType, ...ContentType[]];
@@ -235,9 +248,12 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
     db.message.deleteMany({ where: { OR: [{ fromUserId: userId }, { toUserId: userId }] } }),
     db.report.deleteMany({ where: { reporterId: userId } }),
     db.userBlock.deleteMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } }),
+    db.recommendation.deleteMany({ where: { authorId: userId } }),
     ...(profile
       ? [
           db.hostingOffer.deleteMany({ where: { profileId: profile.id } }),
+          db.education.deleteMany({ where: { profileId: profile.id } }),
+          db.recommendation.deleteMany({ where: { profileId: profile.id } }),
           db.profileKeyword.deleteMany({ where: { profileId: profile.id } }),
           db.content.updateMany({ where: { ownerProfileId: profile.id, status: { in: ["PUBLISHED", "IN_MODERATION", "DRAFT", "SCHEDULED"] } }, data: { status: "ARCHIVED" } }),
           db.profile.update({
@@ -246,7 +262,7 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
               visibility: { ...visibility, directory: false },
               cvUrl: null, cvPublished: false, phone: null, photo: null, bio: null, headline: null, website: null, socials: undefined,
               city: null, country: null, lat: null, lng: null,
-              expertStatus: "NONE", expertDomain: null, expertPitch: null, expertModes: undefined,
+              expertStatus: "NONE", expertDomain: null, expertPitch: null, expertModes: undefined, helpVolunteer: false,
             },
           }),
         ]

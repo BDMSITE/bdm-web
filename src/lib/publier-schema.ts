@@ -2,6 +2,7 @@ import { z } from "zod";
 import { zonedToUtc, isTimezone, DEFAULT_TZ } from "@/lib/temps";
 import type { ContentType } from "@prisma/client";
 import { slugify } from "@/lib/slug";
+import { HELP_CATEGORIES, isHelpKind } from "@/lib/entraide";
 
 /* Validation commune au dépôt (/publier) et à l'édition (/compte/publications/[id])
    d'un contenu membre. Module sans « use server » : les actions l'importent. */
@@ -27,6 +28,9 @@ export const publishFields = z.object({
   category: z.preprocess(vide, z.string().max(60).optional()),
   address: z.preprocess(vide, z.string().max(200).optional()),
   price: z.preprocess(vide, z.string().max(60).optional()),
+  helpKind: z.preprocess(vide, z.string().max(10).optional()),
+  helpCategory: z.preprocess(vide, z.string().max(60).optional()),
+  urgent: z.string().optional(),
 });
 
 export type PublishFields = z.infer<typeof publishFields>;
@@ -49,6 +53,10 @@ export function refinePublish(type: ContentType, d: PublishFields, ctx: z.Refine
   }
   if ((type === "PLACE" || type === "CLASSIFIED") && !d.category) {
     ctx.addIssue({ code: "custom", path: ["category"], message: "Catégorie obligatoire" });
+  }
+  if (type === "HELP_REQUEST") {
+    if (!isHelpKind(d.helpKind)) ctx.addIssue({ code: "custom", path: ["helpKind"], message: "Précisez : besoin d'aide ou offre d'aide" });
+    if (!d.helpCategory || !(HELP_CATEGORIES as readonly string[]).includes(d.helpCategory)) ctx.addIssue({ code: "custom", path: ["helpCategory"], message: "Choisissez une catégorie d'entraide" });
   }
 }
 
@@ -78,5 +86,6 @@ export function detailValues(type: ContentType, d: PublishFields) {
   }
   if (type === "PLACE") return { place: { category: d.category!, address: d.address ?? null } };
   if (type === "CLASSIFIED") return { classified: { category: d.category!, price: d.price ?? null } };
+  if (type === "HELP_REQUEST" && isHelpKind(d.helpKind)) return { help: { kind: d.helpKind, category: d.helpCategory!, urgent: d.urgent === "on" } };
   return {};
 }

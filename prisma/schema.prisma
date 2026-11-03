@@ -109,6 +109,7 @@ model User {
   blocks       UserBlock[]   @relation("Blocker")
   blockedBy    UserBlock[]   @relation("Blocked")
   rsvps        EventRsvp[]
+  recommendationsGiven Recommendation[] @relation("RecoAuthor")
 }
 
 // --- Auth.js (comptes OAuth futurs, sessions, jetons de lien magique) ---
@@ -173,6 +174,7 @@ model Profile {
   expertPitch    String?  // ce que le membre propose, relu par le HCBE
   expertAt       DateTime? // date de la demande ou de la décision
   proVerifiedAt  DateTime? // fiche entreprise / association / artiste validée par l'équipe (si la validation est activée)
+  helpVolunteer  Boolean  @default(false) // reçoit les demandes d'entraide publiées dans sa ville
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -186,6 +188,8 @@ model Profile {
   partner     Partner?
   hosting     HostingOffer?
   sections    HcbeSection[]  @relation("SectionContact")
+  educations  Education[]
+  recommendations Recommendation[] @relation("RecoProfile")
 }
 
 /* « J'y vais » : participation annoncée à un événement (rappel la veille). */
@@ -292,6 +296,8 @@ model Content {
   favorites    Favorite[]
   messages     Message[]
   rsvps        EventRsvp[]
+  help         HelpDetails?
+  recommendations Recommendation[] @relation("RecoContent")
 
   @@index([type, status, publishedAt])
   @@index([country, city])
@@ -603,4 +609,53 @@ model SiteSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+/* Formation : écoles et promotions déclarées par le membre (annuaire des anciens élèves). */
+model Education {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  school     String
+  schoolSlug String
+  field      String?  // filière, diplôme
+  endYear    Int?     // année de sortie = promotion
+  createdAt  DateTime @default(now())
+
+  @@index([schoolSlug])
+  @@index([profileId])
+}
+
+/* Entraide : précisions d'une demande « Chercher / trouver » (besoin ou offre d'aide). */
+enum HelpKind {
+  NEED
+  OFFER
+}
+model HelpDetails {
+  contentId  String    @id
+  content    Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  kind       HelpKind  @default(NEED)
+  category   String
+  urgent     Boolean   @default(false)
+  resolvedAt DateTime?
+}
+
+/* Recommandation d'un membre envers un autre membre ou une bonne adresse. */
+model Recommendation {
+  id        String        @id @default(cuid())
+  authorId  String
+  author    User          @relation("RecoAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  profileId String?
+  profile   Profile?      @relation("RecoProfile", fields: [profileId], references: [id], onDelete: Cascade)
+  contentId String?
+  content   Content?      @relation("RecoContent", fields: [contentId], references: [id], onDelete: Cascade)
+  text      String
+  status    ContentStatus @default(IN_MODERATION)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([authorId, profileId])
+  @@unique([authorId, contentId])
+  @@index([profileId, status])
+  @@index([contentId, status])
 }

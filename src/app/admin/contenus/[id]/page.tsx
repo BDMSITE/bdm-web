@@ -21,7 +21,7 @@ export default async function AdminEditContentPage({ params }: { params: Promise
   const { id } = await params;
   const content = await db.content.findUnique({
     where: { id },
-    include: { job: true, event: true, place: true, classified: true, deal: true, keywords: { include: { keyword: true } }, ownerProfile: { select: { displayName: true, slug: true } } },
+    include: { job: true, event: true, place: true, classified: true, deal: true, help: true, keywords: { include: { keyword: true } }, ownerProfile: { select: { displayName: true, slug: true } } },
   });
   if (!content) notFound();
 
@@ -57,6 +57,9 @@ export default async function AdminEditContentPage({ params }: { params: Promise
     conditions: content.deal?.conditions ?? "",
     validFrom: toDateInput(content.deal?.validFrom),
     validTo: toDateInput(content.deal?.validTo),
+    helpKind: content.help?.kind ?? "NEED",
+    helpCategory: content.help?.category ?? "",
+    urgent: content.help?.urgent ?? false,
   };
 
   const retour = ADMIN_LIST_HREF[content.type];

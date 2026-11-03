@@ -5,6 +5,7 @@ import { ContentList, EmptyState } from "@/components/site/content";
 import { db } from "@/lib/db";
 import { listContents } from "@/lib/content";
 import { FileText, IdCard, Landmark, Banknote, Plane } from "lucide-react";
+import { SaveOfflineButton, OfflineGuidesList } from "@/components/site/offline";
 
 export const metadata: Metadata = {
   title: "Guides de démarches",
@@ -45,6 +46,12 @@ export default async function DemarchesPage() {
           Être alerté des mises à jour
         </Link>
       </PageBanner>
+      <div className="border-b border-line bg-paper-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 text-sm text-ink-2">
+          <span>Chaque guide peut être <strong>enregistré pour une lecture sans connexion</strong> (avion, consulat, zone sans réseau) et se met à jour à votre prochaine visite.</span>
+          <span className="ml-auto"><SaveOfflineButton title="Guides de démarches (sommaire)" /></span>
+        </div>
+      </div>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -84,6 +91,7 @@ export default async function DemarchesPage() {
               <p className="mt-2 text-ink-2">Les guides expliquent et orientent ; les actes eux-mêmes se font auprès de l&apos;ambassade ou du consulat du Bénin de votre pays de résidence.</p>
               <Link href="/pays" className="mt-3 inline-block text-sm font-bold uppercase text-primary hover:underline">Votre pays →</Link>
             </div>
+            <OfflineGuidesList />
             <AlertsBox keywords={["Démarches"]} />
             <AdSlot slot="SIDE" section="pratique" />
           </aside>

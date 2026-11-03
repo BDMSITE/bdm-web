@@ -7,12 +7,13 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { zonedToUtc } from "@/lib/temps";
-import { sendModerationResult, sendProVerified } from "@/lib/mail";
+import { sendModerationResult, sendProVerified, sendRecommendationNotice } from "@/lib/mail";
+import { notifyHelpVolunteers } from "@/lib/entraide-alertes";
 import { SITE_URL } from "@/lib/site-url";
 import { slugify } from "@/lib/slug";
 import { indexContent } from "@/lib/search";
 import { geocode } from "@/lib/geocode";
-import { contentHref, SECTION } from "@/lib/routes";
+import { contentHref, profileHref, SECTION } from "@/lib/routes";
 import { publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 import { ADMIN_CONTENT_TYPES, ADMIN_STATUSES } from "@/components/admin/ui";
 import { SOCIAL_NETWORKS, NUMBER_SETTINGS, FLAG_SETTINGS, numberSetting, MAINTENANCE_KEY, MAINTENANCE_MESSAGE_KEY } from "@/lib/settings";
@@ -70,6 +71,8 @@ export async function moderateContentAction(_prev: AdminActionState, formData: F
     const geo = lieu && lieu.lat === null && lieu.city ? await geocode(lieu.city, lieu.country) : null;
     await db.content.update({ where: { id }, data: { status: "PUBLISHED", publishedAt: new Date(), moderationNote: null, ...(geo && { lat: geo.lat, lng: geo.lng }) } });
     await audit(user.id, "content.publish", "Content", id, { title: content.title, type: content.type });
+    /* Entraide : les volontaires de la ville sont prévenus d'un besoin publié. */
+    if (content.type === "HELP_REQUEST") notifyHelpVolunteers(id).catch((e) => console.error("[entraide] alertes", e));
   } else {
     await db.content.update({ where: { id }, data: { status: "REJECTED", moderationNote: reason } });
     await audit(user.id, "content.reject", "Content", id, { title: content.title, type: content.type, reason });
@@ -373,6 +376,7 @@ function adminDetailValues(type: ContentType, d: AdminFields) {
   if (base.event) return { event: { ...base.event, endsAt: d.endsAt ? zonedToUtc(d.endsAt, base.event.timezone) : null, ticketUrl: d.ticketUrl ?? null } };
   if (base.place) return { place: { ...base.place, phone: d.phone ?? null, hours: d.hours ?? null, verified: d.verified } };
   if (base.classified) return { classified: base.classified };
+  if (base.help) return { help: base.help };
   if (type === "MEMORY_PLACE") return { place: { category: d.category!, address: d.address ?? null, phone: d.phone ?? null, hours: d.hours ?? null, verified: d.verified } };
   if (type === "DEAL") return { deal: { promoCode: d.promoCode ?? null, conditions: d.conditions ?? null, validFrom: date(d.validFrom), validTo: date(d.validTo) } };
   return {};
@@ -448,8 +452,10 @@ export async function createContentAction(_prev: AdminFormState, formData: FormD
   if (v.place) data.place = { create: v.place };
   if (v.classified) data.classified = { create: v.classified };
   if (v.deal) data.deal = { create: v.deal };
+  if (v.help) data.help = { create: v.help };
 
   const created = await db.content.create({ data, select: { id: true, slug: true } });
+  if (d.type === "HELP_REQUEST" && d.status === "PUBLISHED") notifyHelpVolunteers(created.id).catch((e) => console.error("[entraide] alertes", e));
 
   await audit(user.id, "content.create", "Content", created.id, { title: d.title, type: d.type, status: d.status });
   if (d.status === "PUBLISHED") await indexContent(created.id).catch(() => {});
@@ -502,6 +508,7 @@ export async function updateContentAdminAction(_prev: AdminFormState, formData: 
   if (v.place) data.place = { upsert: { create: v.place, update: v.place } };
   if (v.classified) data.classified = { upsert: { create: v.classified, update: v.classified } };
   if (v.deal) data.deal = { upsert: { create: v.deal, update: v.deal } };
+  if (v.help) data.help = { upsert: { create: v.help, update: v.help } };
 
   await db.content.update({ where: { id: content.id }, data });
 
@@ -1092,4 +1099,45 @@ export async function deleteSectionAction(_prev: AdminActionState, formData: For
   revalidatePath("/hcbe");
   revalidatePath("/pays", "layout");
   return { ok: true, message: `Section « ${row.name} » supprimée.` };
+}
+
+/* ---------- Modération : recommandations entre membres ---------- */
+
+const recoModerationSchema = z.object({ id: z.string().min(1), decision: z.enum(["publish", "reject"]) });
+
+export async function moderateRecommendationAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  const parsed = recoModerationSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { id, decision } = parsed.data;
+  const reco = await db.recommendation.findUnique({
+    where: { id },
+    include: {
+      author: { select: { profile: { select: { displayName: true } } } },
+      profile: { select: { slug: true, displayName: true, user: { select: { email: true, status: true } } } },
+      content: { select: { type: true, slug: true } },
+    },
+  });
+  if (!reco) return { error: "Recommandation introuvable." };
+  if (decision === "publish") {
+    await db.recommendation.update({ where: { id }, data: { status: "PUBLISHED" } });
+    await audit(user.id, "recommendation.publish", "Recommendation", id, { profileId: reco.profileId, contentId: reco.contentId });
+    if (reco.profile && reco.profile.user.status === "ACTIVE") {
+      await sendRecommendationNotice(reco.profile.user.email, {
+        prenom: reco.profile.displayName.split(" ")[0],
+        auteur: reco.author.profile?.displayName ?? "Un membre",
+        text: reco.text,
+        href: `${SITE_URL}${profileHref(reco.profile.slug)}`,
+      }).catch((e) => console.error("[recommandation] e-mail impossible", e));
+    }
+  } else {
+    await db.recommendation.delete({ where: { id } });
+    await audit(user.id, "recommendation.reject", "Recommendation", id, { profileId: reco.profileId, contentId: reco.contentId });
+  }
+  if (reco.profile) revalidatePath(profileHref(reco.profile.slug));
+  if (reco.content) revalidatePath(contentHref(reco.content.type, reco.content.slug));
+  revalidatePath("/communaute", "layout");
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: decision === "publish" ? "Recommandation publiée." : "Recommandation supprimée." };
 }

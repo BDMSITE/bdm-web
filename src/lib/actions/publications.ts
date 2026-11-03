@@ -91,6 +91,7 @@ export async function updateContentAction(_prev: PublicationState, formData: For
   if (v.event) data.event = { upsert: { create: v.event, update: v.event } };
   if (v.place) data.place = { upsert: { create: v.place, update: v.place } };
   if (v.classified) data.classified = { upsert: { create: v.classified, update: v.classified } };
+  if (v.help) data.help = { upsert: { create: v.help, update: v.help } };
 
   await db.content.update({ where: { id: content.id }, data });
   await afterChange(content);
@@ -131,4 +132,20 @@ export async function republishContentAction(_prev: PublicationState, formData: 
   await db.content.update({ where: { id: content.id }, data: { status: "IN_MODERATION" } });
   await afterChange(content);
   return { ok: true, message: "Demande envoyée : le contenu sera relu par la modération avant remise en ligne." };
+}
+
+/* --- Entraide : marquer une demande comme résolue ------------------------ */
+
+export async function resolveHelpAction(_prev: PublicationState, formData: FormData): Promise<PublicationState> {
+  const userId = await requireUserId();
+  const idParsed = idSchema.safeParse({ id: formData.get("id") });
+  if (!idParsed.success) return { error: "Contenu introuvable." };
+  const content = await ownedContent(idParsed.data.id, userId);
+  if (!content || content.type !== "HELP_REQUEST") return { error: "Demande introuvable." };
+  await db.content.update({
+    where: { id: content.id },
+    data: { status: "ARCHIVED", help: { upsert: { create: { kind: "NEED", category: "Autre", resolvedAt: new Date() }, update: { resolvedAt: new Date() } } } },
+  });
+  await afterChange(content);
+  return { ok: true, message: "Merci ! La demande est marquée résolue et retirée de la rubrique Entraide." };
 }

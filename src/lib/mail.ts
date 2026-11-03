@@ -520,3 +520,42 @@ export function sendEventReminder(to: string, e: { title: string; href: string; 
     }),
   );
 }
+
+/* Entraide : un besoin d'aide publié dans la ville d'un membre volontaire. */
+export function sendHelpAlert(to: string, h: { prenom: string; title: string; excerpt: string | null; category: string; urgent: boolean; lieu: string; href: string; auteur: string }) {
+  const objet = `${h.urgent ? "Urgent · " : ""}Entraide à ${h.lieu || "proximité"} : ${h.title}`;
+  return send(
+    to,
+    objet,
+    `${h.prenom}, un membre a besoin d'aide près de chez vous.\n\n${h.urgent ? "URGENT — " : ""}${h.category} · ${h.lieu}\n${h.title}\n${h.excerpt ?? ""}\n\nRépondre (formulaire relais, votre e-mail reste caché) : ${h.href}\n\nVous recevez ce message parce que vous êtes volontaire pour l'entraide dans votre ville (Mon espace → Mes alertes).${SIGN}`,
+    layout({
+      preheader: `${h.category} · ${h.lieu}`,
+      eyebrow: h.urgent ? "Entraide · urgent" : "Entraide",
+      title: `${h.prenom}, quelqu'un a besoin d'aide près de chez vous.`,
+      paragraphs: [`<strong>${esc(h.auteur)}</strong> vient de publier une demande d'entraide à <strong>${esc(h.lieu || "proximité")}</strong>. Si vous pouvez aider, répondez par le formulaire du site : votre e-mail reste caché.`],
+      panel: `<p style="margin:0 0 6px;font:600 12px/1.4 Helvetica,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:${h.urgent ? "#e8112d" : INK_2}">${h.urgent ? "Urgent · " : ""}${esc(h.category)}</p><p style="margin:0 0 6px;font:700 18px/1.4 Helvetica,Arial,sans-serif;color:${INK}">${esc(h.title)}</p>${h.excerpt ? `<p style="margin:0;font:15px/1.5 Helvetica,Arial,sans-serif;color:${INK_2}">${esc(h.excerpt)}</p>` : ""}`,
+      panelFirst: true,
+      cta: { label: "Voir la demande et répondre", url: h.href },
+      footnote: `Vous recevez ce message parce que vous êtes volontaire pour l'entraide dans votre ville. Pour ne plus l'être : <a href="${SITE_URL}/compte/alertes" style="color:${GREEN}">Mes alertes</a>.`,
+    }),
+  );
+}
+
+/* Recommandation publiée : le membre recommandé est prévenu. */
+export function sendRecommendationNotice(to: string, r: { prenom: string; auteur: string; text: string; href: string }) {
+  return send(
+    to,
+    `${r.auteur} vous recommande sur Béninois du Monde`,
+    `${r.prenom}, ${r.auteur} vous a recommandé·e :\n\n« ${r.text} »\n\nLa recommandation est visible sur votre fiche : ${r.href}${SIGN}`,
+    layout({
+      preheader: `« ${r.text.slice(0, 90)}${r.text.length > 90 ? "…" : ""} »`,
+      eyebrow: "Recommandation",
+      title: `${r.prenom}, ${r.auteur} vous recommande.`,
+      paragraphs: [`Un membre de la communauté a laissé une recommandation sur votre fiche. Elle est visible par tous les visiteurs de l'annuaire.`],
+      panel: `<p style="margin:0;font:italic 17px/1.6 Georgia,'Times New Roman',serif;color:${INK}">« ${esc(r.text)} »</p><p style="margin:8px 0 0;font:600 13px/1.4 Helvetica,Arial,sans-serif;color:${INK_2}">— ${esc(r.auteur)}</p>`,
+      panelFirst: true,
+      cta: { label: "Voir ma fiche", url: r.href },
+      footnote: "Une recommandation vous semble déplacée ? Signalez-la depuis votre fiche ou écrivez-nous.",
+    }),
+  );
+}

@@ -24,10 +24,11 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [session, enModeration, signalements, deuxFacteursObligatoire, validationPro] = await Promise.all([
+  const [session, enModeration, signalements, recosEnAttente, deuxFacteursObligatoire, validationPro] = await Promise.all([
     auth(),
     db.content.count({ where: { status: "IN_MODERATION" } }),
     db.report.count({ where: { status: "open" } }),
+    db.recommendation.count({ where: { status: "IN_MODERATION" } }),
     flag("securite.2fa_equipe"),
     flag("communaute.validation_pro"),
   ]);
@@ -39,7 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const badges: Record<string, number> = {};
-  if (enModeration + signalements > 0) badges["/admin/moderation"] = enModeration + signalements;
+  if (enModeration + signalements + recosEnAttente > 0) badges["/admin/moderation"] = enModeration + signalements + recosEnAttente;
   if (validationPro) {
     const proAValider = await db.profile.count({ where: { proVerifiedAt: null, user: { status: "ACTIVE", accountType: { not: "MEMBER" } } } });
     if (proAValider > 0) badges["/admin/communaute"] = proAValider;

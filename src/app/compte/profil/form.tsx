@@ -24,7 +24,11 @@ export type ProfilFormValues = {
   assocFoundedYear: string;
   assocMembersCount: string;
   artistDiscipline: string;
+  educations: { school: string; field: string; endYear: string }[];
 };
+
+const MAX_EDU = 4;
+const EDU_VIDE = { school: "", field: "", endYear: "" };
 
 const TAILLES = ["1 à 9 salariés", "10 à 49 salariés", "50 à 249 salariés", "250 salariés et plus"];
 
@@ -38,6 +42,7 @@ const KINDS = [
 export function ProfilForm({ values }: { values: ProfilFormValues }) {
   const [state, action, pending] = useActionState<ProfileState, FormData>(updateProfileAction, {});
   const [kind, setKind] = useState(values.kind);
+  const [edus, setEdus] = useState(values.educations.length ? values.educations : [EDU_VIDE]);
 
   return (
     <form action={action} className="space-y-6">
@@ -136,6 +141,39 @@ export function ProfilForm({ values }: { values: ProfilFormValues }) {
       <div>
         <label htmlFor="bio" className="mb-1 block text-sm font-bold">Bio (visible sur le profil)</label>
         <textarea id="bio" name="bio" rows={5} maxLength={1500} defaultValue={values.bio} className={INPUT} />
+      </div>
+
+      <div id="formation" className="border border-line">
+        <div className="border-b border-line bg-paper-2 px-4 py-3">
+          <p className="font-bold">Formation <span className="font-normal text-muted">(annuaire des anciens élèves)</span></p>
+          <p className="text-xs text-muted">École, université, filière et année de sortie : vous apparaissez parmi les anciens de chaque établissement, par promotion. Laissez vide pour ne pas y figurer.</p>
+        </div>
+        <div className="space-y-3 p-4">
+          {edus.map((e, i) => (
+            <div key={i} className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_110px_auto]">
+              <div>
+                <label htmlFor={`edu_school_${i}`} className="mb-1 block text-xs font-bold">École ou université</label>
+                <input id={`edu_school_${i}`} name="edu_school" maxLength={120} defaultValue={e.school} placeholder="Lycée Béhanzin, UAC, Sorbonne…" className={INPUT} />
+              </div>
+              <div>
+                <label htmlFor={`edu_field_${i}`} className="mb-1 block text-xs font-bold">Filière / diplôme</label>
+                <input id={`edu_field_${i}`} name="edu_field" maxLength={120} defaultValue={e.field} placeholder="Droit, génie civil, médecine…" className={INPUT} />
+              </div>
+              <div>
+                <label htmlFor={`edu_year_${i}`} className="mb-1 block text-xs font-bold">Année de sortie</label>
+                <input id={`edu_year_${i}`} name="edu_year" type="number" min={1940} max={2040} defaultValue={e.endYear} placeholder="2015" className={INPUT} />
+              </div>
+              <div className="flex items-end">
+                {edus.length > 1 && (
+                  <button type="button" onClick={() => setEdus(edus.filter((_, j) => j !== i))} className="pb-2 text-xs font-bold text-ink-2 hover:text-danger">Retirer</button>
+                )}
+              </div>
+            </div>
+          ))}
+          {edus.length < MAX_EDU && (
+            <button type="button" onClick={() => setEdus([...edus, EDU_VIDE])} className="text-sm font-bold text-primary hover:underline">+ Ajouter une formation</button>
+          )}
+        </div>
       </div>
 
       <div>

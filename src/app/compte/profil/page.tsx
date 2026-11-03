@@ -13,7 +13,7 @@ export default async function ProfilComptePage() {
   const session = await auth();
   const profile = await db.profile.findUnique({
     where: { userId: session!.user.id },
-    include: { keywords: { include: { keyword: true } }, user: { select: { accountType: true } }, company: true, association: true, artist: true },
+    include: { keywords: { include: { keyword: true } }, user: { select: { accountType: true } }, company: true, association: true, artist: true, educations: { orderBy: { endYear: "desc" } } },
   });
   if (!profile) return <p className="text-sm text-muted">Profil introuvable.</p>;
 
@@ -58,6 +58,7 @@ export default async function ProfilComptePage() {
           assocFoundedYear: profile.association?.foundedYear ? String(profile.association.foundedYear) : "",
           assocMembersCount: profile.association?.membersCount ? String(profile.association.membersCount) : "",
           artistDiscipline: profile.artist?.discipline ?? "",
+          educations: profile.educations.map((e) => ({ school: e.school, field: e.field ?? "", endYear: e.endYear ? String(e.endYear) : "" })),
         }}
       />
     </div>

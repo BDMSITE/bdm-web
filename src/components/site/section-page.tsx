@@ -11,6 +11,7 @@ import { ogImageUrl } from "@/lib/og";
 import { Pagination, pageHref, pageParam } from "@/components/site/pagination";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isHelpKind } from "@/lib/entraide";
 
 /* Fabrique des pages de rubrique : bandeau, filtres (GET), liste réelle,
    état vide honnête, colonne latérale. Et la fiche détail générique. */
@@ -26,12 +27,14 @@ export type SectionConfig = {
   categoriesFrom?: ContentType;
   contractTypes?: boolean;
   upcoming?: boolean;
+  /** Rubrique Entraide : onglets Besoins / Offres d'aide. */
+  helpKinds?: boolean;
   publishLabel: string;
   empty: { title: string; text: string };
   cols?: 2 | 3;
 };
 
-export type SectionSearch = Promise<{ q?: string; pays?: string; cat?: string; contrat?: string; mot?: string; page?: string }>;
+export type SectionSearch = Promise<{ q?: string; pays?: string; cat?: string; contrat?: string; mot?: string; aide?: string; page?: string }>;
 const PAR_PAGE = 30;
 
 const SELECT = "rounded border border-line bg-paper px-3 py-2 text-sm";
@@ -39,13 +42,20 @@ const SELECT = "rounded border border-line bg-paper px-3 py-2 text-sm";
 export async function SectionListPage({ config, searchParams }: { config: SectionConfig; searchParams: SectionSearch }) {
   const sp = await searchParams;
   const page = pageParam(sp.page);
+  const aide = config.helpKinds && isHelpKind(sp.aide) ? sp.aide : undefined;
   const [{ items, total }, countries, categories, contrats] = await Promise.all([
-    listContents({ types: config.types, q: sp.q, country: sp.pays, category: sp.cat, contractType: sp.contrat, keyword: sp.mot, upcoming: config.upcoming, take: PAR_PAGE, skip: (page - 1) * PAR_PAGE }),
+    listContents({ types: config.types, q: sp.q, country: sp.pays, category: sp.cat, contractType: sp.contrat, keyword: sp.mot, helpKind: aide, upcoming: config.upcoming, take: PAR_PAGE, skip: (page - 1) * PAR_PAGE }),
     listCountries(config.types),
     config.categoriesFrom ? listCategories(config.categoriesFrom) : Promise.resolve([] as string[]),
     config.contractTypes ? listContractTypes() : Promise.resolve([] as string[]),
   ]);
-  const filtre = Boolean(sp.q || sp.pays || sp.cat || sp.contrat || sp.mot);
+  const filtre = Boolean(sp.q || sp.pays || sp.cat || sp.contrat || sp.mot || aide);
+  const lienAide = (kind?: string) => {
+    const u = new URLSearchParams();
+    for (const [k, v] of Object.entries({ q: sp.q, pays: sp.pays, cat: sp.cat, mot: sp.mot, aide: kind })) if (v) u.set(k, v);
+    const qs = u.toString();
+    return `${config.section}${qs ? `?${qs}` : ""}`;
+  };
 
   return (
     <>
@@ -56,8 +66,25 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
         </Link>
       </PageBanner>
 
+      {config.helpKinds && (
+        <nav aria-label="Type de demande" className="border-b border-line bg-paper">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-1 px-4 pt-3">
+            {([undefined, "NEED", "OFFER"] as const).map((k) => {
+              const actif = (aide ?? undefined) === k;
+              return (
+                <Link key={k ?? "tout"} href={lienAide(k)} aria-current={actif ? "page" : undefined} className={`-mb-px border-b-2 px-3 py-2 text-sm font-bold ${actif ? "border-primary text-primary" : "border-transparent text-ink-2 hover:text-primary"}`}>
+                  {k === "NEED" ? "Besoins d'aide" : k === "OFFER" ? "Offres d'aide" : "Tout"}
+                </Link>
+              );
+            })}
+            <Link href="/compte/alertes#entraide" className="ml-auto whitespace-nowrap py-2 text-xs font-bold uppercase text-primary hover:underline">Devenir volontaire dans ma ville</Link>
+          </div>
+        </nav>
+      )}
+
       <form action={config.section} className="border-b border-line bg-paper-2">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-4">
+          {aide && <input type="hidden" name="aide" value={aide} />}
           <input type="search" name="q" aria-label="Rechercher" defaultValue={sp.q ?? ""} placeholder={config.placeholder} className="w-full rounded border border-line bg-paper px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-64" />
           {countries.length > 0 && (
             <select name="pays" defaultValue={sp.pays ?? ""} aria-label="Pays" className={SELECT}>
@@ -95,7 +122,7 @@ export async function SectionListPage({ config, searchParams }: { config: Sectio
               cols={config.cols}
               empty={filtre ? { title: "Rien ne correspond à ces critères", text: "Essayez d'autres mots ou retirez un filtre.", href: config.section, cta: "Tout afficher" } : { ...config.empty, href: "/publier", cta: config.publishLabel }}
             />
-            <Pagination page={page} total={total} perPage={PAR_PAGE} href={pageHref(config.section, { q: sp.q, pays: sp.pays, cat: sp.cat, contrat: sp.contrat, mot: sp.mot })} />
+            <Pagination page={page} total={total} perPage={PAR_PAGE} href={pageHref(config.section, { q: sp.q, pays: sp.pays, cat: sp.cat, contrat: sp.contrat, mot: sp.mot, aide })} />
           </div>
           <aside className="space-y-8">
             <AlertsBox />
@@ -130,6 +157,13 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
   const participants = item.type === "EVENT" && estOrganisateur
     ? (await db.eventRsvp.findMany({ where: { contentId: item.id }, include: { user: { select: { profile: { select: { slug: true, displayName: true } } } } }, orderBy: { createdAt: "asc" } })).flatMap((r) => (r.user.profile ? [r.user.profile] : []))
     : [];
+  /* Bonnes adresses : recommandations publiées + celle du visiteur connecté. */
+  const recommendations = item.type === "PLACE"
+    ? await db.recommendation.findMany({ where: { contentId: item.id, status: "PUBLISHED" }, orderBy: { createdAt: "desc" }, take: 50, select: { id: true, text: true, createdAt: true, author: { select: { profile: { select: { slug: true, displayName: true, photo: true } } } } } })
+    : [];
+  const myReco = item.type === "PLACE" && session?.user
+    ? await db.recommendation.findUnique({ where: { authorId_contentId: { authorId: session.user.id, contentId: item.id } }, select: { id: true, text: true, status: true } })
+    : null;
   const viewer = session?.user
     ? await (async () => {
         const [p, f, r] = await Promise.all([
@@ -145,7 +179,7 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <ContentDetail item={item} related={related} viewer={viewer} rsvpCount={rsvpCount} participants={participants} />
+          <ContentDetail item={item} related={related} viewer={viewer} rsvpCount={rsvpCount} participants={participants} recommendations={recommendations} myReco={myReco} />
           <aside className="space-y-8">
             <AdSlot slot="SIDE" section={SECTION[item.type].replace(/^\//, "")} />
             <AlertsBox />

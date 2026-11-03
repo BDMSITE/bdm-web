@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { CONTENT_LABEL, contentHref } from "@/lib/routes";
 import { fmtDate } from "@/components/site/content";
 import { StatusBadge } from "../status";
-import { PublicationForm, WithdrawButton, RepublishButton } from "./form";
+import { PublicationForm, WithdrawButton, RepublishButton, ResolveHelpButton } from "./form";
 
 export const metadata: Metadata = { title: "Modifier une publication" };
 
@@ -21,7 +21,7 @@ export default async function EditPublicationPage({ params }: { params: Promise<
 
   const content = await db.content.findFirst({
     where: { id, ownerProfile: { userId: session.user.id } },
-    include: { job: true, event: true, place: true, classified: true, keywords: { include: { keyword: true } } },
+    include: { job: true, event: true, place: true, classified: true, help: true, keywords: { include: { keyword: true } } },
   });
   if (!content) notFound();
 
@@ -68,8 +68,19 @@ export default async function EditPublicationPage({ params }: { params: Promise<
           category: content.event?.category ?? content.place?.category ?? content.classified?.category ?? "",
           address: content.place?.address ?? "",
           price: content.classified?.price ?? "",
+          helpKind: content.help?.kind ?? "",
+          helpCategory: content.help?.category ?? "",
+          urgent: content.help?.urgent ?? false,
         }}
       />
+
+      {content.type === "HELP_REQUEST" && content.status !== "ARCHIVED" && (
+        <section className="border-2 border-primary p-5">
+          <h2 className="font-display text-lg font-bold">Votre demande d&apos;entraide est résolue ?</h2>
+          <p className="mt-1 text-sm text-ink-2">Dites-le : la demande est retirée de la rubrique et les volontaires ne sont plus sollicités.</p>
+          <div className="mt-3"><ResolveHelpButton id={content.id} /></div>
+        </section>
+      )}
 
       <section className="border border-line p-5">
         <h2 className="font-display text-lg font-bold">{content.status === "ARCHIVED" ? "Remettre en ligne" : "Retirer de la ligne"}</h2>

@@ -1,7 +1,7 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **22/09/2026**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **03/11/2026**.
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
@@ -340,6 +340,27 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   participants pour l'organisateur et l'équipe, rappel automatique la veille par le cron) ; **sections locales du HCBE**
   (Admin → Sections locales HCBE : pays, ville, nom, présentation, responsable joignable par la messagerie relais, site),
   affichées sur /hcbe et sur chaque page pays. Migration `rsvp_sections` (locale + Neon).
+- **03/11 — LES 4 IDÉES VALIDÉES (« ok on fait les 4 idées, go »).** Migration `anciens_entraide_recommandations`
+  (locale + Neon). (1) **Anciens élèves & promotions** : Mon profil public → bloc « Formation » (jusqu'à 4 lignes :
+  école, filière, année de sortie, table `Education`) ; page publique **/communaute/anciens** (écoles regroupées,
+  recherche, puis membres d'une école filtrables par promo) ; section « Formation » sur la fiche membre avec « N autres
+  anciens » ; lien depuis l'annuaire et le menu Communauté. (2) **Entraide** : la rubrique « Chercher / trouver »
+  devient « Entraide : chercher / trouver » (table `HelpDetails` : besoin / offre, catégorie parmi 9, urgent, résolu) ;
+  onglets Besoins / Offres + filtre catégorie ; badge rouge « Urgent » ; CTA « Proposer mon aide » / « Demander cette
+  aide » ; **volontaires par ville** (Mes alertes → « Entraide près de chez moi », `Profile.helpVolunteer`) prévenus par
+  e-mail à la publication d'un besoin dans leur ville (`notifyHelpVolunteers`, 200 max) ; bouton « C'est résolu »
+  dans Mes publications (archive + `resolvedAt`). Les 10 mises en relation importées (SIAL) ont été rattachées à
+  Besoin / Mise en relation. (3) **Recommandations entre membres** (table `Recommendation`) : un membre recommande
+  un autre membre ou une bonne adresse (20–400 caractères, une par cible, modifiable, retirable) ; passage par
+  Admin → Modération (carte « Recommandations en attente », pastille) sauf si l'interrupteur « Publier les
+  recommandations sans relecture » est activé dans Paramètres ; affichage sur la fiche membre (badge « Recommandé·e
+  par N membres » + liste), sur la fiche adresse, et pastille « N recommandations » dans l'annuaire ; e-mail au membre
+  recommandé. (4) **Lecture hors ligne des guides** : service worker `public/sw.js` (réseau d'abord ; navigations
+  privées jamais mises en cache) ; bouton « Lire hors ligne » sur /pratique/demarches et sur tout article tagué
+  « demarches » ; liste « Mes guides hors ligne » (localStorage) ; page /hors-ligne servie sans réseau. Testé en build
+  de production : serveur arrêté → guide enregistré lisible et stylé, autres pages → page d'attente.
+  Libellé du type HELP_REQUEST renommé « Entraide ». Export RGPD et suppression de compte couvrent formation et
+  recommandations. Lanceur local supplémentaire `bdm-prod` (pnpm start) dans .claude/launch.json.
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

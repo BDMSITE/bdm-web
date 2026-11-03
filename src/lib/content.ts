@@ -1,4 +1,4 @@
-import type { ContentType, Prisma, AccountType } from "@prisma/client";
+import type { ContentType, Prisma, AccountType, HelpKind } from "@prisma/client";
 import { contentHref } from "@/lib/routes";
 import { flag } from "@/lib/settings";
 import { db } from "./db";
@@ -12,6 +12,7 @@ export const CONTENT_INCLUDE = {
   classified: true,
   place: true,
   deal: true,
+  help: true,
   keywords: { include: { keyword: true } },
   ownerProfile: { select: { displayName: true, slug: true, user: { select: { id: true, accountType: true } } } },
 } satisfies Prisma.ContentInclude;
@@ -26,6 +27,7 @@ export type ListParams = {
   keyword?: string;
   category?: string;
   contractType?: string;
+  helpKind?: HelpKind;
   upcoming?: boolean;
   featured?: boolean;
   take?: number;
@@ -52,8 +54,9 @@ export function contentWhere(p: ListParams): Prisma.ContentWhereInput {
     ...(country && { country }),
     ...(city && { city }),
     ...(keyword && { keywords: { some: { keyword: { slug: keyword } } } }),
-    ...(category && { OR: [{ place: { category } }, { classified: { category } }, { event: { category } }] }),
+    ...(category && { OR: [{ place: { category } }, { classified: { category } }, { event: { category } }, { help: { category } }] }),
     ...(contractType && { job: { contractType } }),
+    ...(p.helpKind && { help: { kind: p.helpKind } }),
     ...(p.upcoming && { event: { startsAt: { gte: new Date(Date.now() - 864e5) } } }),
     ...(p.featured && { featured: true }),
   };
@@ -112,6 +115,7 @@ export async function listCategories(type: ContentType) {
     type === "PLACE" || type === "MEMORY_PLACE" ? await db.placeDetails.findMany({ where: { content }, ...sel })
     : type === "CLASSIFIED" ? await db.classifiedDetails.findMany({ where: { content }, ...sel })
     : type === "EVENT" ? await db.eventDetails.findMany({ where: { content }, ...sel })
+    : type === "HELP_REQUEST" ? await db.helpDetails.findMany({ where: { content }, ...sel })
     : [];
   return rows.map((r) => r.category).filter((c): c is string => Boolean(c)).sort((a, b) => a.localeCompare(b, "fr"));
 }
@@ -132,6 +136,7 @@ export const PROFILE_INCLUDE = {
   company: true,
   association: true,
   artist: true,
+  _count: { select: { recommendations: { where: { status: "PUBLISHED" } } } },
 } satisfies Prisma.ProfileInclude;
 
 export type ProfileFull = Prisma.ProfileGetPayload<{ include: typeof PROFILE_INCLUDE }>;

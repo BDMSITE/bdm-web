@@ -230,6 +230,13 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   aligné) ; il reste admin + 5 membres de démo. CGU et confidentialité mises à jour (un seul type de compte).
   Bande « Nos partenaires » : logo + nom seulement, 5 tuiles. En attente : e-mail de Mam pour son compte administrateur.
 
+- **03/11 — TURNSTILE REFAIT.** Le widget Cloudflare avait été supprimé par erreur (les variables Vercel pointaient
+  vers un widget inexistant → formulaires bloqués). Nouveau widget créé par Josué, clés reposées sur le projet bdmsite
+  (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` lisible, `TURNSTILE_SECRET_KEY` sensible, prod + preview), secret validé auprès de
+  Cloudflare, redéploiement de production READY (bdm-690h89nhi). À vérifier connecté en équipe : widget sur /inscription,
+  alerte « Anti-robot » disparue dans Admin → Paramètres. Attention : `vercel env add` crée des variables *sensibles*
+  (valeur non relisible) ; passer par l'API Vercel avec `type: encrypted` pour les clés publiques.
+
 - **30/10 — TURNSTILE ACTIF.** Clés Cloudflare posées sur le projet bdmsite (prod + preview), widget « Vérifiez que vous
   êtes humain » visible sur /inscription et /contact, refus serveur vérifié (envoi sans jeton → « Vérification anti-robot
   échouée »). Domaines déclarés chez Cloudflare : bdm-web-psi.vercel.app et beninois-du-monde.com. Réseaux sociaux :
@@ -363,7 +370,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   recommandations. Lanceur local supplémentaire `bdm-prod` (pnpm start) dans .claude/launch.json.
 
 ## Ce qui RESTE (ordre)
-1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) et domaine ajouté dans Turnstile, puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
+1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) (Turnstile refait le 03/11), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
 2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
 3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure

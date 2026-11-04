@@ -385,13 +385,26 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   `/api/icone` et `apple-icon.tsx` supprimés. Reste côté Josué : 2FA perso + réglages Sécurité & validation,
   suppression de l'ancien projet Vercel / Neon / Blob sur le compte perso, contenus officiels, réouverture.
 
+- **04/11 — REVUE DE LA BASE MEMBRES + NETTOYAGE NEON.** Favicon : première version (fond blanc) validée par Josué.
+  Comparaison Excel « Base de Données BIG DATA PERSO MAJ NOV 2020.xlsx » ↔ Neon : 427 contacts « général », 278 avec
+  e-mail = les 278 comptes PENDING_EMAIL (0 manquant), 149 sans e-mail (non importables), 43 importés sans pays,
+  116 pays interprétés depuis une saisie libre ; presse 19 (17 abonnés) et coop. décentralisée 12 (3 abonnés).
+  Fichier de revue remis à Josué (`Revue-membres-HCBE-2026-11-04.xlsx`, onglets Importés / Sans e-mail / Sans pays /
+  Pays à vérifier / Presse / Coop. déc., colonnes « → » à corriger) ; à son retour, réinjecter les corrections puis
+  envoyer les invitations (lots de 50 à 250, quota Brevo 300/jour, relance auto à 7 jours). Schéma `neon_auth`
+  (9 tables vides créées par Neon Auth le 30/10, jamais utilisées) supprimé sur Neon : seul `public` reste ; si Neon
+  le recrée, désactiver Neon Auth dans la console Neon (branche → Auth). 2FA et interrupteurs Sécurité : le HCBE les
+  activera lui-même ; ancien projet Vercel perso : supprimé par Josué.
+
 ## Ce qui RESTE (ordre)
-1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) (Turnstile refait le 03/11), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
-   et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.
-2. **Régie, suite** : libre-service annonceur, rapport mensuel, FedaPay ; attribuer le rôle Régie à la personne du HCBE.
-3. **S8 mise en ligne** : compte Cloudflare (Turnstile), bascule DNS du domaine, Resend ou Brevo en prod, mesure
-   d'audience (Vercel Analytics gratuit), test complet du parcours inscription → activation → publication.
-4. Plus tard : Meilisearch hébergé si besoin.
+1. **Josué / HCBE** : retour du fichier de revue (corrections pays/ville/type, e-mails des 149) → réinjection ;
+   saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
+   fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
+   « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.
+2. **Décisions HCBE en attente** (F-141, F-156, F-157, F-158) : FedaPay pub, adhésion payante, anglais complet,
+   Meilisearch hébergé. Rien à coder tant qu'elles ne sont pas prises.
+3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
+   publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).
 
 ## Conventions de travail (Josué)
 - Chaque correction : vérifier au navigateur (+ mobile 390px si UI), lint+tsc, commit clair FR, push (→ Vercel auto)

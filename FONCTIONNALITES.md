@@ -52,7 +52,7 @@ fonctionnalité retirée garde son numéro (marquée « retirée »), une nouvel
 | F-030 | Référencement : robots.txt (admin, compte, api exclus), sitemap.xml (pages, contenus publiés, fiches annuaire), métadonnées Open Graph / Twitter | /robots.txt · /sitemap.xml | S | ✅ |
 | F-031 | Image de partage générée pour chaque contenu et chaque fiche membre (optimisée WhatsApp, < 60 Ko) | /api/og | S | ✅ |
 | F-032 | Flux RSS des 30 derniers contenus (agrégateurs, n8n) | /flux.xml | V | ✅ |
-| F-033 | Application installable (manifest PWA, icônes générées) | /manifest.webmanifest | V | ✅ |
+| F-033 | Favicon et icônes d'application tirés du logo (« B » de Béninois, police du site, bande tricolore) : onglet, iOS, Android / manifest PWA | /favicon.ico · /icon · /apple-icon · /manifest.webmanifest | V | ✅ |
 | F-034 | Partage WhatsApp et copie de lien sur chaque fiche | fiches | V | ✅ |
 | F-035 | Mesure d'audience Vercel Analytics (gratuit, sans cookie) | Vercel → Analytics | S | ⚙️ à activer d'un clic dans Vercel |
 | F-036 | Page « La diaspora en chiffres » : membres par pays et secteur, inscriptions sur 12 mois, contenus publiés, calculée en direct | /chiffres | V | ✅ |

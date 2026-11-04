@@ -374,6 +374,17 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   régie, sécurité/exploitation, en attente), chacune avec emplacement, accès (V/M/E/A/S) et état (139 ✅, 16 ⚙️, 4 ⏸️, 1 ✖).
   Numéros définitifs : une nouveauté prend le numéro suivant, un retrait garde son numéro. Copie dans Notion.
 
+- **04/11 — CONFIGURATION FINALE + FAVICON.** Brevo : domaine authentifié (code Brevo, DKIM brevo1/brevo2, DMARC avec
+  rua, SPF `include:spf.brevo.com`), vérifié vert ; en-têtes Hostinger `dkim=pass dmarc=pass spf=pass` ; test « de moi à
+  moi » vers la boîte Hostinger classé spam par le filtre de contenu (liens de suivi Brevo + expéditeur = destinataire),
+  test vers Gmail reçu en boîte de réception → OK. Les 6 comptes de démo supprimés de la prod (reste l'admin
+  contact@beninois-du-monde.com + 278 importés). Correction : message « Lien envoyé ! » après lien magique (Auth.js
+  collait `?provider=…` à l'URL de retour). **Favicon** : l'ancien était celui de Create Next App ; nouveau dessin =
+  « B » du logo (Public Sans 800, vert-900) + bande tricolore, fichiers statiques `src/app/favicon.ico` (16/32/48),
+  `icon.png` (512), `apple-icon.png` (180), `public/icons/*` pour le manifest ; générateurs dynamiques
+  `/api/icone` et `apple-icon.tsx` supprimés. Reste côté Josué : 2FA perso + réglages Sécurité & validation,
+  suppression de l'ancien projet Vercel / Neon / Blob sur le compte perso, contenus officiels, réouverture.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) (Turnstile refait le 03/11), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication
    et de la juridiction (/legal), contenu réel (Notion « 📋 Pages à remplir »), relecture des lieux de mémoire.

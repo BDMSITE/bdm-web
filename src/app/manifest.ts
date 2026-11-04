@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 /* Manifeste d'application : ajout à l'écran d'accueil (Android, Chrome), nom court,
-   couleurs de la charte, icônes générées par /api/icone. */
+   couleurs de la charte, icônes statiques dans public/icons (même dessin que le favicon : « B » du logo + bande tricolore). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Béninois du Monde",
@@ -13,9 +13,9 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#ffffff",
     theme_color: "#008751",
     icons: [
-      { src: "/api/icone?s=192", sizes: "192x192", type: "image/png" },
-      { src: "/api/icone?s=512", sizes: "512x512", type: "image/png" },
-      { src: "/api/icone?s=512&m=1", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icons/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

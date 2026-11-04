@@ -26,7 +26,9 @@ export default async function ConnexionPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const key = Object.entries(sp).map(([k, v]) => `${k}=${v}`).find((k) => k in MESSAGES);
+  /* Auth.js colle « ?provider=…&type=… » derrière l'URL de retour déjà paramétrée (/connexion?envoye=1) :
+     on ne garde que la valeur avant le second « ? ». */
+  const key = Object.entries(sp).map(([k, v]) => `${k}=${(v ?? "").split("?")[0]}`).find((k) => k in MESSAGES);
   const message = key ? MESSAGES[key] : null;
   const suite = sp.callbackUrl?.startsWith("/") ? sp.callbackUrl : "/compte";
 

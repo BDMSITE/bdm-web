@@ -25,7 +25,7 @@ const INPUT = "w-full rounded border border-line bg-paper px-3 py-2.5 text-sm fo
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const key = Object.entries(sp).map(([k, v]) => `${k}=${v}`).find((k) => k in MESSAGES);
+  const key = Object.entries(sp).map(([k, v]) => `${k}=${(v ?? "").split("?")[0]}`).find((k) => k in MESSAGES);
   const message = key ? MESSAGES[key] : null;
   const suite = sp.callbackUrl?.startsWith("/") ? sp.callbackUrl : "/compte";
 

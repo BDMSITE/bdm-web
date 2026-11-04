@@ -1,7 +1,7 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **03/11/2026**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **04/11/2026**.
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
@@ -368,6 +368,11 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   de production : serveur arrêté → guide enregistré lisible et stylé, autres pages → page d'attente.
   Libellé du type HELP_REQUEST renommé « Entraide ». Export RGPD et suppression de compte couvrent formation et
   recommandations. Lanceur local supplémentaire `bdm-prod` (pnpm start) dans .claude/launch.json.
+
+- **04/11 — RÉFÉRENTIEL NUMÉROTÉ DES FONCTIONNALITÉS.** `FONCTIONNALITES.md` à la racine : 160 fonctionnalités F-001 → F-160
+  en 12 familles (comptes, site public, rubriques, communauté, espace membre, modération, gestion, paramètres, e-mails,
+  régie, sécurité/exploitation, en attente), chacune avec emplacement, accès (V/M/E/A/S) et état (139 ✅, 16 ⚙️, 4 ⏸️, 1 ✖).
+  Numéros définitifs : une nouveauté prend le numéro suivant, un retrait garde son numéro. Copie dans Notion.
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : authentification Brevo du domaine (DKIM/DMARC) (Turnstile refait le 03/11), puis invitations des 278 comptes importés depuis /admin/imports, confirmation du nom du directeur de publication

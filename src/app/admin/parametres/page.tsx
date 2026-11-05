@@ -10,7 +10,9 @@ import { MaintenanceForm } from "./maintenance-form";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 import { resetTwoFactorAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
-import { fedapayConfig, keysPresent } from "@/lib/fedapay";
+import { keysPresent } from "@/lib/kkiapay";
+import { stripeKeysPresent } from "@/lib/stripe";
+import { paiementConfig } from "@/lib/paiement";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -32,7 +34,7 @@ export default async function AdminParametresPage() {
   const mail = env.BREVO_API_KEY ? "Brevo" : env.RESEND_API_KEY ? "Resend" : null;
   const settings = await getSettings();
   const maint = await maintenance();
-  const feda = await fedapayConfig();
+  const paiement = await paiementConfig();
   const socialsManquants = SOCIAL_NETWORKS.filter((n) => !settings[n.key]).map((n) => n.label);
   /* Tout ce qui existe sur le site mais n'est pas encore configuré : à traiter avant l'ouverture. */
   const aConfigurer = [
@@ -40,7 +42,8 @@ export default async function AdminParametresPage() {
     !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && { l: "Anti-robot (Turnstile)", d: "Inscription et contact sans protection anti-robot." },
     socialsManquants.length > 0 && { l: `Réseaux sociaux : ${socialsManquants.join(", ")}`, d: "Icônes visibles mais renvoyant vers Contact. Renseigner les liens ci-dessous." },
     !env.NEXT_PUBLIC_MAPTILER_KEY && { l: "Fond de carte (MapTiler)", d: "Facultatif : fond OpenStreetMap en attendant." },
-    !env.FEDAPAY_SANDBOX_SECRET_KEY && !env.FEDAPAY_LIVE_SECRET_KEY && { l: "Paiements (FedaPay)", d: "Adhésions HCBE en ligne : poser FEDAPAY_SANDBOX_PUBLIC_KEY / _SECRET_KEY / _WEBHOOK_SECRET (test) puis FEDAPAY_LIVE_* dans Vercel, déclarer le webhook /api/fedapay/webhook dans FedaPay. Sans clés, activation manuelle dans Admin → Adhésions." },
+    !keysPresent("sandbox") && !keysPresent("live") && { l: "Paiements zone franc (KKiaPay)", d: "Adhésions HCBE par Mobile Money : poser KKIAPAY_SANDBOX_PUBLIC_KEY / _PRIVATE_KEY / _SECRET_KEY / _WEBHOOK_SECRET (test) puis KKIAPAY_LIVE_* dans Vercel, déclarer le webhook /api/kkiapay/webhook dans KKiaPay." },
+    !stripeKeysPresent("test") && !stripeKeysPresent("live") && { l: "Paiements hors zone franc (Stripe)", d: "Adhésions HCBE par carte en €/$ : poser STRIPE_TEST_SECRET_KEY / _WEBHOOK_SECRET puis STRIPE_LIVE_* dans Vercel, déclarer le webhook /api/stripe/webhook (checkout.session.completed) dans Stripe." },
   ].filter(Boolean) as { l: string; d: string }[];
 
   let baseOk = false;
@@ -62,7 +65,8 @@ export default async function AdminParametresPage() {
     { l: "E-mails transactionnels", etat: <Etat ok={!!mail} oui={`Configuré (${mail})`} non="Non configuré" />, note: mail ? `Expéditeur : ${env.EMAIL_FROM ?? "non défini"}` : "Sans clé, les e-mails s'affichent dans les logs du serveur." },
     { l: "Recherche", etat: <Etat ok={!!env.MEILI_HOST} oui="Meilisearch" non="Repli Postgres" />, note: env.MEILI_HOST ? "Tolérance aux fautes et facettes." : "Recherche par mots exacts (ILIKE), mêmes pages." },
     { l: "Cartes (MapTiler)", etat: <Etat ok={!!env.NEXT_PUBLIC_MAPTILER_KEY} oui="Configuré" non="Non configuré" />, note: env.NEXT_PUBLIC_MAPTILER_KEY ? "" : "Fond de carte OpenStreetMap par défaut." },
-    { l: "Paiements (FedaPay)", etat: <Etat ok={feda.ready} oui={feda.live ? "Live (paiements réels)" : "Mode test (sandbox)"} non="Non configuré" />, note: `Adhésions HCBE : Mobile Money et carte, encaissement en FCFA. Clés test : ${keysPresent("sandbox") ? "oui" : "non"} · clés live : ${keysPresent("live") ? "oui" : "non"} · webhook ${feda.mode} : ${feda.webhookReady ? "oui" : "non"}. Bascule : « Sécurité & validation ».` },
+    { l: "Paiements zone franc (KKiaPay)", etat: <Etat ok={paiement.kkia.ready} oui={paiement.kkia.live ? "Live (paiements réels)" : "Mode test (sandbox)"} non="Non configuré" />, note: `Mobile Money, carte, wallet, en FCFA. Clés test : ${keysPresent("sandbox") ? "oui" : "non"} · live : ${keysPresent("live") ? "oui" : "non"} · webhook ${paiement.kkia.mode} : ${paiement.kkia.webhookReady ? "oui" : "non"}.` },
+    { l: "Paiements hors zone franc (Stripe)", etat: <Etat ok={paiement.stripe.ready} oui={paiement.stripe.live ? "Live (paiements réels)" : "Mode test"} non="Non configuré" />, note: `Carte en €, $ US, $ CA au prix affiché. Clés test : ${stripeKeysPresent("test") ? "oui" : "non"} · live : ${stripeKeysPresent("live") ? "oui" : "non"} · webhook ${paiement.stripe.mode} : ${paiement.stripe.webhookReady ? "oui" : "non"}. Bascule test / réel : « Sécurité & validation ».` },
     { l: "Authentification", etat: <Etat ok={!!env.AUTH_SECRET && env.AUTH_SECRET !== "change-me"} oui="Secret défini" non="Secret à définir" />, note: "Sessions JWT, mot de passe + lien magique." },
   ];
 

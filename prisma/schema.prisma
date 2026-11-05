@@ -662,7 +662,7 @@ model Recommendation {
 }
 
 /* Adhésion HCBE (F-156, décision du 05/11/2026) : inscription gratuite, adhésion
-   optionnelle payée via FedaPay (Mobile Money, carte) ou activée à la main par un admin.
+   optionnelle payée via KKiaPay (Mobile Money, carte, wallet) ou activée à la main par un admin.
    Un membre est « adhérent » s'il a une ligne ACTIVE dont endsAt est dans le futur. */
 enum MembershipPlan {
   ANNUEL   // tarif plein (20 € / an)
@@ -683,15 +683,16 @@ model Membership {
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan           MembershipPlan
   status         MembershipStatus @default(PENDING)
-  amount         Int              // montant encaissé, entier, dans `currency` (FedaPay : XOF)
+  amount         Int              // montant encaissé, entier : FCFA pour KKiaPay, centimes (EUR/USD/CAD) pour Stripe
   currency       String           @default("XOF")
   displayAmount  String?          // ce qui a été affiché au membre (« 20 € », « 13 120 FCFA »)
   startsAt       DateTime?
   endsAt         DateTime?
-  paymentRef     String?          @unique // identifiant de la transaction FedaPay
-  live           Boolean          @default(false) // transaction FedaPay en mode live (sinon sandbox / activation manuelle)
-  paymentMode    String?          // moyen de paiement rapporté par FedaPay (mtn_open, carte…)
-  paymentUrl     String?          // page de paiement FedaPay (repli si le widget ne s'ouvre pas)
+  paymentRef     String?          @unique // identifiant de la transaction KKiaPay ou de la session Checkout Stripe
+  live           Boolean          @default(false) // paiement en mode live (sinon test / activation manuelle)
+  provider       String?          // KKIAPAY (zone franc, FCFA) ou STRIPE (carte en €, $) ; null = activation manuelle
+  paymentMode    String?          // moyen de paiement rapporté par KKiaPay (mtn-benin, CARD…)
+  paymentUrl     String?          // page de paiement Stripe (Checkout) ; vide pour KKiaPay (widget sur le site)
   createdById    String?          // admin, si activation manuelle
   note           String?          // motif d'une activation manuelle (paiement en main propre…)
   reminderSentAt DateTime?        // rappel J-30 envoyé

@@ -102,7 +102,7 @@ export default async function AdminRegiePage() {
 
         <Card title="Partenaires">
           {partenaires.length === 0 ? (
-            <EmptyState title="Aucun partenaire enregistré.">Un partenaire est un compte entreprise ou association lié à une formule (RH, annonceur, bons plans). Arrive avec le libre-service annonceur et FedaPay.</EmptyState>
+            <EmptyState title="Aucun partenaire enregistré.">Un partenaire est un compte entreprise ou association lié à une formule (RH, annonceur, bons plans). Arrive avec le libre-service annonceur et le paiement KKiaPay.</EmptyState>
           ) : (
             <TableShell head={<><Th>Partenaire</Th><Th>Type</Th><Th>Formule</Th><Th>Début</Th><Th>Fin</Th></>}>
               {partenaires.map((p) => (

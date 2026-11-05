@@ -13,11 +13,11 @@ export async function GET() {
   const rows = await db.membership.findMany({
     where: { status: { in: ["ACTIVE", "EXPIRED", "CANCELLED"] } },
     orderBy: [{ status: "asc" }, { endsAt: "desc" }],
-    select: { plan: true, status: true, startsAt: true, endsAt: true, amount: true, currency: true, displayAmount: true, paymentRef: true, paymentMode: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, country: true, city: true } } } } },
+    select: { plan: true, status: true, startsAt: true, endsAt: true, amount: true, currency: true, displayAmount: true, paymentRef: true, paymentMode: true, provider: true, live: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, country: true, city: true } } } } },
   });
   await db.auditLog.create({ data: { userId: session.user.id, action: "export.adhesions", entity: "Membership", entityId: null, meta: { lignes: rows.length } } });
   const csv = toCsv(
-    ["Nom", "E-mail", "Pays", "Ville", "Formule", "Statut", "Début", "Fin", "Montant encaissé (FCFA)", "Prix affiché", "Transaction FedaPay", "Moyen", "Activation", "Note", "Créée le"],
+    ["Nom", "E-mail", "Pays", "Ville", "Formule", "Statut", "Début", "Fin", "Montant encaissé", "Devise", "Prix affiché", "Prestataire", "Référence", "Moyen", "Mode", "Activation", "Note", "Créée le"],
     rows.map((m) => [
       m.user.profile?.displayName ?? "",
       m.user.email,
@@ -27,11 +27,14 @@ export async function GET() {
       STATUT[m.status] ?? m.status,
       m.startsAt,
       m.endsAt,
-      m.paymentRef ? m.amount : "",
+      m.paymentRef ? (m.currency === "XOF" ? m.amount : (m.amount / 100).toFixed(2)) : "",
+      m.paymentRef ? m.currency : "",
       m.displayAmount ?? "",
+      m.provider ?? "",
       m.paymentRef ?? "",
       m.paymentMode ?? "",
-      m.createdById ? "manuelle" : "FedaPay",
+      m.paymentRef ? (m.live ? "réel" : "test") : "",
+      m.createdById ? "manuelle" : "en ligne",
       m.note ?? "",
       m.createdAt,
     ]),

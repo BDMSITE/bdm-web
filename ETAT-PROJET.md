@@ -411,9 +411,23 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   réservés : codes des bons plans, offres au-delà du quota. Réglages : interrupteur `adhesion.proposer` (OFF par
   défaut : page et badge masqués) + prix € / $ US / $ CA dans Paramètres → Quotas. **Deux jeux de clés** (demande
   Josué) : `FEDAPAY_SANDBOX_PUBLIC_KEY` / `_SECRET_KEY` / `_WEBHOOK_SECRET` et `FEDAPAY_LIVE_*` ; interrupteur
-  `fedapay.live` « FedaPay : encaisser pour de vrai » (OFF = sandbox, sans effet si clés live absentes) ;
-  `Membership.live` distingue les transactions réelles des tests (stats admin hors tests, badge « Test ») ; le
-  webhook reconnaît le jeu de clés par la signature. Josué fournit les clés sandbox directement dans Vercel + `.env`. Testé en local :
+  `paiement.live` « KKiaPay : encaisser pour de vrai » (OFF = sandbox, sans effet si clés live absentes) ;
+  `Membership.live` distingue les transactions réelles des tests (stats admin hors tests, badge « Test »).
+  **Correction 05/11 (soir) : le compte du HCBE est chez KKiaPay, pas FedaPay** → couche de paiement remplacée :
+  `src/lib/kkiapay.ts` (vérification POST `/api/v1/transactions/status` avec x-api-key / x-private-key /
+  x-secret-key, sandbox `api-sandbox.kkiapay.me`), widget `cdn.kkiapay.me/k.js` ouvert sur le site (montant figé
+  côté serveur, `data` = id d'adhésion), le navigateur transmet le `transactionId` → action `confirmPaymentAction`
+  → vérification serveur (statut SUCCESS, montant, stateData) ; webhook `/api/kkiapay/webhook` (en-tête
+  `X-KKIAPAY-SECRET` = hash choisi dans le tableau de bord, puis même vérification). Clés : `KKIAPAY_SANDBOX_PUBLIC_KEY`
+  / `_PRIVATE_KEY` / `_SECRET_KEY` / `_WEBHOOK_SECRET` et `KKIAPAY_LIVE_*`. KKiaPay = XOF seul ; pays Mobile Money :
+  BJ, CI, TG, SN, NE ; carte partout. Josué pose les clés sandbox directement dans Vercel + `.env` (jamais dans le chat).
+  **Puis (même soir) : le HCBE aurait aussi un compte Stripe → deux prestataires combinés** (`src/lib/paiement.ts`) :
+  zone franc → KKiaPay (Mobile Money, carte, wallet, FCFA) ; reste du monde → **Stripe Checkout** (carte en €, $ US,
+  $ CA au prix affiché, sans conversion) ; repli KKiaPay-carte si Stripe absent. `src/lib/stripe.ts` (REST : session
+  Checkout, relecture, signature `Stripe-Signature` v1 HMAC-SHA256), webhook `/api/stripe/webhook`
+  (checkout.session.completed), `Membership.provider` (KKIAPAY | STRIPE | null manuel), `amount` = FCFA (KKiaPay) ou
+  centimes (Stripe), stats admin groupées par devise. Clés : `STRIPE_TEST_SECRET_KEY` / `_WEBHOOK_SECRET`, `STRIPE_LIVE_*`.
+  Un seul interrupteur test / réel `paiement.live` pour les deux. Testé en local :
   activation manuelle, reçu, badge, code réservé, webhook (signature OK/KO), cron (expiration + rappel), export.
   Non testé faute de clés : paiement réel sandbox (widget + retour + webhook FedaPay).
 
@@ -422,12 +436,18 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
    fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
    « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.
-2. **Adhésion (F-156) : codée le 05/11, à brancher.** (a) Josué pose les clés **sandbox** (`FEDAPAY_SANDBOX_*`)
-   dans Vercel et `.env`, déclare le webhook test `https://beninois-du-monde.com/api/fedapay/webhook` (Workbench →
-   Webhooks) et lie le compte à Feda Checkout ; test d'un paiement sandbox de bout en bout ; (b) KYC FedaPay (fait
-   par FedaPay sur le compte, rien à coder) puis clés **live** (`FEDAPAY_LIVE_*`, webhook live) et couverture cartes
-   « monde » à demander ; cocher « FedaPay : encaisser pour de vrai » ; (c) activer « Proposer l'adhésion HCBE »
-   (propriétaire, fin de projet). Migrations `adhesion` et `adhesion_live` déjà appliquées sur Neon. **Autres décisions en attente** (F-141 pub
+2. **Adhésion (F-156) : codée le 05/11, à brancher (KKiaPay).** (a) Josué pose les clés **sandbox**
+   (`KKIAPAY_SANDBOX_PUBLIC_KEY` / `_PRIVATE_KEY` / `_SECRET_KEY`) dans Vercel et `.env`, déclare le webhook
+   `https://beninois-du-monde.com/api/kkiapay/webhook` (Développeurs → Clés API → Webhook, événement
+   transaction.success, hash secret → `KKIAPAY_SANDBOX_WEBHOOK_SECRET`) ; test d'un paiement sandbox de bout en bout
+   (numéro MTN test 22961000000) ; (b) clés **live** (`KKIAPAY_LIVE_*`, webhook live) puis cocher « KKiaPay :
+   encaisser pour de vrai » ; (c) activer « Proposer l'adhésion HCBE » (propriétaire, fin de projet). Migrations
+   `adhesion`, `adhesion_live` et `adhesion_provider` déjà appliquées sur Neon. **Stripe** : `STRIPE_TEST_SECRET_KEY`
+   + webhook test `https://beninois-du-monde.com/api/stripe/webhook` (checkout.session.completed) →
+   `STRIPE_TEST_WEBHOOK_SECRET` ; test carte 4242 4242 4242 4242 ; puis clés live. **Suggestion Josué en attente de
+   décision : vérification d'identité (KYC) des membres à l'inscription** (explication donnée le 05/11 : rien
+   d'automatique recommandé, e-mail confirmé + validation HCBE + paiement = preuve suffisante ; Smile ID si un jour
+   exigé, payant). **Autres décisions en attente** (F-141 pub
    FedaPay, F-157 anglais, F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
 3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
    publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).

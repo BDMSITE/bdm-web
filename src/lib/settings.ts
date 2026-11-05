@@ -20,11 +20,11 @@ export const NUMBER_SETTINGS = [
   { key: "quota.mails.jour", label: "E-mails de masse par jour (newsletter + alertes)", hint: "Brevo gratuit : 300 par jour. Marge gardée pour les e-mails de connexion et de relais.", default: 250, min: 10, max: 100000 },
   /* Adhésion HCBE (décision du 05/11/2026) : prix en euros, convertis en FCFA à parité fixe pour l'encaissement ;
      équivalents en dollars affichés aux membres des États-Unis et du Canada (à ajuster si le change bouge). */
-  { key: "adhesion.prix", label: "Adhésion HCBE : prix annuel (€)", hint: "Encaissé en FCFA via FedaPay à parité fixe (1 € = 655,957 FCFA).", default: 20, min: 1, max: 1000 },
+  { key: "adhesion.prix", label: "Adhésion HCBE : prix annuel (€)", hint: "Carte en € via Stripe hors zone franc ; en FCFA via KKiaPay à parité fixe (1 € = 655,957 FCFA) en zone franc.", default: 20, min: 1, max: 1000 },
   { key: "adhesion.prix_reduit", label: "Adhésion HCBE : tarif réduit jeunes ≤ 20 ans et étudiants (€)", hint: "Déclaration sur l'honneur du membre.", default: 5, min: 0, max: 1000 },
-  { key: "adhesion.prix_usd", label: "Adhésion : équivalent affiché aux États-Unis ($ US)", hint: "Indicatif : la banque du membre convertit depuis le FCFA.", default: 23, min: 1, max: 2000 },
+  { key: "adhesion.prix_usd", label: "Adhésion : équivalent affiché aux États-Unis ($ US)", hint: "Montant réellement débité en $ US via Stripe.", default: 23, min: 1, max: 2000 },
   { key: "adhesion.prix_usd_reduit", label: "Adhésion : tarif réduit affiché aux États-Unis ($ US)", hint: "", default: 6, min: 0, max: 2000 },
-  { key: "adhesion.prix_cad", label: "Adhésion : équivalent affiché au Canada ($ CA)", hint: "Indicatif.", default: 31, min: 1, max: 2000 },
+  { key: "adhesion.prix_cad", label: "Adhésion : équivalent affiché au Canada ($ CA)", hint: "Montant réellement débité en $ CA via Stripe.", default: 31, min: 1, max: 2000 },
   { key: "adhesion.prix_cad_reduit", label: "Adhésion : tarif réduit affiché au Canada ($ CA)", hint: "", default: 8, min: 0, max: 2000 },
 ] as const;
 
@@ -70,8 +70,8 @@ export const FLAG_SETTINGS = [
   { key: "securite.2fa_equipe", label: "Double authentification obligatoire pour l'équipe", hint: "Toute personne ayant accès au back-office doit activer la 2FA avant d'y entrer. Recommandé avant l'ouverture." },
   { key: "communaute.validation_pro", label: "Valider les fiches entreprise, association et artiste avant leur publication dans les annuaires", hint: "Le membre reste visible comme particulier ; sa fiche pro apparaît dans l'annuaire concerné après validation (Admin → Communauté)." },
   { key: "communaute.recommandations_libres", label: "Publier les recommandations entre membres sans relecture", hint: "Par défaut, chaque recommandation (d'un membre ou d'une bonne adresse) passe par Admin → Modération avant d'apparaître. Activez pour les publier immédiatement ; le signalement reste possible." },
-  { key: "fedapay.live", label: "FedaPay : encaisser pour de vrai (clés live)", hint: "Décoché = mode test (sandbox) : les paiements sont simulés, aucun argent réel. Cocher seulement quand le compte FedaPay est vérifié (KYC) et que les clés FEDAPAY_LIVE_* sont posées dans Vercel ; sans elles, le site reste en test." },
-  { key: "adhesion.proposer", label: "Proposer l'adhésion HCBE aux membres (20 €/an, FedaPay)", hint: "Affiche « Mon adhésion » dans l'espace membre, le badge « Membre HCBE » et réserve aux adhérents les codes des bons plans et les offres au-delà du quota gratuit. Le paiement en ligne exige les clés FedaPay dans Vercel ; sans elles, l'admin active les adhésions à la main (Admin → Adhésions)." },
+  { key: "paiement.live", label: "Paiements : encaisser pour de vrai (clés live KKiaPay et Stripe)", hint: "Décoché = mode test : les paiements sont simulés, aucun argent réel. Cocher quand les clés KKIAPAY_LIVE_* et STRIPE_LIVE_* sont posées dans Vercel ; un prestataire sans clés live reste en test." },
+  { key: "adhesion.proposer", label: "Proposer l'adhésion HCBE aux membres (20 €/an)", hint: "Affiche « Mon adhésion » dans l'espace membre, le badge « Membre HCBE » et réserve aux adhérents les codes des bons plans et les offres au-delà du quota gratuit. Le paiement en ligne exige les clés KKiaPay (zone franc) et Stripe (reste du monde) dans Vercel ; sans elles, l'admin active les adhésions à la main (Admin → Adhésions)." },
 ] as const;
 export type FlagKey = (typeof FLAG_SETTINGS)[number]["key"];
 

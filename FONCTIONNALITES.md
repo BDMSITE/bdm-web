@@ -229,7 +229,7 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 
 | N° | Fonctionnalité | Décideur | État |
 |---|---|---|---|
-| F-156 | Adhésion HCBE optionnelle (décision 05/11) : 20 €/an, 5 € jeunes ≤ 20 ans et étudiants, 12 mois, prix affiché dans la devise du pays (€, $, FCFA) et encaissé en FCFA via FedaPay (Mobile Money + carte, widget Checkout.js + webhook signé), page « Mon adhésion », badge « Membre HCBE », codes des bons plans et offres hors quota réservés, Admin → Adhésions (activation manuelle, retrait, export CSV), rappel J-30 sans prélèvement | HCBE / Josué | ⚙️ interrupteur « Proposer l'adhésion » + clés FedaPay |
+| F-156 | Adhésion HCBE optionnelle (décision 05/11) : 20 €/an, 5 € jeunes ≤ 20 ans et étudiants, 12 mois, prix affiché dans la devise du pays (€, $, FCFA) et encaissé via KKiaPay en zone franc (Mobile Money + carte + wallet, FCFA, widget k.js + vérification serveur + webhook) et via Stripe Checkout ailleurs (carte en €/$, webhook signé), page « Mon adhésion », badge « Membre HCBE », codes des bons plans et offres hors quota réservés, Admin → Adhésions (activation manuelle, retrait, export CSV), rappel J-30 sans prélèvement | HCBE / Josué | ⚙️ interrupteur « Proposer l'adhésion » + clés KKiaPay et Stripe |
 | F-157 | Espace membre et back-office en anglais (seules les pages d'entrée et Roots sont traduites) | HCBE | ⏸️ chantier à part |
 | F-158 | Recherche Meilisearch hébergée (tolérance aux fautes), si le volume le justifie | Josué | ⏸️ repli Postgres en place |
 | F-159 | Suppression des 6 comptes de démonstration et de l'ancien projet Vercel de secours | Josué | ⚙️ avant l'ouverture |

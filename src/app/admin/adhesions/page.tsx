@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import type { MembershipStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { fedapayConfig, keysPresent } from "@/lib/fedapay";
+import { keysPresent } from "@/lib/kkiapay";
+import { stripeKeysPresent } from "@/lib/stripe";
+import { paiementConfig, PRESTATAIRE_LABEL, type Prestataire } from "@/lib/paiement";
 import { adhesionProposee, PLAN_LABEL, RAPPEL_JOURS } from "@/lib/adhesion";
 import { cancelMembershipAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
@@ -12,13 +14,15 @@ import { ManualMembershipForm } from "./manual-form";
 
 export const metadata: Metadata = { title: "Adhésions HCBE" };
 
-/* Adhésions HCBE (F-156) : adhérents en cours, échéances proches, encaissements FedaPay,
+/* Adhésions HCBE (F-156) : adhérents en cours, échéances proches, encaissements KKiaPay,
    activation manuelle (paiement hors ligne, membre d'honneur), retrait, export CSV. */
 
 export const dynamic = "force-dynamic";
 
 const PAR_PAGE = 50;
 const STATUT_LABEL: Record<MembershipStatus, string> = { ACTIVE: "En cours", PENDING: "Paiement en attente", EXPIRED: "Échue", CANCELLED: "Annulée / retirée" };
+/** Montant stocké : FCFA entiers (KKiaPay) ou centimes (Stripe). */
+const montant = (n: number, currency: string) => currency === "XOF" ? `${fmtNumber(n)} FCFA` : `${(n / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} ${currency === "EUR" ? "€" : currency === "USD" ? "$ US" : currency === "CAD" ? "$ CA" : currency}`;
 const STATUT_TONE: Record<MembershipStatus, "green" | "yellow" | "gray" | "red"> = { ACTIVE: "green", PENDING: "yellow", EXPIRED: "gray", CANCELLED: "red" };
 
 export default async function AdminAdhesionsPage({ searchParams }: { searchParams: Promise<{ statut?: string; q?: string; page?: string }> }) {
@@ -34,14 +38,14 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
     ...(q && { user: { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { profile: { displayName: { contains: q, mode: "insensitive" as const } } }] } }),
   };
 
-  const [session, proposee, feda, actifs, expirant, payeesAnnee, encaisseAnnee, enAttente, total, lignes] = await Promise.all([
+  const [session, proposee, config, actifs, expirant, payeesAnnee, encaisseAnnee, enAttente, total, lignes] = await Promise.all([
     auth(),
     adhesionProposee(),
-    fedapayConfig(),
+    paiementConfig(),
     db.membership.count({ where: { status: "ACTIVE", endsAt: { gt: now } } }),
     db.membership.count({ where: { status: "ACTIVE", endsAt: { gt: now, lte: dans30j } } }),
     db.membership.count({ where: { status: "ACTIVE", live: true, paymentRef: { not: null }, amount: { gt: 0 }, startsAt: { gte: debutAnnee } } }),
-    db.membership.aggregate({ where: { status: { in: ["ACTIVE", "EXPIRED"] }, live: true, paymentRef: { not: null }, startsAt: { gte: debutAnnee } }, _sum: { amount: true } }),
+    db.membership.groupBy({ by: ["currency"], where: { status: { in: ["ACTIVE", "EXPIRED"] }, live: true, paymentRef: { not: null }, startsAt: { gte: debutAnnee } }, _sum: { amount: true } }),
     db.membership.count({ where: { status: "PENDING" } }),
     db.membership.count({ where }),
     db.membership.findMany({
@@ -49,7 +53,7 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
       orderBy: [{ status: "asc" }, { endsAt: "asc" }, { createdAt: "desc" }],
       take: PAR_PAGE,
       skip: (page - 1) * PAR_PAGE,
-      select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, amount: true, paymentRef: true, paymentMode: true, live: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, slug: true, country: true } } } } },
+      select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, amount: true, currency: true, paymentRef: true, paymentMode: true, live: true, provider: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, slug: true, country: true } } } } },
     }),
   ]);
   const isAdmin = session?.user?.role === "ADMIN";
@@ -66,7 +70,7 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
 
   return (
     <>
-      <PageHead title="Adhésions HCBE" desc="Inscription gratuite pour tous ; adhésion annuelle facultative (20 €, 5 € jeunes et étudiants), payée via FedaPay ou activée ici à la main. Aucun prélèvement automatique : rappel 30 jours avant l'échéance.">
+      <PageHead title="Adhésions HCBE" desc="Inscription gratuite pour tous ; adhésion annuelle facultative (20 €, 5 € jeunes et étudiants), payée via KKiaPay ou activée ici à la main. Aucun prélèvement automatique : rappel 30 jours avant l'échéance.">
         {isAdmin && (
           <a href="/api/admin/export/adhesions" className="whitespace-nowrap rounded border border-line bg-paper px-4 py-2 text-sm font-bold text-ink-2 hover:border-primary hover:text-primary">Exporter (CSV)</a>
         )}
@@ -78,23 +82,26 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
           L&apos;adhésion n&apos;est <strong>pas encore proposée</strong> aux membres : la page « Mon adhésion » et le badge sont masqués. Activer « Proposer l&apos;adhésion HCBE » dans Paramètres → Sécurité &amp; validation quand le HCBE est prêt. L&apos;activation manuelle ci-dessous fonctionne dès maintenant.
         </p>
       )}
-      {!feda.ready ? (
-        <p className="mb-4 rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">
-          Paiement en ligne indisponible : poser les clés <code className="rounded bg-paper-2 px-1">FEDAPAY_SANDBOX_*</code> (puis <code className="rounded bg-paper-2 px-1">FEDAPAY_LIVE_*</code>) dans Vercel. En attendant, les membres sont invités à écrire au HCBE et vous activez ici.
+      <div className="mb-4 grid gap-3 text-sm lg:grid-cols-2">
+        <p className={`rounded border px-3 py-2.5 ${!config.kkia.ready ? "border-line bg-paper-2" : config.kkia.live ? "border-primary bg-primary-faint" : "border-accent bg-accent-light"}`}>
+          <strong>KKiaPay</strong> (zone franc : Mobile Money, carte, wallet, en FCFA) :{" "}
+          {!config.kkia.ready ? <>non configuré. Poser <code className="rounded bg-paper px-1">KKIAPAY_SANDBOX_*</code> (publique, privée, secrète) dans Vercel.</> : config.kkia.live ? "mode live, paiements réels." : "mode test (sandbox), paiements simulés."}
+          {config.kkia.ready && !config.kkia.webhookReady && " Hash du webhook manquant : un paiement n'est confirmé que si le membre reste sur la page."}
+          {config.kkia.ready && !config.kkia.live && !keysPresent("live") && " Clés live absentes."}
         </p>
-      ) : (
-        <p className={`mb-4 rounded border px-3 py-2.5 text-sm ${feda.live ? "border-primary bg-primary-faint" : "border-accent bg-accent-light"}`}>
-          FedaPay en <strong>{feda.live ? "mode live : les paiements sont réels" : "mode test (sandbox) : paiements simulés, aucun argent réel"}</strong>.
-          {!feda.webhookReady && " Secret du webhook manquant pour ce mode : les paiements ne seront confirmés qu'au retour du membre sur le site."}
-          {!feda.live && keysPresent("live") && " Les clés live sont posées : cocher « FedaPay : encaisser pour de vrai » dans Paramètres pour basculer."}
-          {!feda.live && !keysPresent("live") && " Clés live absentes : la bascule dans Paramètres restera sans effet tant qu'elles ne sont pas posées dans Vercel."}
+        <p className={`rounded border px-3 py-2.5 ${!config.stripe.ready ? "border-line bg-paper-2" : config.stripe.live ? "border-primary bg-primary-faint" : "border-accent bg-accent-light"}`}>
+          <strong>Stripe</strong> (reste du monde : carte en €, $ US, $ CA) :{" "}
+          {!config.stripe.ready ? <>non configuré. Poser <code className="rounded bg-paper px-1">STRIPE_TEST_SECRET_KEY</code> (puis <code className="rounded bg-paper px-1">STRIPE_LIVE_*</code>) dans Vercel ; sans Stripe, les cartes hors zone franc passent par KKiaPay en FCFA.</> : config.stripe.live ? "mode live, paiements réels." : "mode test, paiements simulés."}
+          {config.stripe.ready && !config.stripe.webhookReady && " Secret du webhook manquant : un paiement n'est confirmé qu'au retour du membre sur le site."}
+          {config.stripe.ready && !config.stripe.live && !stripeKeysPresent("live") && " Clés live absentes."}
         </p>
-      )}
+      </div>
+      {!config.enLigne && <p className="mb-4 rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">Paiement en ligne indisponible : les membres sont invités à écrire au HCBE et vous activez ici. La bascule test / réel se fait dans Paramètres → Sécurité &amp; validation.</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Adhérents en cours" value={fmtNumber(actifs)} />
         <StatCard label={`Échéance sous ${RAPPEL_JOURS} jours`} value={fmtNumber(expirant)} tone={expirant ? "warn" : "default"} hint="Rappel envoyé automatiquement par le cron" />
-        <StatCard label={`Paiements FedaPay ${now.getUTCFullYear()}`} value={fmtNumber(payeesAnnee)} hint={`${fmtNumber(encaisseAnnee._sum.amount ?? 0)} FCFA réellement encaissés (hors tests)`} />
+        <StatCard label={`Paiements en ligne ${now.getUTCFullYear()}`} value={fmtNumber(payeesAnnee)} hint={encaisseAnnee.length ? `Encaissé (hors tests) : ${encaisseAnnee.map((e) => montant(e._sum.amount ?? 0, e.currency)).join(" · ")}` : "Rien encaissé pour le moment (hors tests)"} />
         <StatCard label="Paiements en attente" value={fmtNumber(enAttente)} hint="Tentatives non abouties (nettoyées automatiquement)" />
       </div>
 
@@ -112,7 +119,7 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
 
           <Card className="mt-4" title={`${fmtNumber(total)} adhésion${total > 1 ? "s" : ""} · page ${page} / ${pages}`}>
             {lignes.length === 0 ? (
-              <EmptyState title="Aucune adhésion pour l'instant.">Les paiements FedaPay confirmés et les activations manuelles apparaîtront ici.</EmptyState>
+              <EmptyState title="Aucune adhésion pour l'instant.">Les paiements KKiaPay vérifiés et les activations manuelles apparaîtront ici.</EmptyState>
             ) : (
               <TableShell head={<><Th>Membre</Th><Th>Formule</Th><Th>Période</Th><Th>Montant</Th><Th>Statut</Th><Th>&nbsp;</Th></>}>
                 {lignes.map((m) => (
@@ -130,8 +137,8 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
                     </Td>
                     <Td className="whitespace-nowrap text-ink-2">{m.startsAt ? `${fmtDate(m.startsAt)} → ${fmtDate(m.endsAt)}` : fmtDate(m.createdAt)}</Td>
                     <Td className="whitespace-nowrap text-ink-2">
-                      {m.paymentRef && m.amount > 0 ? `${fmtNumber(m.amount)} FCFA` : m.displayAmount ?? "—"}
-                      {m.paymentRef && <p className="text-xs text-muted">FedaPay n° {m.paymentRef}{m.paymentMode ? ` · ${m.paymentMode}` : ""}{m.live ? "" : " · test"}</p>}
+                      {m.paymentRef && m.amount > 0 ? montant(m.amount, m.currency) : m.displayAmount ?? "—"}
+                      {m.paymentRef && <p className="text-xs text-muted">{m.provider ? PRESTATAIRE_LABEL[m.provider as Prestataire] : "Paiement"} {m.paymentRef.slice(0, 24)}{m.paymentMode ? ` · ${m.paymentMode}` : ""}{m.live ? "" : " · test"}</p>}
                     </Td>
                     <Td><Badge tone={STATUT_TONE[m.status]}>{STATUT_LABEL[m.status]}</Badge>{m.paymentRef && !m.live && <> <Badge tone="gray">Test</Badge></>}</Td>
                     <Td>
@@ -153,7 +160,7 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
               </nav>
             )}
             <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
-              Les montants FedaPay sont en francs CFA (seule devise encaissée) ; le membre a vu le prix dans la devise de son pays. Un renouvellement démarre à la fin de l&apos;adhésion en cours. Les adhésions échues passent automatiquement en « Échue » chaque matin.
+              KKiaPay encaisse en francs CFA (zone franc) ; Stripe encaisse en €, $ US ou $ CA (reste du monde) au prix affiché au membre. Un renouvellement démarre à la fin de l&apos;adhésion en cours. Les adhésions échues passent automatiquement en « Échue » chaque matin.
             </p>
           </Card>
         </div>

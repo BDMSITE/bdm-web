@@ -6,10 +6,10 @@ import { numberSetting, flag } from "./settings";
 /* Adhésion HCBE (F-156) — règles métier fixées par le HCBE le 05/11/2026 :
    inscription gratuite pour tous ; adhésion optionnelle 20 €/an, 5 €/an pour les jeunes
    jusqu'à 20 ans et les étudiants ; 12 mois à compter de l'adhésion ; rappel 30 jours
-   avant l'échéance, jamais de prélèvement automatique ; paiement FedaPay (Mobile Money,
-   carte) encaissé en franc CFA ; activation manuelle possible par un administrateur.
-   Le prix est affiché dans la devise du pays du membre (€, $, FCFA), l'encaissement se
-   fait toujours en XOF (parité fixe 1 € = 655,957 FCFA). */
+   avant l'échéance, jamais de prélèvement automatique ; paiement KKiaPay (zone franc :
+   Mobile Money, carte, wallet, en FCFA) ou Stripe (reste du monde : carte en €, $ US, $ CA) ;
+   activation manuelle possible par un administrateur. Le prix est affiché dans la devise du
+   pays du membre ; parité fixe 1 € = 655,957 FCFA pour la zone franc. */
 
 export const DUREE_MOIS = 12;
 export const RAPPEL_JOURS = 30;
@@ -35,17 +35,14 @@ export function deviseDuPays(pays: string | null | undefined): Devise {
   return "EUR";
 }
 
-/* Mobile Money accepté par FedaPay, par pays (doc FedaPay « Moyens de paiement », 11/2026).
-   Partout ailleurs : carte Visa / Mastercard (si la couverture « monde » est activée sur le compte FedaPay). */
+/* Mobile Money et wallets acceptés par KKiaPay, par pays couvert (BJ, CI, TG, SN, NE ; doc KKiaPay
+   « Moyens de paiement », 11/2026). Partout ailleurs : carte Visa / Mastercard. */
 export const MOBILE_MONEY: Record<string, string[]> = {
   Bénin: ["MTN Mobile Money", "Moov Money", "Celtiis Cash", "Coris Money"],
-  "Côte d'Ivoire": ["MTN Mobile Money", "Moov Money", "Orange Money", "Wave"],
-  Sénégal: ["Orange Money", "Wave", "Free Money"],
-  Togo: ["Moov Money", "Mixx by Yas (T-Money)"],
+  "Côte d'Ivoire": ["MTN Mobile Money", "Orange Money", "Wave"],
+  Togo: ["Mixx by Yas (T-Money)", "Moov Money"],
+  Sénégal: ["Orange Money", "Wave"],
   Niger: ["Airtel Money"],
-  Mali: ["Orange Money"],
-  "Burkina Faso": ["Moov Money", "Orange Money"],
-  Guinée: ["MTN Mobile Money"],
 };
 
 /** Moyens de paiement proposés au membre selon son pays. */
@@ -69,6 +66,8 @@ export type Tarif = {
   label: string;
   eur: number;
   xof: number;
+  /** Montant dans la devise d'affichage (nombre), pour Stripe. */
+  local: number;
   /** Montant dans la devise d'affichage du membre. */
   affiche: string;
   /** Montant réellement débité, en FCFA, affiché à côté si la devise diffère. */
@@ -88,7 +87,7 @@ export const tarifs = cache(async (devise: Devise): Promise<Tarif[]> => {
   const ligne = (plan: Tarif["plan"], eur: number, enUsd: number, enCad: number): Tarif => {
     const xof = eurVersXof(eur);
     const local = devise === "XOF" ? xof : devise === "USD" ? enUsd : devise === "CAD" ? enCad : eur;
-    return { plan, label: PLAN_LABEL[plan], eur, xof, affiche: fmtMontant(local, devise), debite: fmtMontant(xof, "XOF") };
+    return { plan, label: PLAN_LABEL[plan], eur, xof, local, affiche: fmtMontant(local, devise), debite: fmtMontant(xof, "XOF") };
   };
   return [ligne("ANNUEL", plein, usd, cad), ligne("ETUDIANT", reduit, usdReduit, cadReduit)];
 });
@@ -126,7 +125,7 @@ export function ajouterMois(d: Date, mois: number) {
   return r;
 }
 
-/** Active une adhésion (paiement confirmé ou activation manuelle). Idempotent : une ligne déjà ACTIVE n'est pas modifiée.
+/** Active une adhésion (paiement vérifié ou activation manuelle). Idempotent : une ligne déjà ACTIVE n'est pas modifiée.
     Un renouvellement démarre à la fin de l'adhésion en cours pour ne pas faire perdre de jours. */
 export async function activerAdhesion(membershipId: string, extra: { paymentRef?: string; paymentMode?: string | null } = {}) {
   return db.$transaction(async (tx) => {

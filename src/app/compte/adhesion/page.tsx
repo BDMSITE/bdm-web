@@ -4,14 +4,14 @@ import { notFound } from "next/navigation";
 import { BadgeCheck, Smartphone, CreditCard } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { fedapayConfig } from "@/lib/fedapay";
+import { paiementConfig, prestatairePour } from "@/lib/paiement";
 import { adhesionActive, adhesionProposee, deviseDuPays, tarifs, moyensDePaiement, fmtEcheance, joursAvant, PLAN_LABEL, RAPPEL_JOURS } from "@/lib/adhesion";
 import { AdhesionForm } from "./form";
 
 export const metadata: Metadata = { title: "Mon adhésion" };
 
 /* Mon adhésion (F-156) : statut et échéance, les deux tarifs dans la devise du pays du membre,
-   moyens de paiement disponibles dans son pays, bouton Adhérer / Renouveler → FedaPay.
+   moyens de paiement disponibles dans son pays, bouton Adhérer / Renouveler → widget KKiaPay.
    Le compte reste gratuit : l'adhésion n'ouvre que le badge et les avantages réservés. */
 
 const AVANTAGES = [
@@ -31,9 +31,12 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
     db.membership.findMany({ where: { userId, status: { in: ["ACTIVE", "EXPIRED"] } }, orderBy: { createdAt: "desc" }, take: 6, select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, createdById: true } }),
   ]);
   const devise = deviseDuPays(profile?.country);
-  const [prix, feda] = await Promise.all([tarifs(devise), fedapayConfig()]);
+  const [prix, config] = await Promise.all([tarifs(devise), paiementConfig()]);
   const paiement = moyensDePaiement(profile?.country);
-  const enLigne = feda.ready;
+  const prestataire = prestatairePour(devise, config);
+  const enLigne = prestataire !== null;
+  const viaStripe = prestataire === "STRIPE";
+  const modeTest = viaStripe ? !config.stripe.live : !config.kkia.live;
   const joursRestants = joursAvant(active?.endsAt);
 
   return (
@@ -43,7 +46,7 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
         <p className="mt-1 text-sm text-ink-2">Votre compte Béninois du Monde est et reste gratuit. L&apos;adhésion au HCBE est facultative : elle soutient le Haut Conseil et ouvre quelques avantages réservés.</p>
       </div>
 
-      {sp.etat === "attente" && <p role="status" className="rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">Paiement en cours de confirmation. Cette page se mettra à jour dès que FedaPay nous aura prévenus (quelques minutes au plus).</p>}
+      {sp.etat === "attente" && <p role="status" className="rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">Paiement en cours de confirmation. Cette page se mettra à jour dès que KKiaPay nous aura confirmé la transaction (quelques minutes au plus). Si rien ne change, écrivez au HCBE avec l&apos;heure du paiement.</p>}
       {sp.etat === "refuse" && <p role="alert" className="rounded border border-danger bg-danger-light px-3 py-2.5 text-sm text-danger">Le paiement n&apos;a pas abouti (refusé ou abandonné). Rien n&apos;a été débité : vous pouvez réessayer.</p>}
 
       {active ? (
@@ -73,13 +76,13 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
       <section className="border border-line p-5">
         <h2 className="section-title text-base">{active ? "Renouveler" : "Adhérer"} <em>pour 12 mois</em></h2>
         <p className="mt-2 text-sm text-ink-2">
-          Prix affichés {devise === "XOF" ? "en francs CFA" : devise === "EUR" ? "en euros" : "dans votre devise, à titre indicatif"}
-          {profile?.country ? ` (${profile.country})` : ""}. {devise !== "XOF" && "Le paiement est encaissé en francs CFA : votre banque ou votre opérateur applique sa conversion."}
-          {devise === "XOF" && "Montant exact, débité en FCFA."}
+          Prix affichés {devise === "XOF" ? "en francs CFA" : devise === "EUR" ? "en euros" : devise === "USD" ? "en dollars US" : "en dollars canadiens"}
+          {profile?.country ? ` (${profile.country})` : ""}.{" "}
+          {devise === "XOF" || viaStripe ? "Montant exact, débité dans cette devise." : "Le paiement est encaissé en francs CFA : votre banque applique sa conversion."}
         </p>
-        {enLigne && !feda.live && <p className="mt-3 rounded border border-accent bg-accent-light px-3 py-2 text-xs"><strong>Mode test</strong> : le paiement est simulé par FedaPay, aucun argent réel n&apos;est débité.</p>}
+        {enLigne && modeTest && <p className="mt-3 rounded border border-accent bg-accent-light px-3 py-2 text-xs"><strong>Mode test</strong> : le paiement est simulé par {viaStripe ? "Stripe" : "KKiaPay"}, aucun argent réel n&apos;est débité.</p>}
         {enLigne ? (
-          <AdhesionForm tarifs={prix.map((t) => ({ plan: t.plan, label: t.label, affiche: t.affiche, debite: t.debite, memeDevise: devise === "XOF" }))} renouvellement={Boolean(active)} />
+          <AdhesionForm tarifs={prix.map((t) => ({ plan: t.plan, label: t.label, affiche: t.affiche, debite: t.debite, memeDevise: devise === "XOF" || viaStripe }))} renouvellement={Boolean(active)} viaStripe={viaStripe} />
         ) : (
           <div className="mt-4 space-y-3">
             <ul className="grid gap-3 sm:grid-cols-2">
@@ -87,7 +90,7 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
                 <li key={t.plan} className="border border-line p-4">
                   <p className="font-bold">{t.label}</p>
                   <p className="mt-1 font-display text-2xl font-extrabold text-primary">{t.affiche}</p>
-                  {devise !== "XOF" && <p className="text-xs text-muted">débité {t.debite}</p>}
+                  {devise !== "XOF" && !viaStripe && <p className="text-xs text-muted">débité {t.debite}</p>}
                 </li>
               ))}
             </ul>
@@ -95,17 +98,26 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
           </div>
         )}
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-          <div className="flex items-start gap-2">
-            <Smartphone aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p>
-              <strong>Mobile Money</strong>
-              {paiement.mobile.length > 0 ? ` ${profile?.country ? `(${profile.country})` : ""} : ${paiement.mobile.join(", ")}.` : " : disponible depuis le Bénin, le Togo, la Côte d'Ivoire, le Sénégal, le Niger, le Mali, le Burkina Faso et la Guinée."}
-            </p>
-          </div>
-          <div className="flex items-start gap-2">
-            <CreditCard aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p><strong>Carte bancaire</strong> Visa ou Mastercard, depuis tous les pays. Paiement sécurisé par FedaPay ; nous ne voyons jamais vos numéros.</p>
-          </div>
+          {viaStripe ? (
+            <div className="flex items-start gap-2 sm:col-span-2">
+              <CreditCard aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p><strong>Carte bancaire</strong> Visa, Mastercard ou American Express, débitée dans votre devise. Paiement sécurisé par Stripe ; nous ne voyons jamais vos numéros. Depuis la zone franc, les membres paient par Mobile Money via KKiaPay.</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start gap-2">
+                <Smartphone aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p>
+                  <strong>Mobile Money</strong>
+                  {paiement.mobile.length > 0 ? ` ${profile?.country ? `(${profile.country})` : ""} : ${paiement.mobile.join(", ")}.` : " : disponible depuis le Bénin, le Togo, la Côte d'Ivoire, le Sénégal et le Niger."}
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <CreditCard aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p><strong>Carte bancaire</strong> Visa ou Mastercard. Paiement sécurisé par KKiaPay ; nous ne voyons jamais vos numéros.</p>
+              </div>
+            </>
+          )}
         </div>
         <p className="mt-4 text-xs text-muted">Tarif réduit : jeunes jusqu&apos;à 20 ans et étudiants, sur déclaration sur l&apos;honneur. Paiement hors ligne ou question : <Link href="/contact?sujet=Adhésion%20HCBE" className="font-semibold text-primary hover:underline">écrire au HCBE</Link>.</p>
       </section>

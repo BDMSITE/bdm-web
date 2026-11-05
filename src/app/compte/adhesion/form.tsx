@@ -3,12 +3,12 @@
 import { useActionState, useState } from "react";
 import { startMembershipAction, type AdhesionState } from "@/lib/actions/adhesion";
 
-/* Choix du tarif puis départ vers le paiement FedaPay. Le tarif réduit exige une case
+/* Choix du tarif puis départ vers le paiement KKiaPay. Le tarif réduit exige une case
    « sur l'honneur » (jeunes jusqu'à 20 ans, étudiants). */
 
 type TarifProps = { plan: "ANNUEL" | "ETUDIANT"; label: string; affiche: string; debite: string; memeDevise: boolean };
 
-export function AdhesionForm({ tarifs, renouvellement }: { tarifs: TarifProps[]; renouvellement: boolean }) {
+export function AdhesionForm({ tarifs, renouvellement, viaStripe = false }: { tarifs: TarifProps[]; renouvellement: boolean; viaStripe?: boolean }) {
   const [state, action, pending] = useActionState<AdhesionState, FormData>(startMembershipAction, {});
   const [plan, setPlan] = useState<"ANNUEL" | "ETUDIANT">("ANNUEL");
 
@@ -39,7 +39,7 @@ export function AdhesionForm({ tarifs, renouvellement }: { tarifs: TarifProps[];
       <button type="submit" disabled={pending} className="rounded bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60">
         {pending ? "Préparation du paiement…" : renouvellement ? "Renouveler mon adhésion" : "Adhérer et payer"}
       </button>
-      <p className="text-xs text-muted">Vous serez dirigé·e vers le paiement sécurisé FedaPay (Mobile Money ou carte). Aucun renouvellement automatique.</p>
+      <p className="text-xs text-muted">{viaStripe ? "Vous serez dirigé·e vers la page de paiement sécurisée Stripe (carte bancaire)." : "La fenêtre de paiement sécurisée KKiaPay s'ouvrira à l'étape suivante (Mobile Money, carte ou wallet)."} Aucun renouvellement automatique.</p>
     </form>
   );
 }

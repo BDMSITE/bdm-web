@@ -401,8 +401,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
    fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
    « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.
-2. **Décisions HCBE en attente** (F-141, F-156, F-157, F-158) : FedaPay pub, adhésion payante, anglais complet,
-   Meilisearch hébergé. Rien à coder tant qu'elles ne sont pas prises.
+2. **Adhésion (F-156, décidée le 05/11)** : à coder dès le go de Josué + clés FedaPay (sandbox pour commencer) :
+   table Membership, page « Mon adhésion », paiement FedaPay + webhook, badge, accès réservés, admin (liste, activation
+   manuelle, export), rappel J-30 par le cron. **Autres décisions en attente** (F-141 pub FedaPay, F-157 anglais,
+   F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
 3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
    publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).
 

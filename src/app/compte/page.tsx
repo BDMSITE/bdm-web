@@ -3,6 +3,7 @@ import { Bell } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CONTENT_LABEL } from "@/lib/routes";
+import { adhesionActive, adhesionProposee, fmtEcheance, joursAvant, RAPPEL_JOURS } from "@/lib/adhesion";
 
 /* Tableau de bord membre : l'activité du compte connecté. */
 
@@ -34,6 +35,8 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
     db.message.count({ where: { toUserId: userId, readAt: null } }),
   ]);
   const prenom = (profile?.displayName ?? session!.user.name ?? "").split(" ")[0];
+  const adhesion = (await adhesionProposee()) ? await adhesionActive(userId) : undefined;
+  const joursAdhesion = joursAvant(adhesion?.endsAt);
 
   return (
     <div className="space-y-8">
@@ -47,6 +50,19 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
         <h1 className="font-display text-2xl font-extrabold">Bonjour {prenom}</h1>
         <p className="mt-1 text-sm text-ink-2">Voici l&apos;activité de votre compte.</p>
       </div>
+
+      {adhesion === null && (
+        <aside className="flex flex-wrap items-center gap-4 border-l-4 border-accent bg-accent-light p-4">
+          <p className="min-w-0 flex-1 text-sm"><strong>Soutenez le HCBE.</strong> Votre compte est gratuit et le reste ; l&apos;adhésion annuelle (facultative) ajoute le badge « Membre HCBE » et quelques avantages réservés. Paiement Mobile Money ou carte.</p>
+          <Link href="/compte/adhesion" className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Découvrir l&apos;adhésion</Link>
+        </aside>
+      )}
+      {adhesion && joursAdhesion <= RAPPEL_JOURS && (
+        <aside className="flex flex-wrap items-center gap-4 border-l-4 border-primary bg-primary-faint p-4">
+          <p className="min-w-0 flex-1 text-sm">Votre adhésion HCBE se termine le <strong>{fmtEcheance(adhesion.endsAt)}</strong>. Aucun prélèvement automatique : renouvelez quand vous voulez.</p>
+          <Link href="/compte/adhesion" className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Renouveler</Link>
+        </aside>
+      )}
 
       <section className="grid gap-4 sm:grid-cols-3">
         {[

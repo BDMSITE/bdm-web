@@ -6,6 +6,7 @@ import { SiteHeader, SiteFooter, AdSlot, AlertsBox } from "@/components/site/chr
 import { Avatar } from "@/components/site/avatar";
 import { db } from "@/lib/db";
 import { profileHref } from "@/lib/routes";
+import { adhesionProposee, adherentsParmi } from "@/lib/adhesion";
 
 export const metadata: Metadata = { title: "Annuaire des membres" };
 
@@ -53,6 +54,8 @@ export default async function MembresPage({ searchParams }: Props) {
     db.profile.findMany({ where: { user: { status: "ACTIVE" }, country: { not: null } }, distinct: ["country"], select: { country: true }, orderBy: { country: "asc" } }),
     db.keyword.findMany({ where: { family: "SECTOR" }, orderBy: { name: "asc" } }),
   ]);
+
+  const adherents = (await adhesionProposee()) ? await adherentsParmi(membres.map((m) => m.userId)) : new Set<string>();
 
   const qs = (patch: Record<string, string>) => {
     const p = new URLSearchParams({ q, pays, secteur, lettre, ...patch });
@@ -159,6 +162,9 @@ export default async function MembresPage({ searchParams }: Props) {
                       {sectors.map((s) => (
                         <span key={s} className="rounded-full border border-line bg-paper-2 px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-ink-2">{s}</span>
                       ))}
+                      {adherents.has(m.userId) && (
+                        <span className="rounded-full bg-primary-dark px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-white">Membre HCBE</span>
+                      )}
                       {m.cvPublished && (
                         <span className="rounded-full bg-accent px-2 py-0.5 text-[0.7rem] font-bold uppercase tracking-wide text-ink">CV publié</span>
                       )}

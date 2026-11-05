@@ -6,7 +6,7 @@ import { contentHref, CONTENT_LABEL } from "@/lib/routes";
 import { SITE_URL as BASE } from "@/lib/site-url";
 import { numberSetting } from "@/lib/settings";
 import { pendingIssues, sendNewsletterBatch } from "@/lib/newsletter";
-import { weeklyDigest, profileReminders, monthlyHcbeReport, eventReminders } from "@/lib/rappels";
+import { weeklyDigest, profileReminders, monthlyHcbeReport, eventReminders, expireMemberships, membershipReminders } from "@/lib/rappels";
 
 /* Alertes par mots-clés : chaque matin (cron Vercel), pour chaque alerte,
    les contenus publiés depuis le dernier envoi qui portent un de ses mots-clés
@@ -72,6 +72,11 @@ export async function GET(req: Request) {
   const evenements = await eventReminders(budget);
   budget -= evenements;
 
+  /* Adhésions HCBE : échues → « Échue », rappel unique 30 jours avant l'échéance (jamais de prélèvement). */
+  const adhesionsEchues = await expireMemberships().catch((e) => { console.error("[adhesion] expiration impossible", e); return 0; });
+  const rappelsAdhesion = await membershipReminders(Math.min(budget, 100));
+  budget -= rappelsAdhesion;
+
   /* Lundi : hebdo « près de chez vous » puis rappels de profil ; 1er du mois : rapport mensuel. */
   let hebdo = 0, rappels = 0, rapport = false;
   if (now.getUTCDay() === 1) {
@@ -81,5 +86,5 @@ export async function GET(req: Request) {
     budget -= rappels;
   }
   if (now.getUTCDate() === 1) rapport = await monthlyHcbeReport().catch((e) => { console.error("[rapport mensuel] impossible", e); return false; });
-  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter, evenements, hebdo, rappels, rapport });
+  return NextResponse.json({ ok: true, alertes: alerts.length, envoyes, sansNouveaute, newsletter, evenements, adhesionsEchues, rappelsAdhesion, hebdo, rappels, rapport });
 }

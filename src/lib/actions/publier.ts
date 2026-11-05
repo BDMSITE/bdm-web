@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { uploadCover } from "@/lib/photo";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { numberSetting } from "@/lib/settings";
+import { adhesionProposee, isAdherent } from "@/lib/adhesion";
 import { slugify } from "@/lib/slug";
 import { PUBLISH_TYPES, publishFields, refinePublish, parseKeywords, keywordsCreate, detailValues } from "@/lib/publier-schema";
 
@@ -45,8 +46,9 @@ export async function publishAction(_prev: PublishState, formData: FormData): Pr
   const profile = await db.profile.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!profile) return { error: "Votre profil est introuvable : complétez-le dans votre espace avant de publier." };
 
-  /* Quota d'offres gratuites (réglable dans Paramètres) : offres en ligne ou en attente. */
-  if (d.type === "JOB" || d.type === "INTERNSHIP") {
+  /* Quota d'offres gratuites (réglable dans Paramètres) : offres en ligne ou en attente.
+     Les adhérents du HCBE n'y sont pas soumis (avantage réservé, F-156). */
+  if ((d.type === "JOB" || d.type === "INTERNSHIP") && !((await adhesionProposee()) && (await isAdherent(session.user.id)))) {
     const quota = await numberSetting("quota.offres");
     const enCours = await db.content.count({ where: { ownerProfileId: profile.id, type: { in: ["JOB", "INTERNSHIP"] }, status: { in: ["PUBLISHED", "IN_MODERATION"] } } });
     if (enCours >= quota) {

@@ -345,4 +345,9 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "newsletter.compose": "Newsletter composée",
   "newsletter.send": "Newsletter envoyée",
   "export.annuaire": "Export de l'annuaire",
+  "membership.paid": "Adhésion HCBE payée (FedaPay)",
+  "membership.manual": "Adhésion HCBE activée à la main",
+  "membership.cancel": "Adhésion HCBE retirée",
+  "membership.reminder": "Rappel d'échéance d'adhésion envoyé",
+  "export.adhesions": "Export des adhésions",
 };

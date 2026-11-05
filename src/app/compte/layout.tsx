@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter } from "@/components/site/chrome";
 import { CompteSidebar } from "@/components/compte/sidebar";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { adhesionProposee, isAdherent } from "@/lib/adhesion";
 
 export const metadata: Metadata = {
   title: { default: "Mon espace", template: "%s — Mon espace" },
@@ -18,10 +19,14 @@ export default async function CompteLayout({ children }: { children: React.React
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/compte");
 
-  const profile = await db.profile.findUnique({
-    where: { userId: session.user.id },
-    select: { displayName: true, city: true, user: { select: { accountType: true } } },
-  });
+  const [profile, adhesion, adherent] = await Promise.all([
+    db.profile.findUnique({
+      where: { userId: session.user.id },
+      select: { displayName: true, city: true, user: { select: { accountType: true } } },
+    }),
+    adhesionProposee(),
+    isAdherent(session.user.id),
+  ]);
 
   return (
     <>
@@ -31,6 +36,8 @@ export default async function CompteLayout({ children }: { children: React.React
           <CompteSidebar
             name={profile?.displayName ?? session.user.name ?? "Mon espace"}
             meta={[profile ? TYPE_LABEL[profile.user.accountType] : null, profile?.city].filter(Boolean).join(" · ")}
+            adhesion={adhesion}
+            adherent={adhesion && adherent}
           />
           <div className="min-w-0">{children}</div>
         </div>

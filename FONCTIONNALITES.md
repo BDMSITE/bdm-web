@@ -229,7 +229,7 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 
 | N° | Fonctionnalité | Décideur | État |
 |---|---|---|---|
-| F-156 | Adhésion payante au HCBE : cotisation obligatoire ou optionnelle, montant, paiement FedaPay, page « Mon adhésion » | HCBE | ⏸️ |
+| F-156 | Adhésion HCBE optionnelle (décision 05/11) : 20 €/an, 5 € jeunes ≤ 20 ans et étudiants, 12 mois, prix affiché dans la devise du pays (€, $, FCFA) et encaissé en FCFA via FedaPay (Mobile Money + carte, widget Checkout.js + webhook signé), page « Mon adhésion », badge « Membre HCBE », codes des bons plans et offres hors quota réservés, Admin → Adhésions (activation manuelle, retrait, export CSV), rappel J-30 sans prélèvement | HCBE / Josué | ⚙️ interrupteur « Proposer l'adhésion » + clés FedaPay |
 | F-157 | Espace membre et back-office en anglais (seules les pages d'entrée et Roots sont traduites) | HCBE | ⏸️ chantier à part |
 | F-158 | Recherche Meilisearch hébergée (tolérance aux fautes), si le volume le justifie | Josué | ⏸️ repli Postgres en place |
 | F-159 | Suppression des 6 comptes de démonstration et de l'ancien projet Vercel de secours | Josué | ⚙️ avant l'ouverture |
@@ -237,4 +237,4 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 
 ---
 
-**Total : 160 fonctionnalités numérotées** — 139 en ligne (✅), 16 en ligne qui attendent un réglage ou une saisie (⚙️), 4 en attente de décision (⏸️), 1 retirée sur décision (✖).
+**Total : 160 fonctionnalités numérotées** — 139 en ligne (✅), 17 en ligne qui attendent un réglage ou une saisie (⚙️), 3 en attente de décision (⏸️), 1 retirée sur décision (✖).

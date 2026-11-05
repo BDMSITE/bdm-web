@@ -17,6 +17,7 @@ import {
   BadgeCheck,
   Home,
   UserPlus,
+  BadgeEuro,
 } from "lucide-react";
 
 /* Menu de l'espace membre (CDC §7.16). */
@@ -34,12 +35,14 @@ const MENU = [
   { label: "Mes compétences", href: "/compte/competences", icon: BadgeCheck },
   { label: "Ma fiche d'accueil", href: "/compte/accueil", icon: Home },
   { label: "Inviter mes proches", href: "/compte/inviter", icon: UserPlus },
+  { label: "Mon adhésion", href: "/compte/adhesion", icon: BadgeEuro },
   { label: "Sécurité", href: "/compte/securite", icon: ShieldCheck },
   { label: "Mes données", href: "/compte/donnees", icon: DatabaseBackup },
 ];
 
-export function CompteSidebar({ name, meta }: { name: string; meta: string }) {
+export function CompteSidebar({ name, meta, adhesion = false, adherent = false }: { name: string; meta: string; adhesion?: boolean; adherent?: boolean }) {
   const pathname = usePathname();
+  const menu = adhesion ? MENU : MENU.filter((m) => m.href !== "/compte/adhesion");
   return (
     <aside className="h-fit border border-line lg:sticky lg:top-4">
       <div className="flex items-center gap-3 border-b border-line bg-paper-2 p-4">
@@ -49,10 +52,11 @@ export function CompteSidebar({ name, meta }: { name: string; meta: string }) {
         <div className="min-w-0">
           <p className="truncate font-bold leading-tight">{name}</p>
           {meta && <p className="text-xs text-muted">{meta}</p>}
+          {adherent && <p className="mt-0.5 inline-block rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Membre HCBE</p>}
         </div>
       </div>
       <nav className="p-2 text-sm">
-        {MENU.map((m) => {
+        {menu.map((m) => {
           const active = m.href === "/compte" ? pathname === "/compte" : pathname.startsWith(m.href);
           return (
             <Link

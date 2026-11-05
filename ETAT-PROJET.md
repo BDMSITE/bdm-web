@@ -1,7 +1,7 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **05/11/2026**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **05/11/2026 (soir)**.
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
@@ -396,15 +396,37 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   le recrée, désactiver Neon Auth dans la console Neon (branche → Auth). 2FA et interrupteurs Sécurité : le HCBE les
   activera lui-même ; ancien projet Vercel perso : supprimé par Josué.
 
+- **05/11 (soir) — ADHÉSION HCBE CODÉE (F-156).** Go de Josué ; client : encaissement en FCFA accepté, prix affiché
+  selon le pays du membre, compte FedaPay = compte personnel de l'administrateur. Livré : modèle `Membership`
+  (plan ANNUEL / ETUDIANT / HONNEUR, statut PENDING / ACTIVE / EXPIRED / CANCELLED, montant XOF, paymentRef unique),
+  `src/lib/adhesion.ts` (devise par pays : FCFA zone franc, $ US, $ CA, € ailleurs ; parité 655,957 ; Mobile Money
+  par pays ; `isAdherent`, `activerAdhesion` idempotente, renouvellement enchaîné), `src/lib/fedapay.ts` (REST
+  transactions + token, relecture, signature webhook HMAC-SHA256 `t=…,s=…` sur `${t}.${corps}` tolérance 5 min,
+  sandbox/live selon préfixe de clé), page `/compte/adhesion` (statut, tarifs, moyens de paiement du pays, déclaration
+  sur l'honneur pour le tarif réduit), `/compte/adhesion/payer` (widget FedaPay Checkout.js v1.1.7 sur la transaction
+  créée côté serveur + lien de repli), `/compte/adhesion/retour` (relit la transaction, jamais le `status` de l'URL),
+  webhook `/api/fedapay/webhook` (signature puis relecture à la source, montant vérifié), e-mails reçu + rappel J-30,
+  cron : échues → EXPIRED, PENDING > 2 j → CANCELLED, rappel unique 30 j avant (`reminderSentAt`), Admin → Adhésions
+  (stats, liste filtrée, activation manuelle, retrait, export CSV), badge « Membre HCBE » (profil, annuaire, menu),
+  réservés : codes des bons plans, offres au-delà du quota. Réglages : interrupteur `adhesion.proposer` (OFF par
+  défaut : page et badge masqués) + prix € / $ US / $ CA dans Paramètres → Quotas. Variables Vercel à poser :
+  `FEDAPAY_PUBLIC_KEY`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET` (sandbox d'abord). Testé en local :
+  activation manuelle, reçu, badge, code réservé, webhook (signature OK/KO), cron (expiration + rappel), export.
+  Non testé faute de clés : paiement réel sandbox (widget + retour + webhook FedaPay).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
    fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
    « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.
-2. **Adhésion (F-156, décidée le 05/11)** : à coder dès le go de Josué + clés FedaPay (sandbox pour commencer) :
-   table Membership, page « Mon adhésion », paiement FedaPay + webhook, badge, accès réservés, admin (liste, activation
-   manuelle, export), rappel J-30 par le cron. **Autres décisions en attente** (F-141 pub FedaPay, F-157 anglais,
-   F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
+2. **Adhésion (F-156) : codée le 05/11, à brancher.** (a) Compte FedaPay de l'administrateur : créer les clés
+   **sandbox** → poser `FEDAPAY_PUBLIC_KEY`, `FEDAPAY_SECRET_KEY` dans Vercel, déclarer le webhook
+   `https://beninois-du-monde.com/api/fedapay/webhook` (Workbench → Webhooks) → `FEDAPAY_WEBHOOK_SECRET` ; lier le
+   compte à Feda Checkout (domaine) ; tester un paiement sandbox de bout en bout ; (b) KYC FedaPay puis clés **live**
+   (couverture cartes « monde » à demander à FedaPay, sinon cartes UEMOA seulement) ; (c) activer « Proposer
+   l'adhésion HCBE » dans Paramètres → Sécurité & validation (par le propriétaire, en fin de projet) ; (d) migration
+   `20261105154249_adhesion` à appliquer sur Neon avant déploiement. **Autres décisions en attente** (F-141 pub
+   FedaPay, F-157 anglais, F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
 3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
    publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).
 

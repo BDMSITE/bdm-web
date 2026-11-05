@@ -7,7 +7,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { normalizeCountry, normalizeCity } from "@/lib/pays";
 import { zonedToUtc } from "@/lib/temps";
-import { sendModerationResult, sendProVerified, sendRecommendationNotice } from "@/lib/mail";
+import { sendModerationResult, sendProVerified, sendRecommendationNotice, sendMembershipConfirmed } from "@/lib/mail";
+import { activerAdhesion, fmtEcheance, PLAN_LABEL } from "@/lib/adhesion";
 import { notifyHelpVolunteers } from "@/lib/entraide-alertes";
 import { SITE_URL } from "@/lib/site-url";
 import { slugify } from "@/lib/slug";
@@ -1140,4 +1141,59 @@ export async function moderateRecommendationAction(_prev: AdminActionState, form
   revalidatePath("/communaute", "layout");
   revalidatePath("/admin", "layout");
   return { ok: true, message: decision === "publish" ? "Recommandation publiée." : "Recommandation supprimée." };
+}
+
+/* ---------- Adhésions HCBE : activation manuelle, retrait ---------- */
+
+const manualMembershipSchema = z.object({
+  email: z.email("Adresse e-mail du membre invalide").transform((s) => s.toLowerCase().trim()),
+  plan: z.enum(["ANNUEL", "ETUDIANT", "HONNEUR"]),
+  montant: z.preprocess((s) => (typeof s === "string" && s.trim() ? s.trim() : undefined), z.string().max(40).optional()),
+  note: z.preprocess((s) => (typeof s === "string" && s.trim() ? s.trim() : undefined), z.string().max(300, "Note limitée à 300 caractères").optional()),
+});
+
+export async function activateMembershipManualAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut activer une adhésion à la main." };
+  const parsed = manualMembershipSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const { email, plan, montant, note } = parsed.data;
+  const membre = await db.user.findUnique({ where: { email }, select: { id: true, status: true, profile: { select: { displayName: true } } } });
+  if (!membre || membre.status === "DELETED") return { error: "Aucun compte avec cette adresse." };
+  const created = await db.membership.create({
+    data: { userId: membre.id, plan, amount: 0, currency: "XOF", displayAmount: plan === "HONNEUR" ? null : (montant ?? null), createdById: user.id, note: note ?? (plan === "HONNEUR" ? "Membre d'honneur" : "Paiement hors ligne") },
+    select: { id: true },
+  });
+  const m = await activerAdhesion(created.id);
+  await audit(user.id, "membership.manual", "Membership", created.id, { email, plan, montant: montant ?? null, note: note ?? null });
+  if (membre.status === "ACTIVE") {
+    await sendMembershipConfirmed(email, {
+      prenom: (membre.profile?.displayName ?? "").split(" ")[0] || "cher membre",
+      plan: PLAN_LABEL[plan],
+      montant: plan === "HONNEUR" ? "" : (montant ?? ""),
+      echeance: fmtEcheance(m?.endsAt),
+      manuelle: true,
+      href: `${SITE_URL}/compte/adhesion`,
+    }).catch(() => {});
+  }
+  revalidatePath("/admin/adhesions");
+  revalidatePath("/communaute", "layout");
+  return { ok: true, message: `Adhésion de ${membre.profile?.displayName ?? email} activée jusqu'au ${fmtEcheance(m?.endsAt)}.` };
+}
+
+export async function cancelMembershipAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const user = await requireStaff();
+  if (!user) return REFUS;
+  if (user.role !== "ADMIN") return { error: "Seul un administrateur peut retirer une adhésion." };
+  const parsed = z.object({ id: z.string().min(1) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const m = await db.membership.findUnique({ where: { id: parsed.data.id }, select: { id: true, status: true, user: { select: { email: true } } } });
+  if (!m) return { error: "Adhésion introuvable." };
+  if (m.status !== "ACTIVE" && m.status !== "PENDING") return { error: "Cette adhésion n'est plus active." };
+  await db.membership.update({ where: { id: m.id }, data: { status: "CANCELLED", note: `Retirée par l'administration le ${new Date().toLocaleDateString("fr-FR")}` } });
+  await audit(user.id, "membership.cancel", "Membership", m.id, { email: m.user.email, avant: m.status });
+  revalidatePath("/admin/adhesions");
+  revalidatePath("/communaute", "layout");
+  return { ok: true, message: `Adhésion de ${m.user.email} retirée.` };
 }

@@ -14,7 +14,7 @@ import { RecommendationsBlock, type RecoItem } from "@/components/site/recommend
 import type { MyReco } from "@/components/site/recommend";
 import { SaveOfflineButton } from "@/components/site/offline";
 
-export type Viewer = { id: string; cvUrl: string | null; favori: boolean; going?: boolean } | null;
+export type Viewer = { id: string; cvUrl: string | null; favori: boolean; going?: boolean; adherent?: boolean } | null;
 
 /* Briques d'affichage des contenus réels : carte, liste, fiche, état vide.
    Pas d'image = pas de bloc image (aucun faux « photo »). */
@@ -92,7 +92,7 @@ function Body({ text }: { text: string }) {
   );
 }
 
-function Details({ item }: { item: ContentFull }) {
+function Details({ item, codeReserve = false }: { item: ContentFull; codeReserve?: boolean }) {
   const rows: [string, string | null | undefined][] = [];
   if (item.job) rows.push(["Contrat", item.job.contractType], ["Rémunération", item.job.salary]);
   if (item.event) {
@@ -106,7 +106,7 @@ function Details({ item }: { item: ContentFull }) {
   }
   if (item.place) rows.push(["Catégorie", item.place.category], ["Adresse", item.place.address], ["Horaires", item.place.hours], ["Téléphone", item.place.phone]);
   if (item.classified) rows.push(["Catégorie", item.classified.category], ["Prix", item.classified.price]);
-  if (item.deal) rows.push(["Code", item.deal.promoCode], ["Conditions", item.deal.conditions], ["Valable jusqu'au", item.deal.validTo ? fmtDate(item.deal.validTo) : null]);
+  if (item.deal) rows.push(["Code", item.deal.promoCode ? (codeReserve ? "Réservé aux adhérents du HCBE" : item.deal.promoCode) : null], ["Conditions", item.deal.conditions], ["Valable jusqu'au", item.deal.validTo ? fmtDate(item.deal.validTo) : null]);
   if (item.help) rows.push(["Entraide", HELP_KIND_LABEL[item.help.kind]], ["Catégorie", item.help.category], ["Urgence", item.help.urgent ? "Demande urgente" : null]);
   const lieu = [item.city, item.country].filter(Boolean).join(" · ");
   if (lieu) rows.push(["Localisation", lieu]);
@@ -124,7 +124,7 @@ function Details({ item }: { item: ContentFull }) {
   );
 }
 
-export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, participants = [], recommendations = [], myReco = null }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer; rsvpCount?: number; participants?: { slug: string; displayName: string }[]; recommendations?: RecoItem[]; myReco?: MyReco }) {
+export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, participants = [], recommendations = [], myReco = null, codeReserve = false }: { item: ContentFull; related: ContentFull[]; viewer?: Viewer; rsvpCount?: number; participants?: { slug: string; displayName: string }[]; recommendations?: RecoItem[]; myReco?: MyReco; codeReserve?: boolean }) {
   const owner = item.ownerProfile;
   const isJob = item.type === "JOB" || item.type === "INTERNSHIP";
   const isGuide = (item.type === "ARTICLE" || item.type === "MEMBER_ARTICLE") && item.keywords.some((k) => k.keyword.slug === "demarches");
@@ -167,7 +167,13 @@ export function ContentDetail({ item, related, viewer = null, rsvpCount = 0, par
         </figure>
       )}
 
-      <Details item={item} />
+      <Details item={item} codeReserve={codeReserve} />
+      {codeReserve && item.deal?.promoCode && (
+        <p className="mt-3 border-l-4 border-accent bg-accent-light p-3 text-sm">
+          Le code de ce bon plan est réservé aux <strong>adhérents du HCBE</strong>.{" "}
+          <Link href={viewer ? "/compte/adhesion" : "/connexion?callbackUrl=/compte/adhesion"} className="font-bold text-primary hover:underline">{viewer ? "Adhérer (20 €/an)" : "Se connecter puis adhérer"}</Link>
+        </p>
+      )}
       {item.event && item.event.startsAt > new Date() && (
         <div className="mt-4 border border-line bg-paper-2 p-4">
           <RsvpButton contentId={item.id} retour={contentHref(item.type, item.slug)} going={Boolean(viewer?.going)} count={rsvpCount} connected={Boolean(viewer)} />

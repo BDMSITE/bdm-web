@@ -23,6 +23,7 @@ import {
   type LucideIcon,
   Building2,
   Globe2,
+  BadgeEuro,
 } from "lucide-react";
 
 /* Barre latérale du back-office — 13 modules (CDC §7.17) + Compétences et En direct.
@@ -48,6 +49,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Mémoire & HCBE", href: "/admin/memoire", icon: Landmark },
   { label: "Ambassades & consulats", href: "/admin/consulats", icon: Building2 },
   { label: "Sections locales HCBE", href: "/admin/sections", icon: Globe2 },
+  { label: "Adhésions HCBE", href: "/admin/adhesions", icon: BadgeEuro },
   { label: "Régie pub", href: "/admin/regie", icon: Megaphone },
   { label: "Newsletter & alertes", href: "/admin/newsletter", icon: Mail },
   { label: "En direct (ticker)", href: "/admin/direct", icon: Radio },

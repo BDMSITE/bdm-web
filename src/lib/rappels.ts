@@ -1,5 +1,6 @@
 import { db } from "./db";
-import { sendProfileReminder, sendWeeklyDigest, sendMonthlyReport, sendEventReminder } from "./mail";
+import { sendProfileReminder, sendWeeklyDigest, sendMonthlyReport, sendEventReminder, sendMembershipReminder } from "./mail";
+import { RAPPEL_JOURS, fmtEcheance, tarifs, deviseDuPays } from "./adhesion";
 import { contentHref, CONTENT_LABEL } from "./routes";
 import { SITE_URL } from "./site-url";
 import { unsubscribeLink } from "./newsletter";
@@ -138,6 +139,50 @@ export async function eventReminders(budget: number): Promise<number> {
       } catch (err) {
         console.error("[rappel événement] envoi impossible", r.user.email, err);
       }
+    }
+  }
+  return sent;
+}
+
+/* ---------- Adhésions HCBE ---------- */
+
+/** Chaque matin : adhésions échues → EXPIRED ; tentatives de paiement en attente depuis plus de 2 jours → CANCELLED. */
+export async function expireMemberships(): Promise<number> {
+  const now = new Date();
+  const [echues] = await Promise.all([
+    db.membership.updateMany({ where: { status: "ACTIVE", endsAt: { lte: now } }, data: { status: "EXPIRED" } }),
+    db.membership.updateMany({ where: { status: "PENDING", createdAt: { lt: new Date(now.getTime() - 2 * 864e5) } }, data: { status: "CANCELLED", note: "Paiement jamais finalisé" } }),
+  ]);
+  return echues.count;
+}
+
+/** Rappel unique 30 jours avant l'échéance (décision HCBE : aucun prélèvement automatique). */
+export async function membershipReminders(budget: number): Promise<number> {
+  if (budget <= 0) return 0;
+  const limite = new Date(Date.now() + RAPPEL_JOURS * 864e5);
+  const aRappeler = await db.membership.findMany({
+    where: { status: "ACTIVE", reminderSentAt: null, endsAt: { gt: new Date(), lte: limite }, user: { status: "ACTIVE" } },
+    orderBy: { endsAt: "asc" },
+    take: budget,
+    select: { id: true, plan: true, endsAt: true, user: { select: { id: true, email: true, profile: { select: { displayName: true, country: true } } } } },
+  });
+  let sent = 0;
+  for (const m of aRappeler) {
+    /* Déjà renouvelée (une autre adhésion démarre après celle-ci) : pas de rappel. */
+    const suivante = await db.membership.findFirst({ where: { userId: m.user.id, status: "ACTIVE", id: { not: m.id }, startsAt: { gte: m.endsAt ?? undefined } }, select: { id: true } });
+    if (suivante) {
+      await db.membership.update({ where: { id: m.id }, data: { reminderSentAt: new Date() } });
+      continue;
+    }
+    try {
+      const prix = await tarifs(deviseDuPays(m.user.profile?.country));
+      const tarif = prix.find((t) => t.plan === (m.plan === "ETUDIANT" ? "ETUDIANT" : "ANNUEL")) ?? prix[0];
+      await sendMembershipReminder(m.user.email, { prenom: (m.user.profile?.displayName ?? "").split(" ")[0] || "cher membre", echeance: fmtEcheance(m.endsAt), montant: tarif.affiche, href: `${SITE_URL}/compte/adhesion` });
+      await db.membership.update({ where: { id: m.id }, data: { reminderSentAt: new Date() } });
+      await db.auditLog.create({ data: { userId: m.user.id, action: "membership.reminder", entity: "Membership", entityId: m.id } });
+      sent++;
+    } catch (e) {
+      console.error("[adhesion] rappel impossible", m.user.email, e);
     }
   }
   return sent;

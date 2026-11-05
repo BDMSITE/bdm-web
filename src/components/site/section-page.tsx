@@ -10,6 +10,7 @@ import { CONTENT_LABEL, SECTION } from "@/lib/routes";
 import { ogImageUrl } from "@/lib/og";
 import { Pagination, pageHref, pageParam } from "@/components/site/pagination";
 import { auth } from "@/lib/auth";
+import { adhesionProposee, isAdherent } from "@/lib/adhesion";
 import { db } from "@/lib/db";
 import { isHelpKind } from "@/lib/entraide";
 
@@ -171,15 +172,17 @@ export async function ContentDetailPage({ slug, types }: { slug: string; types: 
           db.favorite.findUnique({ where: { userId_contentId: { userId: session.user.id, contentId: item.id } }, select: { userId: true } }),
           item.type === "EVENT" ? db.eventRsvp.findUnique({ where: { contentId_userId: { contentId: item.id, userId: session.user.id } }, select: { userId: true } }) : null,
         ]);
-        return { id: session.user.id, cvUrl: p?.cvUrl ?? null, favori: Boolean(f), going: Boolean(r) };
+        return { id: session.user.id, cvUrl: p?.cvUrl ?? null, favori: Boolean(f), going: Boolean(r), adherent: await isAdherent(session.user.id) };
       })()
     : null;
+  /* Bons plans : le code partenaire est réservé aux adhérents du HCBE quand l'adhésion est proposée (F-156). */
+  const codeReserve = item.type === "DEAL" && (await adhesionProposee()) && !viewer?.adherent;
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <ContentDetail item={item} related={related} viewer={viewer} rsvpCount={rsvpCount} participants={participants} recommendations={recommendations} myReco={myReco} />
+          <ContentDetail item={item} related={related} viewer={viewer} rsvpCount={rsvpCount} participants={participants} recommendations={recommendations} myReco={myReco} codeReserve={codeReserve} />
           <aside className="space-y-8">
             <AdSlot slot="SIDE" section={SECTION[item.type].replace(/^\//, "")} />
             <AlertsBox />

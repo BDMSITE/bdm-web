@@ -110,6 +110,7 @@ model User {
   blockedBy    UserBlock[]   @relation("Blocked")
   rsvps        EventRsvp[]
   recommendationsGiven Recommendation[] @relation("RecoAuthor")
+  memberships  Membership[]
 }
 
 // --- Auth.js (comptes OAuth futurs, sessions, jetons de lien magique) ---
@@ -658,4 +659,44 @@ model Recommendation {
   @@unique([authorId, contentId])
   @@index([profileId, status])
   @@index([contentId, status])
+}
+
+/* Adhésion HCBE (F-156, décision du 05/11/2026) : inscription gratuite, adhésion
+   optionnelle payée via FedaPay (Mobile Money, carte) ou activée à la main par un admin.
+   Un membre est « adhérent » s'il a une ligne ACTIVE dont endsAt est dans le futur. */
+enum MembershipPlan {
+  ANNUEL   // tarif plein (20 € / an)
+  ETUDIANT // tarif réduit : jeunes jusqu'à 20 ans et étudiants (5 € / an)
+  HONNEUR  // offerte par le HCBE (activation manuelle, sans paiement)
+}
+
+enum MembershipStatus {
+  PENDING   // créée, paiement en cours
+  ACTIVE
+  EXPIRED
+  CANCELLED // paiement refusé / abandonné, ou adhésion retirée par un admin
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan           MembershipPlan
+  status         MembershipStatus @default(PENDING)
+  amount         Int              // montant encaissé, entier, dans `currency` (FedaPay : XOF)
+  currency       String           @default("XOF")
+  displayAmount  String?          // ce qui a été affiché au membre (« 20 € », « 13 120 FCFA »)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  paymentRef     String?          @unique // identifiant de la transaction FedaPay
+  paymentMode    String?          // moyen de paiement rapporté par FedaPay (mtn_open, carte…)
+  paymentUrl     String?          // page de paiement FedaPay (repli si le widget ne s'ouvre pas)
+  createdById    String?          // admin, si activation manuelle
+  note           String?          // motif d'une activation manuelle (paiement en main propre…)
+  reminderSentAt DateTime?        // rappel J-30 envoyé
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([status, endsAt])
 }

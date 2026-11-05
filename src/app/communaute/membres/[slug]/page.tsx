@@ -10,6 +10,7 @@ import { Avatar } from "@/components/site/avatar";
 import { EXPERT_MODE_LABEL, expertModes } from "@/lib/competences";
 import { CONTENT_LABEL, contentHref, profileHref } from "@/lib/routes";
 import { auth } from "@/lib/auth";
+import { adhesionProposee, isAdherent } from "@/lib/adhesion";
 import { RelayForm } from "@/components/site/relay-form";
 import { RecommendationsBlock } from "@/components/site/recommendations";
 import { GraduationCap, ThumbsUp } from "lucide-react";
@@ -45,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProfilPage({ params }: Props) {
   const [profile, session] = await Promise.all([getProfile((await params).slug), auth()]);
   if (!profile) notFound();
+  const adherent = (await adhesionProposee()) && (await isAdherent(profile.userId));
   const viewerId = session?.user?.id ?? null;
   const isSelf = viewerId === profile.userId;
 
@@ -88,6 +90,7 @@ export default async function ProfilPage({ params }: Props) {
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{TYPE_LABEL[profile.user.accountType]}</span>
                 {profile.cvPublished && <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">CV publié</span>}
+                {adherent && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-dark">Membre HCBE</span>}
                 {profile.expertStatus === "APPROVED" && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-dark">Expert validé par le HCBE</span>}
                 {profile.recommendations.length > 0 && (
                   <a href="#recommandations" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold hover:bg-white/20">

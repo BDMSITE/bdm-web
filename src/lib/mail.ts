@@ -559,3 +559,47 @@ export function sendRecommendationNotice(to: string, r: { prenom: string; auteur
     }),
   );
 }
+
+/* ---------- Adhésion HCBE ---------- */
+
+export function sendMembershipConfirmed(to: string, r: { prenom: string; plan: string; montant: string; echeance: string; manuelle: boolean; href: string }) {
+  const intro = r.manuelle
+    ? `Le HCBE a enregistré votre adhésion${r.montant ? ` (${r.montant})` : ""}. Elle est valable jusqu'au ${r.echeance}.`
+    : `Votre paiement de ${r.montant} a bien été reçu. Votre adhésion est valable jusqu'au ${r.echeance}.`;
+  return send(
+    to,
+    `Bienvenue parmi les adhérents du HCBE`,
+    `Bonjour ${r.prenom},\n\n${intro}\n\nVotre profil porte maintenant le badge « Membre HCBE » et vous accédez aux avantages réservés aux adhérents. Merci de soutenir le Haut Conseil des Béninois de l'Extérieur.\n\nMon adhésion : ${r.href}${SIGN}`,
+    layout({
+      preheader: `Adhésion ${r.plan.toLowerCase()} valable jusqu'au ${r.echeance}.`,
+      eyebrow: "Adhésion",
+      title: `Merci ${esc(r.prenom)}, vous êtes adhérent·e.`,
+      paragraphs: [
+        esc(intro),
+        `Votre profil porte maintenant le badge <strong>Membre HCBE</strong> et vous accédez aux avantages réservés aux adhérents. Merci de soutenir le Haut Conseil des Béninois de l'Extérieur.`,
+      ],
+      cta: { label: "Voir mon adhésion", url: r.href },
+      panel: `<p style="margin:0;font:15px/1.5 Helvetica,Arial,sans-serif;color:${INK}"><strong>${esc(r.plan)}</strong>${r.montant ? ` · ${esc(r.montant)}` : ""}<br>Valable jusqu'au ${esc(r.echeance)}. Aucun prélèvement automatique : nous vous écrirons 30 jours avant l'échéance.</p>`,
+      footnote: "Ce message vaut reçu. Pour une attestation, écrivez au HCBE depuis la page Contact.",
+    }),
+  );
+}
+
+export function sendMembershipReminder(to: string, r: { prenom: string; echeance: string; montant: string; href: string }) {
+  return send(
+    to,
+    `Votre adhésion HCBE arrive à échéance le ${r.echeance}`,
+    `Bonjour ${r.prenom},\n\nVotre adhésion au HCBE se termine le ${r.echeance}. Rien n'est prélevé automatiquement : pour la renouveler (${r.montant}), rendez-vous sur Mon adhésion.\n${r.href}\n\nSans renouvellement, votre compte reste actif et gratuit ; seuls le badge et les avantages réservés aux adhérents s'arrêtent.${SIGN}`,
+    layout({
+      preheader: `Renouvellement possible jusqu'au ${r.echeance}, sans prélèvement automatique.`,
+      eyebrow: "Adhésion",
+      title: "Votre adhésion se termine dans 30 jours.",
+      paragraphs: [
+        `Bonjour ${esc(r.prenom)}, votre adhésion au HCBE se termine le <strong>${esc(r.echeance)}</strong>. Rien n'est prélevé automatiquement : la renouveler ne prend qu'une minute.`,
+        `Sans renouvellement, votre compte reste actif et gratuit ; seuls le badge « Membre HCBE » et les avantages réservés aux adhérents s'arrêtent.`,
+      ],
+      cta: { label: `Renouveler (${r.montant})`, url: r.href },
+      footnote: "Vous pouvez aussi renouveler plus tard : la nouvelle adhésion démarre à la fin de l'actuelle.",
+    }),
+  );
+}

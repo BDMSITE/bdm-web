@@ -444,10 +444,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
    encaisser pour de vrai » ; (c) activer « Proposer l'adhésion HCBE » (propriétaire, fin de projet). Migrations
    `adhesion`, `adhesion_live` et `adhesion_provider` déjà appliquées sur Neon. **Stripe** : `STRIPE_TEST_SECRET_KEY`
    + webhook test `https://beninois-du-monde.com/api/stripe/webhook` (checkout.session.completed) →
-   `STRIPE_TEST_WEBHOOK_SECRET` ; test carte 4242 4242 4242 4242 ; puis clés live. **Suggestion Josué en attente de
-   décision : vérification d'identité (KYC) des membres à l'inscription** (explication donnée le 05/11 : rien
-   d'automatique recommandé, e-mail confirmé + validation HCBE + paiement = preuve suffisante ; Smile ID si un jour
-   exigé, payant). **Autres décisions en attente** (F-141 pub
+   `STRIPE_TEST_WEBHOOK_SECRET` ; test carte 4242 4242 4242 4242 ; puis clés live. **Décision Josué 05/11 : pas de KYC
+   automatique à l'inscription des membres** (e-mail confirmé + validation HCBE des fiches pro + modération + le
+   paiement d'adhésion vaut vérification ; Smile ID seulement si une fonction l'exige un jour). Consignée dans le
+   Journal des décisions Notion. **Autres décisions en attente** (F-141 pub
    FedaPay, F-157 anglais, F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
 3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
    publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).

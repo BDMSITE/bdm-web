@@ -1,7 +1,7 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **04/11/2026**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **05/11/2026**.
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
@@ -397,7 +397,7 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   activera lui-même ; ancien projet Vercel perso : supprimé par Josué.
 
 ## Ce qui RESTE (ordre)
-1. **Josué / HCBE** : retour du fichier de revue (corrections pays/ville/type, e-mails des 149) → réinjection ;
+1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
    fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
    « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.

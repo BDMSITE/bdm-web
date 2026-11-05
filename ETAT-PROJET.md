@@ -409,8 +409,11 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   cron : échues → EXPIRED, PENDING > 2 j → CANCELLED, rappel unique 30 j avant (`reminderSentAt`), Admin → Adhésions
   (stats, liste filtrée, activation manuelle, retrait, export CSV), badge « Membre HCBE » (profil, annuaire, menu),
   réservés : codes des bons plans, offres au-delà du quota. Réglages : interrupteur `adhesion.proposer` (OFF par
-  défaut : page et badge masqués) + prix € / $ US / $ CA dans Paramètres → Quotas. Variables Vercel à poser :
-  `FEDAPAY_PUBLIC_KEY`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET` (sandbox d'abord). Testé en local :
+  défaut : page et badge masqués) + prix € / $ US / $ CA dans Paramètres → Quotas. **Deux jeux de clés** (demande
+  Josué) : `FEDAPAY_SANDBOX_PUBLIC_KEY` / `_SECRET_KEY` / `_WEBHOOK_SECRET` et `FEDAPAY_LIVE_*` ; interrupteur
+  `fedapay.live` « FedaPay : encaisser pour de vrai » (OFF = sandbox, sans effet si clés live absentes) ;
+  `Membership.live` distingue les transactions réelles des tests (stats admin hors tests, badge « Test ») ; le
+  webhook reconnaît le jeu de clés par la signature. Josué fournit les clés sandbox directement dans Vercel + `.env`. Testé en local :
   activation manuelle, reçu, badge, code réservé, webhook (signature OK/KO), cron (expiration + rappel), export.
   Non testé faute de clés : paiement réel sandbox (widget + retour + webhook FedaPay).
 
@@ -419,13 +422,12 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,
    fiches « Béninois qui comptent », relecture des lieux de mémoire) ; 2FA perso puis « 2FA obligatoire » et
    « Validation des fiches pro » dans Paramètres ; rôle Régie à la personne du HCBE.
-2. **Adhésion (F-156) : codée le 05/11, à brancher.** (a) Compte FedaPay de l'administrateur : créer les clés
-   **sandbox** → poser `FEDAPAY_PUBLIC_KEY`, `FEDAPAY_SECRET_KEY` dans Vercel, déclarer le webhook
-   `https://beninois-du-monde.com/api/fedapay/webhook` (Workbench → Webhooks) → `FEDAPAY_WEBHOOK_SECRET` ; lier le
-   compte à Feda Checkout (domaine) ; tester un paiement sandbox de bout en bout ; (b) KYC FedaPay puis clés **live**
-   (couverture cartes « monde » à demander à FedaPay, sinon cartes UEMOA seulement) ; (c) activer « Proposer
-   l'adhésion HCBE » dans Paramètres → Sécurité & validation (par le propriétaire, en fin de projet) ; (d) migration
-   `20261105154249_adhesion` à appliquer sur Neon avant déploiement. **Autres décisions en attente** (F-141 pub
+2. **Adhésion (F-156) : codée le 05/11, à brancher.** (a) Josué pose les clés **sandbox** (`FEDAPAY_SANDBOX_*`)
+   dans Vercel et `.env`, déclare le webhook test `https://beninois-du-monde.com/api/fedapay/webhook` (Workbench →
+   Webhooks) et lie le compte à Feda Checkout ; test d'un paiement sandbox de bout en bout ; (b) KYC FedaPay (fait
+   par FedaPay sur le compte, rien à coder) puis clés **live** (`FEDAPAY_LIVE_*`, webhook live) et couverture cartes
+   « monde » à demander ; cocher « FedaPay : encaisser pour de vrai » ; (c) activer « Proposer l'adhésion HCBE »
+   (propriétaire, fin de projet). Migrations `adhesion` et `adhesion_live` déjà appliquées sur Neon. **Autres décisions en attente** (F-141 pub
    FedaPay, F-157 anglais, F-158 Meilisearch) : rien à coder tant qu'elles ne sont pas prises.
 3. **Clôture** : fin du mode maintenance (Paramètres → Maintenance), test complet inscription → activation →
    publication, puis envoi des 278 invitations depuis /admin/imports (en tout dernier).

@@ -689,6 +689,7 @@ model Membership {
   startsAt       DateTime?
   endsAt         DateTime?
   paymentRef     String?          @unique // identifiant de la transaction FedaPay
+  live           Boolean          @default(false) // transaction FedaPay en mode live (sinon sandbox / activation manuelle)
   paymentMode    String?          // moyen de paiement rapporté par FedaPay (mtn_open, carte…)
   paymentUrl     String?          // page de paiement FedaPay (repli si le widget ne s'ouvre pas)
   createdById    String?          // admin, si activation manuelle

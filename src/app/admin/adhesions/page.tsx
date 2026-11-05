@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import type { MembershipStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { fedapayConfigured, FEDAPAY_LIVE } from "@/lib/fedapay";
+import { fedapayConfig, keysPresent } from "@/lib/fedapay";
 import { adhesionProposee, PLAN_LABEL, RAPPEL_JOURS } from "@/lib/adhesion";
 import { cancelMembershipAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
@@ -34,13 +34,14 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
     ...(q && { user: { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { profile: { displayName: { contains: q, mode: "insensitive" as const } } }] } }),
   };
 
-  const [session, proposee, actifs, expirant, payeesAnnee, encaisseAnnee, enAttente, total, lignes] = await Promise.all([
+  const [session, proposee, feda, actifs, expirant, payeesAnnee, encaisseAnnee, enAttente, total, lignes] = await Promise.all([
     auth(),
     adhesionProposee(),
+    fedapayConfig(),
     db.membership.count({ where: { status: "ACTIVE", endsAt: { gt: now } } }),
     db.membership.count({ where: { status: "ACTIVE", endsAt: { gt: now, lte: dans30j } } }),
-    db.membership.count({ where: { status: "ACTIVE", paymentRef: { not: null }, amount: { gt: 0 }, startsAt: { gte: debutAnnee } } }),
-    db.membership.aggregate({ where: { status: { in: ["ACTIVE", "EXPIRED"] }, paymentRef: { not: null }, startsAt: { gte: debutAnnee } }, _sum: { amount: true } }),
+    db.membership.count({ where: { status: "ACTIVE", live: true, paymentRef: { not: null }, amount: { gt: 0 }, startsAt: { gte: debutAnnee } } }),
+    db.membership.aggregate({ where: { status: { in: ["ACTIVE", "EXPIRED"] }, live: true, paymentRef: { not: null }, startsAt: { gte: debutAnnee } }, _sum: { amount: true } }),
     db.membership.count({ where: { status: "PENDING" } }),
     db.membership.count({ where }),
     db.membership.findMany({
@@ -48,7 +49,7 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
       orderBy: [{ status: "asc" }, { endsAt: "asc" }, { createdAt: "desc" }],
       take: PAR_PAGE,
       skip: (page - 1) * PAR_PAGE,
-      select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, amount: true, paymentRef: true, paymentMode: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, slug: true, country: true } } } } },
+      select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, amount: true, paymentRef: true, paymentMode: true, live: true, createdById: true, note: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true, slug: true, country: true } } } } },
     }),
   ]);
   const isAdmin = session?.user?.role === "ADMIN";
@@ -77,16 +78,23 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
           L&apos;adhésion n&apos;est <strong>pas encore proposée</strong> aux membres : la page « Mon adhésion » et le badge sont masqués. Activer « Proposer l&apos;adhésion HCBE » dans Paramètres → Sécurité &amp; validation quand le HCBE est prêt. L&apos;activation manuelle ci-dessous fonctionne dès maintenant.
         </p>
       )}
-      {proposee && !fedapayConfigured() && (
+      {!feda.ready ? (
         <p className="mb-4 rounded border border-accent bg-accent-light px-3 py-2.5 text-sm">
-          Paiement en ligne indisponible : poser <code className="rounded bg-paper-2 px-1">FEDAPAY_PUBLIC_KEY</code>, <code className="rounded bg-paper-2 px-1">FEDAPAY_SECRET_KEY</code> et <code className="rounded bg-paper-2 px-1">FEDAPAY_WEBHOOK_SECRET</code> dans Vercel. En attendant, les membres sont invités à écrire au HCBE et vous activez ici.
+          Paiement en ligne indisponible : poser les clés <code className="rounded bg-paper-2 px-1">FEDAPAY_SANDBOX_*</code> (puis <code className="rounded bg-paper-2 px-1">FEDAPAY_LIVE_*</code>) dans Vercel. En attendant, les membres sont invités à écrire au HCBE et vous activez ici.
+        </p>
+      ) : (
+        <p className={`mb-4 rounded border px-3 py-2.5 text-sm ${feda.live ? "border-primary bg-primary-faint" : "border-accent bg-accent-light"}`}>
+          FedaPay en <strong>{feda.live ? "mode live : les paiements sont réels" : "mode test (sandbox) : paiements simulés, aucun argent réel"}</strong>.
+          {!feda.webhookReady && " Secret du webhook manquant pour ce mode : les paiements ne seront confirmés qu'au retour du membre sur le site."}
+          {!feda.live && keysPresent("live") && " Les clés live sont posées : cocher « FedaPay : encaisser pour de vrai » dans Paramètres pour basculer."}
+          {!feda.live && !keysPresent("live") && " Clés live absentes : la bascule dans Paramètres restera sans effet tant qu'elles ne sont pas posées dans Vercel."}
         </p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Adhérents en cours" value={fmtNumber(actifs)} />
         <StatCard label={`Échéance sous ${RAPPEL_JOURS} jours`} value={fmtNumber(expirant)} tone={expirant ? "warn" : "default"} hint="Rappel envoyé automatiquement par le cron" />
-        <StatCard label={`Paiements FedaPay ${now.getUTCFullYear()}`} value={fmtNumber(payeesAnnee)} hint={`${fmtNumber(encaisseAnnee._sum.amount ?? 0)} FCFA encaissés${fedapayConfigured() ? (FEDAPAY_LIVE ? "" : " (sandbox)") : ""}`} />
+        <StatCard label={`Paiements FedaPay ${now.getUTCFullYear()}`} value={fmtNumber(payeesAnnee)} hint={`${fmtNumber(encaisseAnnee._sum.amount ?? 0)} FCFA réellement encaissés (hors tests)`} />
         <StatCard label="Paiements en attente" value={fmtNumber(enAttente)} hint="Tentatives non abouties (nettoyées automatiquement)" />
       </div>
 
@@ -123,9 +131,9 @@ export default async function AdminAdhesionsPage({ searchParams }: { searchParam
                     <Td className="whitespace-nowrap text-ink-2">{m.startsAt ? `${fmtDate(m.startsAt)} → ${fmtDate(m.endsAt)}` : fmtDate(m.createdAt)}</Td>
                     <Td className="whitespace-nowrap text-ink-2">
                       {m.paymentRef && m.amount > 0 ? `${fmtNumber(m.amount)} FCFA` : m.displayAmount ?? "—"}
-                      {m.paymentRef && <p className="text-xs text-muted">FedaPay n° {m.paymentRef}{m.paymentMode ? ` · ${m.paymentMode}` : ""}</p>}
+                      {m.paymentRef && <p className="text-xs text-muted">FedaPay n° {m.paymentRef}{m.paymentMode ? ` · ${m.paymentMode}` : ""}{m.live ? "" : " · test"}</p>}
                     </Td>
-                    <Td><Badge tone={STATUT_TONE[m.status]}>{STATUT_LABEL[m.status]}</Badge></Td>
+                    <Td><Badge tone={STATUT_TONE[m.status]}>{STATUT_LABEL[m.status]}</Badge>{m.paymentRef && !m.live && <> <Badge tone="gray">Test</Badge></>}</Td>
                     <Td>
                       {isAdmin && (m.status === "ACTIVE" || m.status === "PENDING") && (
                         <div className="flex justify-end">

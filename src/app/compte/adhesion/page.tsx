@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { BadgeCheck, Smartphone, CreditCard } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { fedapayConfigured } from "@/lib/fedapay";
+import { fedapayConfig } from "@/lib/fedapay";
 import { adhesionActive, adhesionProposee, deviseDuPays, tarifs, moyensDePaiement, fmtEcheance, joursAvant, PLAN_LABEL, RAPPEL_JOURS } from "@/lib/adhesion";
 import { AdhesionForm } from "./form";
 
@@ -31,8 +31,9 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
     db.membership.findMany({ where: { userId, status: { in: ["ACTIVE", "EXPIRED"] } }, orderBy: { createdAt: "desc" }, take: 6, select: { id: true, plan: true, status: true, startsAt: true, endsAt: true, displayAmount: true, createdById: true } }),
   ]);
   const devise = deviseDuPays(profile?.country);
-  const [prix, paiement] = await Promise.all([tarifs(devise), Promise.resolve(moyensDePaiement(profile?.country))]);
-  const enLigne = fedapayConfigured();
+  const [prix, feda] = await Promise.all([tarifs(devise), fedapayConfig()]);
+  const paiement = moyensDePaiement(profile?.country);
+  const enLigne = feda.ready;
   const joursRestants = joursAvant(active?.endsAt);
 
   return (
@@ -76,6 +77,7 @@ export default async function AdhesionPage({ searchParams }: { searchParams: Pro
           {profile?.country ? ` (${profile.country})` : ""}. {devise !== "XOF" && "Le paiement est encaissé en francs CFA : votre banque ou votre opérateur applique sa conversion."}
           {devise === "XOF" && "Montant exact, débité en FCFA."}
         </p>
+        {enLigne && !feda.live && <p className="mt-3 rounded border border-accent bg-accent-light px-3 py-2 text-xs"><strong>Mode test</strong> : le paiement est simulé par FedaPay, aucun argent réel n&apos;est débité.</p>}
         {enLigne ? (
           <AdhesionForm tarifs={prix.map((t) => ({ plan: t.plan, label: t.label, affiche: t.affiche, debite: t.debite, memeDevise: devise === "XOF" }))} renouvellement={Boolean(active)} />
         ) : (

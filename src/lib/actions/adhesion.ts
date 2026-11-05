@@ -5,7 +5,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SITE_URL } from "@/lib/site-url";
-import { createTransaction, fedapayConfigured } from "@/lib/fedapay";
+import { createTransaction, fedapayConfig } from "@/lib/fedapay";
 import { adhesionProposee, deviseDuPays, tarifs, PLAN_LABEL } from "@/lib/adhesion";
 
 /* Action de l'espace membre : démarrer un paiement FedaPay (création de la transaction,
@@ -19,7 +19,8 @@ export async function startMembershipAction(_prev: AdhesionState, formData: Form
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/compte/adhesion");
   if (!(await adhesionProposee())) return { error: "L'adhésion n'est pas encore ouverte." };
-  if (!fedapayConfigured()) return { error: "Le paiement en ligne n'est pas encore disponible : écrivez au HCBE pour adhérer." };
+  const feda = await fedapayConfig();
+  if (!feda.ready) return { error: "Le paiement en ligne n'est pas encore disponible : écrivez au HCBE pour adhérer." };
 
   const parsed = startSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "Choisissez une formule." };
@@ -34,16 +35,16 @@ export async function startMembershipAction(_prev: AdhesionState, formData: Form
   if (tarif.xof <= 0) return { error: "Ce tarif n'est pas disponible." };
 
   /* Une seule tentative en attente à la fois : on réutilise la précédente si elle est récente. */
-  const enAttente = await db.membership.findFirst({ where: { userId, status: "PENDING", plan, paymentUrl: { not: null }, createdAt: { gt: new Date(Date.now() - 20 * 60e3) } }, select: { id: true } });
+  const enAttente = await db.membership.findFirst({ where: { userId, status: "PENDING", plan, live: feda.live, paymentUrl: { not: null }, createdAt: { gt: new Date(Date.now() - 20 * 60e3) } }, select: { id: true } });
   if (enAttente) redirect(`/compte/adhesion/payer?m=${enAttente.id}`);
 
   const m = await db.membership.create({
-    data: { userId, plan, amount: tarif.xof, currency: "XOF", displayAmount: tarif.affiche },
+    data: { userId, plan, amount: tarif.xof, currency: "XOF", displayAmount: tarif.affiche, live: feda.live },
     select: { id: true },
   });
   const [prenom, ...reste] = profile.displayName.trim().split(/\s+/);
   try {
-    const tx = await createTransaction({
+    const tx = await createTransaction(feda.mode, {
       description: `Adhésion HCBE — ${PLAN_LABEL[plan]} — Béninois du Monde`,
       amountXof: tarif.xof,
       callbackUrl: `${SITE_URL}/compte/adhesion/retour?m=${m.id}`,

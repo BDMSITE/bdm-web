@@ -11,12 +11,12 @@ import { sendMembershipConfirmed } from "@/lib/mail";
 
 /** Au retour de FedaPay : relit la transaction et active si elle est approuvée (le webhook fait la même chose, le premier gagne). */
 export async function confirmerRetour(membershipId: string, userId: string): Promise<"active" | "attente" | "refuse" | "inconnu"> {
-  const m = await db.membership.findFirst({ where: { id: membershipId, userId }, select: { id: true, status: true, paymentRef: true, amount: true } });
+  const m = await db.membership.findFirst({ where: { id: membershipId, userId }, select: { id: true, status: true, paymentRef: true, amount: true, live: true } });
   if (!m) return "inconnu";
   if (m.status === "ACTIVE") return "active";
   if (m.status !== "PENDING" || !m.paymentRef) return "refuse";
   try {
-    const tx = await getTransaction(m.paymentRef);
+    const tx = await getTransaction(m.live ? "live" : "sandbox", m.paymentRef);
     if (tx.status === "approved" || tx.status === "transferred") {
       if (tx.amount !== m.amount) {
         console.error("[adhesion] montant FedaPay différent", { membershipId, attendu: m.amount, recu: tx.amount });

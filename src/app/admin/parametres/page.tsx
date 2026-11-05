@@ -10,6 +10,7 @@ import { MaintenanceForm } from "./maintenance-form";
 import { RoleSelect, AddTeamMemberForm } from "./role-form";
 import { resetTwoFactorAction } from "@/lib/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
+import { fedapayConfig, keysPresent } from "@/lib/fedapay";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -31,6 +32,7 @@ export default async function AdminParametresPage() {
   const mail = env.BREVO_API_KEY ? "Brevo" : env.RESEND_API_KEY ? "Resend" : null;
   const settings = await getSettings();
   const maint = await maintenance();
+  const feda = await fedapayConfig();
   const socialsManquants = SOCIAL_NETWORKS.filter((n) => !settings[n.key]).map((n) => n.label);
   /* Tout ce qui existe sur le site mais n'est pas encore configuré : à traiter avant l'ouverture. */
   const aConfigurer = [
@@ -38,7 +40,7 @@ export default async function AdminParametresPage() {
     !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && { l: "Anti-robot (Turnstile)", d: "Inscription et contact sans protection anti-robot." },
     socialsManquants.length > 0 && { l: `Réseaux sociaux : ${socialsManquants.join(", ")}`, d: "Icônes visibles mais renvoyant vers Contact. Renseigner les liens ci-dessous." },
     !env.NEXT_PUBLIC_MAPTILER_KEY && { l: "Fond de carte (MapTiler)", d: "Facultatif : fond OpenStreetMap en attendant." },
-    !env.FEDAPAY_SECRET_KEY && { l: "Paiements (FedaPay)", d: "Adhésions HCBE en ligne : poser FEDAPAY_PUBLIC_KEY, FEDAPAY_SECRET_KEY et FEDAPAY_WEBHOOK_SECRET dans Vercel, puis déclarer le webhook /api/fedapay/webhook dans le tableau de bord FedaPay. Sans clés, activation manuelle dans Admin → Adhésions." },
+    !env.FEDAPAY_SANDBOX_SECRET_KEY && !env.FEDAPAY_LIVE_SECRET_KEY && { l: "Paiements (FedaPay)", d: "Adhésions HCBE en ligne : poser FEDAPAY_SANDBOX_PUBLIC_KEY / _SECRET_KEY / _WEBHOOK_SECRET (test) puis FEDAPAY_LIVE_* dans Vercel, déclarer le webhook /api/fedapay/webhook dans FedaPay. Sans clés, activation manuelle dans Admin → Adhésions." },
   ].filter(Boolean) as { l: string; d: string }[];
 
   let baseOk = false;
@@ -60,7 +62,7 @@ export default async function AdminParametresPage() {
     { l: "E-mails transactionnels", etat: <Etat ok={!!mail} oui={`Configuré (${mail})`} non="Non configuré" />, note: mail ? `Expéditeur : ${env.EMAIL_FROM ?? "non défini"}` : "Sans clé, les e-mails s'affichent dans les logs du serveur." },
     { l: "Recherche", etat: <Etat ok={!!env.MEILI_HOST} oui="Meilisearch" non="Repli Postgres" />, note: env.MEILI_HOST ? "Tolérance aux fautes et facettes." : "Recherche par mots exacts (ILIKE), mêmes pages." },
     { l: "Cartes (MapTiler)", etat: <Etat ok={!!env.NEXT_PUBLIC_MAPTILER_KEY} oui="Configuré" non="Non configuré" />, note: env.NEXT_PUBLIC_MAPTILER_KEY ? "" : "Fond de carte OpenStreetMap par défaut." },
-    { l: "Paiements (FedaPay)", etat: <Etat ok={!!env.FEDAPAY_SECRET_KEY && !!env.FEDAPAY_WEBHOOK_SECRET} oui={env.FEDAPAY_SECRET_KEY?.startsWith("sk_live_") ? "Configuré (live)" : "Configuré (sandbox)"} non={env.FEDAPAY_SECRET_KEY ? "Webhook manquant" : "Non configuré"} />, note: "Adhésions HCBE : Mobile Money et carte, encaissement en FCFA. Webhook : /api/fedapay/webhook." },
+    { l: "Paiements (FedaPay)", etat: <Etat ok={feda.ready} oui={feda.live ? "Live (paiements réels)" : "Mode test (sandbox)"} non="Non configuré" />, note: `Adhésions HCBE : Mobile Money et carte, encaissement en FCFA. Clés test : ${keysPresent("sandbox") ? "oui" : "non"} · clés live : ${keysPresent("live") ? "oui" : "non"} · webhook ${feda.mode} : ${feda.webhookReady ? "oui" : "non"}. Bascule : « Sécurité & validation ».` },
     { l: "Authentification", etat: <Etat ok={!!env.AUTH_SECRET && env.AUTH_SECRET !== "change-me"} oui="Secret défini" non="Secret à définir" />, note: "Sessions JWT, mot de passe + lien magique." },
   ];
 

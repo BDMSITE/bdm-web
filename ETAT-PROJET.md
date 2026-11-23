@@ -482,6 +482,25 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   et `noindex`, /connexion répond toujours 200 pour l'équipe. Base de prod : **293 comptes** (288 + 5 inscriptions
   spontanées depuis le 04/11). Pour réouvrir : Admin → Paramètres → Maintenance, ou remettre la clé à `0`.
 
+- **23/11 — VÉRIFICATION DE TOUTES LES PAGES ET DE LA CHAÎNE DE PAIEMENT (aucune fonctionnalité inachevée).**
+  90 routes de page dans `src/app` (74 fixes + 16 dynamiques). Balayage HTTP complet en local :
+  - **36 pages publiques → 200**, **38 pages protégées → 307** en visiteur anonyme (redirection correcte).
+  - Connecté en **ADMIN** (compte de démo du seed) : **33 sur 36 en 200**. Les 3 autres sont des gardes
+    légitimes, pas des pages manquantes : `/compte/adhesion/payer` et `/compte/adhesion/retour` exigent
+    `?m=<id d'adhésion>` (sinon `notFound()`), `/compte/securite/2fa` et `/connexion/code` redirigent sans
+    jeton en cours. **Zéro 404, zéro 500**, et **zéro `TODO` / `FIXME`** dans `src`, `prisma` et `scripts`.
+  - `/compte/adhesion` et `/admin/adhesions` s'affichent dès que `adhesion.proposer` = 1 (vérifié en local,
+    drapeau laissé à 1 sur la base locale seulement).
+  - **Webhooks vérifiés « fail closed »** : sans secret configuré → **503** ; avec un mauvais
+    `X-KKIAPAY-SECRET` ou une mauvaise `stripe-signature` → **400**. La signature est contrôlée avant toute
+    lecture de l'événement, et la transaction est relue à la source avant activation (revue du code).
+  - Précision sur l'audit du matin : sur `/magazine`, ce n'est **pas** une page de pub — c'est l'unique
+    emplacement « bandeau haut de rubrique » dont le carrousel fait défiler les 5 campagnes maison. L'effet
+    vient du manque d'articles (2), pas du gabarit.
+  - **Conclusion : côté code, le projet est terminé.** Ce qui reste n'est ni du développement ni un bug :
+    les clés de paiement (à poser par Josué dans Vercel, jamais par l'agent ni par le chat), les contenus
+    du HCBE, et les trois décisions F-141 / F-157 / F-158.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

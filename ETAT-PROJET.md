@@ -501,6 +501,19 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
     les clés de paiement (à poser par Josué dans Vercel, jamais par l'agent ni par le chat), les contenus
     du HCBE, et les trois décisions F-141 / F-157 / F-158.
 
+- **23/11 — GARDE-FOU DES PAIEMENTS (F-161).** Chaque prestataire choisissait son mode indépendamment :
+  avec « encaisser pour de vrai » coché mais un seul jeu de clés live posé, l'autre prestataire restait en
+  test et un membre aurait été activé « adhérent » sans paiement réel (badge « Test »). `paiementConfig()`
+  neutralise désormais un prestataire resté en test quand le mode réel est demandé (`sansModeSimule`,
+  champ `enTest`) : l'autre prend le relais via `prestatairePour`, sinon l'adhésion reste en activation
+  manuelle (Admin → Adhésions). Admin → Paramètres affiche la raison sur la ligne du prestataire concerné.
+  Vérifié en local (mode réel + clés sandbox seules) : /compte/adhesion affiche « Le paiement en ligne ouvre
+  bientôt » au lieu de proposer un paiement simulé, et l'avertissement apparaît dans Paramètres. `pnpm check` vert.
+  **Choix d'architecture confirmé : on garde les deux prestataires** — KKiaPay pour la zone franc (Mobile Money,
+  carte, wallet en FCFA) et Stripe hors zone franc (carte en €, \$ US, \$ CA sans conversion). Stripe ne fait pas
+  de Mobile Money au Bénin et KKiaPay débite en FCFA : aucun des deux ne couvre seul les trois cas d'usage.
+  ⚠️ À vérifier avant le live : le compte d'encaissement doit être **au nom du HCBE**, pas un compte personnel.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

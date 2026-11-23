@@ -224,6 +224,7 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 | F-153 | Outils d'exploitation : `db:etat` (état de la base), `db:backup` local, `search:reindex`, `db:seed` (démo) | scripts | E | ✅ |
 | F-154 | Hébergement : Vercel (équipe bdmsite, région Paris), base Neon Postgres, coffres Blob privé et public, domaine beninois-du-monde.com (Hostinger → Vercel, HTTPS, www redirigé) | — | — | ✅ |
 | F-155 | Documentation vivante : ETAT-PROJET.md (mémoire du projet), ce référentiel, Notion (décisions, vérification, pages à remplir) | dépôt · Notion | E | ✅ |
+| F-161 | Garde-fou des paiements : quand « encaisser pour de vrai » est coché, un prestataire dont seules les clés de test sont posées est mis hors service (l'autre prend le relais, sinon activation manuelle) et Paramètres explique pourquoi | `src/lib/paiement.ts` · Admin → Paramètres | S | ✅ |
 
 ## L. En attente de décision ou non engagé
 
@@ -237,7 +238,7 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 
 ---
 
-**Total : 160 fonctionnalités numérotées** — 141 en ligne (✅), 15 en ligne qui attendent un réglage ou une saisie (⚙️), 3 en attente de décision (⏸️), 1 retirée sur décision (✖).
+**Total : 161 fonctionnalités numérotées** — 142 en ligne (✅), 15 en ligne qui attendent un réglage ou une saisie (⚙️), 3 en attente de décision (⏸️), 1 retirée sur décision (✖).
 
 > Revérifié le 23/11/2026 sur https://beninois-du-monde.com : les 29 routes publiques répondent toutes en 200, mais
 > 9 rubriques affichent un état vide (emploi, agenda, adresses, annonces, bons plans, entreprises, associations,

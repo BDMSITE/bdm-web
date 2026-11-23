@@ -474,6 +474,14 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   - Réglages du propriétaire toujours à faire : 2FA perso puis « 2FA obligatoire », « Validation des fiches pro »,
     rôle Régie, et Vercel Analytics à activer.
 
+- **23/11 — SITE REFERMÉ (demande de Josué après l'audit).** Le réglage `maintenance` **n'existait pas** en base :
+  seule la clé `maintenance.message` restait, modifiée le 06/11 — c'est donc entre le 02/11 et le 06/11 que le site
+  a été réouvert, sans que ce soit consigné. `maintenance` = `1` posé sur Neon le 23/11 à 15:24 UTC
+  (`SiteSetting`, via `DATABASE_URL_UNPOOLED` ; secrets de prod dans `.env.production.local`, ignoré par Git).
+  Vérifié en ligne : https://beninois-du-monde.com sert la page « Site en maintenance » avec le message par défaut
+  et `noindex`, /connexion répond toujours 200 pour l'équipe. Base de prod : **293 comptes** (288 + 5 inscriptions
+  spontanées depuis le 04/11). Pour réouvrir : Admin → Paramètres → Maintenance, ou remettre la clé à `0`.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

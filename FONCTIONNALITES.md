@@ -1,6 +1,6 @@
 # Béninois du Monde — Référentiel numéroté des fonctionnalités
 
-Version 1.0 — 04/11/2026 — site : https://beninois-du-monde.com (dépôt GitHub BDMSITE/bdm-web, hébergement Vercel équipe bdmsite).
+Version 1.1 — 23/11/2026 (états revérifiés page par page sur le site en ligne) — site : https://beninois-du-monde.com (dépôt GitHub BDMSITE/bdm-web, hébergement Vercel équipe bdmsite).
 
 Ce document liste **toutes** les fonctionnalités livrées, une ligne par fonctionnalité, avec un numéro stable (F-001…).
 Il sert à la recette avec le HCBE, à la formation de l'équipe et à la facturation. Chaque numéro est définitif : une
@@ -26,8 +26,8 @@ fonctionnalité retirée garde son numéro (marquée « retirée »), une nouvel
 | F-009 | Version anglaise des pages d'entrée : Join, Sign in, The community, Roots ; formulaire d'inscription bilingue, messages de connexion dans la langue choisie | /en/join · /en/sign-in · /en/community · /en/roots | V | ✅ |
 | F-010 | Modèle de comptes simplifié : membre ou administrateur ; le type d'acteur (particulier, entreprise, association, artiste) est un choix du profil modifiable qui décide seulement de l'annuaire d'affichage | /compte/profil | M | ✅ |
 | F-011 | Import des membres depuis le fichier Excel du HCBE (278 comptes importés, pays et villes normalisés, fonction et téléphone repris, rapport des lignes sans e-mail) | script `pnpm import:membres` | E | ✅ |
-| F-012 | Envoi des invitations aux comptes importés par lots dans la limite Brevo, relance automatique après 7 jours | /admin/imports | E | ⚙️ attend l'authentification du domaine Brevo |
-| F-013 | Mode maintenance : page d'attente pour les visiteurs (non indexée), message personnalisable, site normal pour l'équipe connectée avec bandeau rouge ; connexion, admin et API restent ouverts | Admin → Paramètres → Maintenance | A | ✅ (actif depuis le 02/11) |
+| F-012 | Envoi des invitations aux comptes importés par lots dans la limite Brevo, relance automatique après 7 jours | /admin/imports | E | ⚙️ domaine Brevo authentifié le 04/11 : plus aucun blocage technique, mais **aucune invitation n'a jamais été envoyée** (8 comptes activés sur 288 au 23/11) |
+| F-013 | Mode maintenance : page d'attente pour les visiteurs (non indexée), message personnalisable, site normal pour l'équipe connectée avec bandeau rouge ; connexion, admin et API restent ouverts | Admin → Paramètres → Maintenance | A | ✅ (**inactif au 23/11** : le site est ouvert aux visiteurs) |
 | F-014 | Règles d'accès appliquées par le proxy sur toutes les pages : /admin réservé à l'équipe, /compte aux connectés, les membres n'entrent jamais dans le back-office | — | S | ✅ |
 
 ## B. Structure du site public
@@ -187,7 +187,7 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 | F-126 | Tableau de bord mensuel envoyé au HCBE le 1er (inscrits, actifs, pays, publications, messages, candidatures, abonnés, experts, régie) | cron | S | ✅ |
 | F-127 | Rapport annonceurs mensuel par e-mail le 1er + export CSV 90 jours | cron · /api/admin/export/regie | S / E | ✅ |
 | F-128 | Aperçu local de tous les e-mails (`scripts/apercu-mails.ts`) | script | E | ✅ |
-| F-129 | Authentification du domaine chez Brevo (DKIM / DMARC, ligne SPF Hostinger) pour éviter le dossier spam | Brevo + DNS | — | ⚙️ à faire par le HCBE / Josué |
+| F-129 | Authentification du domaine chez Brevo (DKIM / DMARC, ligne SPF Hostinger) pour éviter le dossier spam | Brevo + DNS | — | ✅ fait le 04/11 (DKIM brevo1/brevo2, DMARC avec rua, SPF Hostinger ; vérifié vert) |
 
 ## J. Régie publicitaire
 
@@ -232,9 +232,13 @@ Tous les e-mails utilisent un gabarit maison unique (bande tricolore, fresque, b
 | F-156 | Adhésion HCBE optionnelle (décision 05/11) : 20 €/an, 5 € jeunes ≤ 20 ans et étudiants, 12 mois, prix affiché dans la devise du pays (€, $, FCFA) et encaissé via KKiaPay en zone franc (Mobile Money + carte + wallet, FCFA, widget k.js + vérification serveur + webhook) et via Stripe Checkout ailleurs (carte en €/$, webhook signé), page « Mon adhésion », badge « Membre HCBE », codes des bons plans et offres hors quota réservés, Admin → Adhésions (activation manuelle, retrait, export CSV), rappel J-30 sans prélèvement | HCBE / Josué | ⚙️ interrupteur « Proposer l'adhésion » + clés KKiaPay et Stripe |
 | F-157 | Espace membre et back-office en anglais (seules les pages d'entrée et Roots sont traduites) | HCBE | ⏸️ chantier à part |
 | F-158 | Recherche Meilisearch hébergée (tolérance aux fautes), si le volume le justifie | Josué | ⏸️ repli Postgres en place |
-| F-159 | Suppression des 6 comptes de démonstration et de l'ancien projet Vercel de secours | Josué | ⚙️ avant l'ouverture |
-| F-160 | Réouverture du site (fin du mode maintenance) après Brevo, réglages de sécurité et contenus officiels | HCBE / Josué | ⚙️ |
+| F-159 | Suppression des 6 comptes de démonstration et de l'ancien projet Vercel de secours | Josué | ✅ fait le 04/11 |
+| F-160 | Réouverture du site (fin du mode maintenance) après Brevo, réglages de sécurité et contenus officiels | HCBE / Josué | ⚠️ le site est ouvert depuis une date non consignée, **avant** les contenus officiels et les réglages de sécurité (audit du 23/11) |
 
 ---
 
-**Total : 160 fonctionnalités numérotées** — 139 en ligne (✅), 17 en ligne qui attendent un réglage ou une saisie (⚙️), 3 en attente de décision (⏸️), 1 retirée sur décision (✖).
+**Total : 160 fonctionnalités numérotées** — 141 en ligne (✅), 15 en ligne qui attendent un réglage ou une saisie (⚙️), 3 en attente de décision (⏸️), 1 retirée sur décision (✖).
+
+> Revérifié le 23/11/2026 sur https://beninois-du-monde.com : les 29 routes publiques répondent toutes en 200, mais
+> 9 rubriques affichent un état vide (emploi, agenda, adresses, annonces, bons plans, entreprises, associations,
+> artistes, anciens) et /hcbe affiche encore « Texte officiel en cours de rédaction ». Détail dans `ETAT-PROJET.md`.

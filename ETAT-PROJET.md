@@ -446,6 +446,34 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   État du dépôt : `main` = `staging` au commit du 05/11, rien en attente ; 3 PR Dependabot ouvertes (dont le lot
   de 17 mises à jour du 17/11) et une branche `claude/gracious-aryabhata-365b4b` en retard sur `main` (rien dedans).
 
+- **23/11 — AUDIT DU SITE EN LIGNE CONTRE NOTION (ce qui n'est pas encore géré).** Les 29 routes publiques
+  répondent **200** (y compris /robots.txt, /flux.xml, /agenda/ical, /recherche, /mot/[slug]) : rien n'est cassé,
+  tout ce qui manque est du **contenu** ou un **réglage**.
+  - **Le site est OUVERT au public** alors que F-160 prévoyait de ne lever la maintenance qu'après les contenus
+    officiels et les réglages de sécurité. La date de la levée n'est pas consignée. **Décision à prendre : remettre
+    la maintenance (Admin → Paramètres, 1 clic) ou publier le contenu.**
+  - **Contenu réel au 23/11** (page /chiffres) : **8 membres visibles**, 5 pays, 8 villes, **35 contenus** =
+    23 lieux de mémoire + 10 entraide (SIAL) + **2 articles** (les deux itinéraires repris du WordPress),
+    **0 expert validé**, **0 fiche d'accueil**.
+  - **9 rubriques vides** : emploi, agenda, bonnes adresses, petites annonces, bons plans, et les annuaires
+    entreprises / associations / artistes / anciens. Les états vides s'affichent correctement (rien d'inventé),
+    mais sur /magazine les panneaux de la régie passent avant les 2 seuls articles.
+  - **/hcbe** : encore « Texte officiel en cours de rédaction par le HCBE » pour les missions, l'historique et le
+    bureau exécutif. Sections locales et consulats toujours vides.
+  - **278 comptes importés, 8 activés** : le domaine Brevo est authentifié depuis le 04/11, donc **plus aucun
+    blocage technique** — les invitations n'ont simplement jamais été lancées depuis /admin/imports.
+  - **Notion est en retard sur la réalité** : la page projet affiche encore « Statut : cadrage » et des prochaines
+    étapes de septembre, « Ce qui vit où » cite une org GitHub `beninois-du-monde` qui n'existe pas (c'est
+    **BDMSITE/bdm-web**), le tableau des comptes de test liste des comptes supprimés le 30/10, et la base
+    **✅ Vérification du site a ses 60 lignes encore « À vérifier »** : la relecture page par page n'a jamais été faite.
+  - ⚠️ **Mots de passe en clair dans la page Notion du projet** (admin du site, compte Brevo), alors que la règle
+    du projet est « Bitwarden, jamais dans Notion ». À déplacer et à faire tourner.
+  - Décisions toujours ouvertes côté HCBE : **F-141** (paiement des pubs), **F-157** (interface en anglais),
+    **F-158** (Meilisearch hébergé). **F-156** est décidée et codée, mais aucune clé `KKIAPAY_*` ni `STRIPE_*`
+    n'est posée dans Vercel : l'adhésion ne peut pas encore encaisser.
+  - Réglages du propriétaire toujours à faire : 2FA perso puis « 2FA obligatoire », « Validation des fiches pro »,
+    rôle Régie, et Vercel Analytics à activer.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

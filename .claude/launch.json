@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bdm-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--webpack"],
+      "port": 3000
+    },
+    {
+      "name": "bdm-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["start"],
+      "port": 3000
+    }
+  ]
+}

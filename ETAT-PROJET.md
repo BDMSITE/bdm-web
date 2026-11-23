@@ -1,23 +1,27 @@
 # ÉTAT DU PROJET — Béninois du Monde
 
 > ⚠️ **Claude : lis ce fichier en début de session et METS-LE À JOUR à chaque étape franchie.**
-> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **05/11/2026 (soir)**.
+> Il est la mémoire du projet en cas de compactage de contexte. Dernière mise à jour : **23/11/2026** (liens vitaux + environnement local remonté sur le nouveau Mac).
 
 ## Le projet en une phrase
 Média + réseau de la diaspora béninoise pour le HCBE, calqué sur reunionnaisdumonde.com,
 from scratch en Next.js — remplace l'ancien WordPress de beninois-du-monde.com (audit 14/09/2026).
 
-## 📍 NIVEAU ACTUEL : site réel et sécurisé (S7 livré), en attente de contenu et de la clé Brevo (20/10/2026)
-Fait en local : base Postgres + Meilisearch (Docker/OrbStack installé), migration `init`, seed de démo,
-Auth.js (inscription → lien d'activation → connexion, mot de passe + lien magique), annuaire et fiche
-profil en base, recherche Meilisearch, routes protégées, build de prod vert.
-**Reste pour clore S1** : comptes services (Neon, Resend, MapTiler — aucun ouvert à ce jour), variables
-d'env Vercel + base Neon, CI verte sur un push, démo à Josué (critères §7 Notion Socle).
-Toujours en attente : retours HCBE sur la maquette, atelier questionnaire (58 questions dans Notion).
+## 📍 NIVEAU ACTUEL : site en production sur son domaine et ouvert au public (vérifié le 23/11/2026)
+**En ligne** : https://beninois-du-monde.com — S1 → S7 livrés, 160 fonctionnalités au référentiel
+(`FONCTIONNALITES.md`, 139 ✅ au 04/11). Base **Neon** (288 comptes, dont 278 importés en attente d'activation,
+35 contenus, 16 campagnes de régie), Blob privé `bdm-fichiers`, crons de sauvegarde (03:00) et d'alertes (06:00),
+**Brevo** branché et domaine authentifié (DKIM / DMARC / SPF, 04/11), **Turnstile** actif, CSP et 2FA disponibles.
+Le mode maintenance du 02/11 **a été levé** : le site sert du vrai contenu aux visiteurs.
+**Reste à faire** (détail dans « Ce qui RESTE » plus bas) : brancher l'adhésion F-156 — au 23/11, **aucune clé
+`KKIAPAY_*` ni `STRIPE_*` n'est posée dans les variables Vercel** ; les saisies et contenus du HCBE ; 2FA perso de
+Josué puis les deux interrupteurs « Sécurité & validation » ; l'envoi des 278 invitations, en tout dernier.
+`NEXT_PUBLIC_MAPTILER_KEY` n'a jamais été posée : la carte reste sur le fond OpenStreetMap (gratuit, suffisant).
+Toujours en attente côté HCBE : atelier questionnaire (58 questions dans Notion).
 
 ### Lancer le socle en local
 ```
-docker compose up -d            # Postgres 5433 + Meilisearch 7700 (docker = ~/.orbstack/bin/docker)
+docker compose up -d            # Postgres 5433 + Meilisearch 7700 (Docker Desktop depuis le 23/11/2026)
 cp .env.example .env            # puis AUTH_SECRET=$(openssl rand -base64 32)
 pnpm prisma migrate dev && pnpm db:seed && pnpm search:reindex
 pnpm dev --webpack              # Turbopack casse sur next/font Google en worktree
@@ -27,9 +31,10 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
 ⚠️ Un Postgres Homebrew occupe le port 5432 de la machine → la base du projet est sur **5433**.
 
 ## Liens vitaux
-- **Maquette en ligne (publique, envoyée au HCBE)** : https://bdm-web-jojo-devs-projects.vercel.app
-- **Vercel** : team `team_jmu7x2nDWnI2r8qmpsUBFeBB` (JOJO DEV's projects, hobby), projet `prj_vWuKacWXTE2QC0VgrCe1j0Y53Qoe` (bdm-web), lié au repo GitHub → déploiement auto à chaque push sur main. Protection SSO désactivée volontairement (revue HCBE).
-- **GitHub** : JOJODEVS-GIT/bdm-web (compte perso de Josué, transfert vers une org prévu plus tard)
+- **Site en production** : https://beninois-du-monde.com (ouvert au public ; `bdm-web-psi.vercel.app` → domaine en 308)
+- **Vercel** : compte **`bdmsite`** (équipe `bdmsite`, hobby), projet `prj_YaqJgMNr53qslvdTWfclRcDQRCFV` (bdm-web), Node 24, lié au dépôt GitHub → déploiement auto à chaque push sur main. Protection SSO désactivée volontairement (revue HCBE). ⚠️ Le CLI ne garde **qu'une** session : `vercel login` avec le compte bdmsite, car le scope `bdmsite` est invisible depuis les comptes JOJODEVS-GIT / DAHOMEYDISCOVERY (« scope does not exist »).
+- **GitHub** : **BDMSITE/bdm-web** — dépôt **public**, transféré le 30/10/2026 (l'ancienne URL `JOJODEVS-GIT/bdm-web` redirige). `JOJODEVS-GIT` y est collaborateur avec droit d'écriture : pas besoin de changer de compte `gh` pour cloner ou pousser.
+- **Historique** : la maquette `bdm-web-jojo-devs-projects.vercel.app` et le projet Vercel du compte perso ont été supprimés par Josué (04/11/2026).
 - **Notion projet** : https://app.notion.com/p/3dc1ecad443581cfb74adf7f1a6e279d — contient : CDC v2 importé,
   bases ❓ Questionnaire (58 q), 🧭 Journal des décisions, 📅 Comptes rendus, 🗂️ Étapes du projet (tâches S0→S8),
   ✅ Vérification des maquettes, pages 🏗️ Socle technique / 🔐 Accès & comptes / 🎨 Design system
@@ -430,6 +435,16 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   Un seul interrupteur test / réel `paiement.live` pour les deux. Testé en local :
   activation manuelle, reçu, badge, code réservé, webhook (signature OK/KO), cron (expiration + rappel), export.
   Non testé faute de clés : paiement réel sandbox (widget + retour + webhook FedaPay).
+
+- **23/11 — ENVIRONNEMENT LOCAL REMONTÉ (nouveau Mac).** L'ancienne machine est morte : dépôt recloné depuis
+  BDMSITE/bdm-web dans `~/Developer/bdm-web`, `.env` recréé depuis `.env.example` (AUTH_SECRET et CRON_SECRET
+  régénérés), **Docker Desktop** à la place d'OrbStack (`docker compose up -d` → Postgres 5433 + Meilisearch 7700),
+  `pnpm install`, les 23 migrations appliquées, seed de démo (6 comptes, 37 mots-clés, 12 contenus) et réindexation
+  (12 contenus, 6 profils). Accueil vérifié sur http://localhost:3000 (`pnpm dev --webpack`). `.claude/launch.json`
+  recréé (`bdm-dev`, `bdm-prod`) : il n'était pas versionné et a été perdu avec la machine. Rappel vérifié :
+  `vercel link` recrée un `.env.local` (jeton OIDC + Neon) qui prend le pas sur `.env` → supprimé aussitôt.
+  État du dépôt : `main` = `staging` au commit du 05/11, rien en attente ; 3 PR Dependabot ouvertes (dont le lot
+  de 17 mises à jour du 17/11) et une branche `claude/gracious-aryabhata-365b4b` en retard sur `main` (rien dedans).
 
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;

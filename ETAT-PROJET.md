@@ -536,6 +536,16 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   colocalisées dans `page.tsx` pour contact / newsletter / demande d'expert au lieu de `src/lib/actions`, et
   les 3 PR Dependabot en attente (dont TypeScript 6, majeure).
 
+- **23/11 (soir) — SITE ROUVERT pour la validation KKiaPay (demande de Josué).** Josué ouvre le compte marchand
+  KKiaPay : le formulaire exige l'adresse du site, et KKiaPay vérifie le site avant d'activer le compte — une page
+  d'attente aurait fait échouer la validation. `maintenance` remis à `0` sur Neon ; les pages publiques répondent
+  de nouveau normalement (effet immédiat), les flux et `robots.txt` suivent dans les 5 minutes (`revalidate = 300`).
+  **À refermer dès que KKiaPay a validé** (Admin → Paramètres → Maintenance). Réponses fournies pour le formulaire :
+  secteur « Médias & services en ligne », description du portail et de l'adhésion, contact@beninois-du-monde.com,
+  https://beninois-du-monde.com, pays Bénin ; téléphone et adresse du siège à fournir par Josué / le HCBE.
+  ⚠️ Rappelé à Josué : le compte doit être au nom du **HCBE** (nom commercial « Béninois du Monde ») et non un
+  compte personnel — des cotisations d'association sur un compte personnel se corrigent mieux maintenant.
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { buildIcs } from "@/lib/temps";
 import { SITE_URL } from "@/lib/site-url";
+import { maintenance } from "@/lib/settings";
 
 /* Calendrier iCal de tous les événements à venir : abonnable dans Google Agenda, Apple
    Calendrier ou Outlook (« S'abonner à un calendrier » avec cette adresse). */
@@ -8,11 +9,13 @@ export const revalidate = 900;
 
 export async function GET() {
   const depuis = new Date(Date.now() - 864e5);
+  /* Site fermé aux visiteurs : calendrier vide, comme le flux et le sitemap. */
+  const ferme = (await maintenance()).on;
   const items = await db.content.findMany({
     where: { type: "EVENT", status: "PUBLISHED", event: { startsAt: { gte: depuis } } },
     include: { event: true },
     orderBy: { event: { startsAt: "asc" } },
-    take: 300,
+    take: ferme ? 0 : 300,
   });
   const ics = buildIcs(
     items.flatMap((c) =>

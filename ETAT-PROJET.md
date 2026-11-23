@@ -514,6 +514,28 @@ Sans `RESEND_API_KEY`, les e-mails (lien magique / activation) s'affichent dans 
   de Mobile Money au Bénin et KKiaPay débite en FCFA : aucun des deux ne couvre seul les trois cas d'usage.
   ⚠️ À vérifier avant le live : le compte d'encaissement doit être **au nom du HCBE**, pas un compte personnel.
 
+- **23/11 — REVUE D'ARCHITECTURE : DEUX ÉCARTS CORRIGÉS.** Revue complète (244 fichiers, 21 000 lignes,
+  40 modèles) : contrôle d'accès à trois couches vérifié route par route (proxy JWT, les 12 routes d'API avec
+  leur propre garde, les 16 fichiers d'actions tous derrière un garde), règle de modération imposée côté
+  serveur (le statut n'est pas dans le schéma Zod), aucun e-mail de membre sur une page publique, aucun
+  composant client n'important `db`/`auth`/`mail`/`settings`, index composites présents sur les requêtes
+  chaudes, `BannerStat` à clé primaire composite (compteur idempotent), zéro code mort, zéro `TODO`.
+  Deux écarts trouvés et corrigés :
+  1. **La maintenance ne fermait pas les flux** : `sitemap.xml`, `flux.xml`, `/agenda/ical` et `robots.txt`
+     sont hors du matcher du proxy, donc le site « fermé » diffusait encore 30 articles en RSS et annonçait
+     83 URL, pendant que les pages HTML ne rendaient que la page d'attente — Google aurait crawlé 83 pages
+     `noindex`. Les quatre routes consultent désormais `maintenance()` : flux, sitemap et calendrier vides,
+     `robots.txt` en `Disallow: /`, `revalidate = 300` sur robots et sitemap. Vérifié en local dans les deux
+     sens (fermé : 0 / 0 / 0 ; ouvert : 12 articles, 58 URL).
+  2. **Les compteurs de publicité n'étaient pas limités** : `/api/pub/vue` et `/api/pub/clic` acceptaient un
+     nombre illimité d'appels, alors que le CSV 90 jours et le rapport mensuel aux annonceurs en dépendent.
+     Plafond par IP et par campagne (30 affichages/h, 10 clics/h) avec la table `RateLimit` existante ; le
+     visiteur est toujours redirigé et la balise répond toujours 204, seul le comptage s'arrête.
+  Restent en l'état, signalés : deux couleurs en dur à passer en token (fond du conteneur de carte, thème du
+  widget KKiaPay), les `NEXT_PUBLIC_SOCIAL_*` lus côté serveur seulement (préfixe trompeur), les actions
+  colocalisées dans `page.tsx` pour contact / newsletter / demande d'expert au lieu de `src/lib/actions`, et
+  les 3 PR Dependabot en attente (dont TypeScript 6, majeure).
+
 ## Ce qui RESTE (ordre)
 1. **Josué / HCBE** : corrections éventuelles du fichier de revue (colonnes « → ») → réinjection ; **les 149 sans e-mail sont ignorés (décision Josué 05/11)** ;
    saisies admin (textes /hcbe, sections locales, consulats, réseaux sociaux, directeur de publication + juridiction,

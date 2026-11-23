@@ -3,14 +3,19 @@ import { SITE_URL } from "@/lib/site-url";
 import { db } from "@/lib/db";
 import { contentHref } from "@/lib/routes";
 import { slugify } from "@/lib/slug";
+import { maintenance } from "@/lib/settings";
 
 /* Plan du site pour les moteurs : pages fixes + tous les contenus publiés
-   + fiches membres visibles dans l'annuaire. Régénéré à chaque demande. */
+   + fiches membres visibles dans l'annuaire. Recalculé au plus toutes les
+   5 minutes, et **vide** quand le site est fermé aux visiteurs : on n'annonce
+   pas des URL qui ne répondent que par la page d'attente. */
+export const revalidate = 300;
 
 const FIXES = ["/", "/magazine", "/magazine/beninois-qui-comptent", "/retour-au-pays", "/memoire", "/en/roots", "/emploi", "/emploi/recruteurs", "/communaute", "/communaute/membres", "/communaute/entreprises", "/communaute/associations", "/communaute/artistes", "/communaute/competences", "/communaute/anciens", "/adresses", "/agenda", "/bons-plans", "/annonces", "/pratique/chercher-trouver", "/pratique/accueil", "/pratique/demarches", "/pays", "/chiffres", "/newsletter", "/en/join", "/en/sign-in", "/en/community", "/publier", "/hcbe", "/annonceurs", "/contact", "/legal/mentions-legales", "/legal/confidentialite", "/legal/cgu"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL;
+  if ((await maintenance()).on) return [];
   const [contents, profiles, pays] = await Promise.all([
     db.content.findMany({ where: { status: "PUBLISHED" }, select: { type: true, slug: true, updatedAt: true } }).catch(() => []),
     db.profile.findMany({ where: { user: { status: "ACTIVE" }, visibility: { path: ["directory"], equals: true } }, select: { slug: true, updatedAt: true } }).catch(() => []),

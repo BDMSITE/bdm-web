@@ -22,12 +22,12 @@ fonctionnalité retirée garde son numéro (marquée « retirée »), une nouvel
 | F-005 | Connexion en deux étapes par code à usage unique (TOTP) pour les comptes qui ont activé la 2FA | /connexion/code | M | ✅ |
 | F-006 | Déconnexion ; session de 7 jours ; rôle et statut relus en base toutes les 5 minutes (une suspension prend effet immédiatement) | — | M | ✅ |
 | F-007 | Anti-robot Cloudflare Turnstile sur l'inscription, le contact, la newsletter et la demande d'expert ; refus serveur sans jeton valide | formulaires publics | V | ✅ |
-| F-008 | Limitation des tentatives sans service externe : connexion 5/e-mail et 10/IP par quart d'heure, lien magique, inscription 5/IP/h, contact 5/IP/h, messages 20/h | — | S | ✅ |
+| F-008 | Limitation des tentatives sans service externe : connexion 5/e-mail et 10/IP par quart d'heure, lien magique, inscription 5/IP/h, contact 5/IP/h, messages 20/h, affichages de publicité 30/h et clics 10/h par IP et par campagne | — | S | ✅ |
 | F-009 | Version anglaise des pages d'entrée : Join, Sign in, The community, Roots ; formulaire d'inscription bilingue, messages de connexion dans la langue choisie | /en/join · /en/sign-in · /en/community · /en/roots | V | ✅ |
 | F-010 | Modèle de comptes simplifié : membre ou administrateur ; le type d'acteur (particulier, entreprise, association, artiste) est un choix du profil modifiable qui décide seulement de l'annuaire d'affichage | /compte/profil | M | ✅ |
 | F-011 | Import des membres depuis le fichier Excel du HCBE (278 comptes importés, pays et villes normalisés, fonction et téléphone repris, rapport des lignes sans e-mail) | script `pnpm import:membres` | E | ✅ |
 | F-012 | Envoi des invitations aux comptes importés par lots dans la limite Brevo, relance automatique après 7 jours | /admin/imports | E | ⚙️ domaine Brevo authentifié le 04/11 : plus aucun blocage technique, mais **aucune invitation n'a jamais été envoyée** (8 comptes activés sur 288 au 23/11) |
-| F-013 | Mode maintenance : page d'attente pour les visiteurs (non indexée), message personnalisable, site normal pour l'équipe connectée avec bandeau rouge ; connexion, admin et API restent ouverts | Admin → Paramètres → Maintenance | A | ✅ (**inactif au 23/11** : le site est ouvert aux visiteurs) |
+| F-013 | Mode maintenance : page d'attente pour les visiteurs (non indexée), message personnalisable, site normal pour l'équipe connectée avec bandeau rouge ; connexion, admin et API restent ouverts ; **les flux se taisent aussi** (RSS, sitemap et iCal vides, robots.txt en `Disallow: /`) | Admin → Paramètres → Maintenance | A | ✅ (**inactif au 23/11** : le site est ouvert aux visiteurs) |
 | F-014 | Règles d'accès appliquées par le proxy sur toutes les pages : /admin réservé à l'équipe, /compte aux connectés, les membres n'entrent jamais dans le back-office | — | S | ✅ |
 
 ## B. Structure du site public
